@@ -21,6 +21,14 @@ services:
     environment:
       - ALLOW_PLAINTEXT_LISTENER=yes
 
+  remote_chrome:
+    image: 'selenium/standalone-chrome'
+    prots:
+      - "4444:4444"
+
+    networks:
+      - remote_chrome
+
 volumes:
   zookeeper_data:
     driver: local
@@ -29,4 +37,6 @@ volumes:
 
 networks:
   kafka:
+    driver: bridge
+  remote_chrome:
     driver: bridge

@@ -1,7 +1,8 @@
-from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
 from selenium import webdriver
 import time
+
+from selenium.webdriver.remote.webdriver import WebDriver
 
 user=" "  # your fb email
 pwd=" "  # your facebook password

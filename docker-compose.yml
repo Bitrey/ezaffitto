@@ -13,3 +13,20 @@ services:
     build: ./scraper
     volumes:
       - ./scraper:/usr/src/app
+
+  kafka:
+    image: 'bitnami/kafka:latest'
+    networks:
+      - kafka
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+
+volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local
+
+networks:
+  kafka:
+    driver: bridge

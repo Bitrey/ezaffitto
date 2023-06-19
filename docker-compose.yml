@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  parser:
+    build: ./parser
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./parser:/usr/src/app
+    command: npm start
+
+  scraper:
+    build: ./scraper
+    volumes:
+      - ./scraper:/usr/src/app

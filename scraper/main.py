@@ -1,28 +1,13 @@
-import asyncio, json
-from EdgeGPT.EdgeGPT import Chatbot, ConversationStyle
+import sclib.fb as _fb
+import os
 
 
-async def main():
-    bot = await Chatbot.create(
-    )  # Passing cookies is "optional", as explained above
-    response = await bot.ask(prompt="""
-    Hello World
-    """,
-                             conversation_style=ConversationStyle.creative,
-                             simplify_response=True)
-    print(json.dumps(response, indent=2))  # Returns
-    """
-    {
-        "text": str
-        "author": str
-        "sources": list[dict]
-        "sources_text": str
-        "suggestions": list[str]
-        "messages_left": int
-    }
-    """
-    await bot.close()
+from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+driver = webdriver.Remote("http://127.0.0.1:4444/wd/hub", DesiredCapabilities.CHROME)
 
+def main():
+  cookies = _fb.login(driver, user, pwd)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+  main()

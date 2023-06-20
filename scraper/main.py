@@ -9,7 +9,7 @@ load_dotenv()
 
 user=os.environ.get("FB_UNAME")
 pwd=os.environ.get("FB_PWD")  # your facebook password
-REMOTE_CHROME = "http://remote_chrome:4444"
+# REMOTE_CHROME = "http://remote_chrome:4444"
 
 
 def main():

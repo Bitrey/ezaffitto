@@ -1,3 +1,4 @@
 export const config = {
-    NUM_RETRIES: 3
+    NUM_TRIES: 5,
+    DELAY_BETWEEN_TRIES_MS: 3000
 };

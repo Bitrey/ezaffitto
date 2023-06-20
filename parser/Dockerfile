@@ -16,7 +16,8 @@ COPY . .
 EXPOSE 3000
 
 # Installa modulo EdgeGPT per Python
-RUN python3 -m pip install EdgeGPT --upgrade --root-user-action=ignore
+# in prod aggiungi parametro --upgrade in modo da usare l'ultima versione
+RUN python3 -m pip install EdgeGPT --root-user-action=ignore
 
 # Avviare l'applicazione
 CMD [ "npm", "run", "dev" ]

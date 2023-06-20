@@ -6,6 +6,7 @@ FROM python:3.8-alpine
 # Impostare una directory di lavoro
 WORKDIR /usr/src/app
 
+RUN apk add -u gcc musl-dev
 # Copiare requirements.txt nella directory di lavoro
 COPY requirements.txt ./
 

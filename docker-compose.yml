@@ -1,17 +1,8 @@
 version: '3.8'
 
 services:
-  nginx:
-    image: nginx:latest
-    ports:
-      - "3000:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-
   parser:
     build: ./parser
-    # ports:
-    #   - "3000:3000"
     volumes:
       - ./parser:/usr/src/app
     command: npm start
@@ -21,17 +12,16 @@ services:
       - PYTHON_PARSER_PATH=./parser.py
       - PROMPT_PATH=./prompt.txt
     depends_on:
-      - nginx
+      - kafka
+    networks:
+      - kafka
 
   scraper:
     build: ./scraper
     volumes:
       - ./scraper:/usr/src/app
-
     depends_on:
       - kafka
-
-
     networks:
       - kafka
 
@@ -39,17 +29,10 @@ services:
     build: ./reader
     volumes:
       - ./reader:/usr/src/app
-
     depends_on:
       - kafka
-
     networks:
       - kafka
-    #depends_on:
-     #- remote_chrome
-
-    #networks:
-      #- remote_chrome
 
   kafka:
     image: 'bitnami/kafka:latest'

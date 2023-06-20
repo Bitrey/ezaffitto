@@ -4,7 +4,6 @@ import { spawn } from "child_process";
 import path from "path";
 import { logger } from "../shared/logger";
 import { RentalPost } from "../interfaces/RentalPost";
-import { writeFileSync } from "fs";
 import { config } from "../config/config";
 
 interface ParsedResponse {

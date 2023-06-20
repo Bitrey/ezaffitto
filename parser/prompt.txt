@@ -1,4 +1,4 @@
-Estrai le informazioni riguardanti la struttura abitativa dal seguente testo e restituiscile SOLO ed ESCLUSIVAMENTE in formato JSON, SENZA ALCUN testo aggiuntivo. Includi SOLO le proprietà che sono esplicitamente menzionate o che puoi dedurre con certezza dal testo. NON includere una proprietà se non è menzionata o deducibile. Rielabora leggermente la descrizione in lingua italiana, garantendo che sia ben scritta e priva di riferimenti personali, e che abbia una lunghezza compresa tra 200 e 500 caratteri. I campi "isRental" e "isForRent" devono essere sempre presenti. Il campo "isRental" deve essere true SOLAMENTE se il testo è da parte di un LOCATORE che OFFRE (e non CERCA) una struttura abitativa in AFFITTO, altrimenti DEVE ESSERE false. Se il prezzo è indicato su base giornaliera o settimanale, convertilo in un prezzo mensile (moltiplicalo per il numero appropriato di giorni o settimane).
+Estrai le informazioni riguardanti la struttura abitativa dal seguente testo e restituiscile SOLO ed ESCLUSIVAMENTE in formato JSON, SENZA ALCUN testo aggiuntivo. Includi SOLO le proprietà che sono esplicitamente menzionate o che puoi dedurre con certezza dal testo. NON includere una proprietà se non è menzionata o deducibile. Rielabora leggermente la descrizione in lingua italiana, garantendo che sia ben scritta e priva di riferimenti personali, e che abbia una lunghezza compresa tra 200 e 500 caratteri. I campi "isRental" e "isForRent" devono essere sempre presenti. Il campo "isRental" deve essere true SOLAMENTE se il testo è da parte di un LOCATORE che OFFRE (e non CERCA) una struttura abitativa in AFFITTO, altrimenti DEVE ESSERE false. Se il prezzo è indicato su base giornaliera o settimanale, convertilo in un prezzo mensile (moltiplicalo per il numero appropriato di giorni o settimane). Se l'annuncio contiene informazioni su più stanze, includi solo le informazioni sulla stanza più opportuna. Se la proprietà è una stanza doppia, il campo "monthlyPricePerBed" deve specificare il prezzo per singolo letto.
 
 Testo da elaborare: {0}
 
@@ -7,14 +7,21 @@ Struttura JSON: {
     "isForRent": <boolean: if the property is for rent and not for sale>,
     "rentalType": <enum: "singleRoom", "doubleRoom", "studio", "apartment", "house", "other">,
     "monthlyPrice": <number | null: monthly rent cost, converted if price is per day or week>,
-    "zone": <string | null>,
+    "monthlyPricePerBed": <number | null: monthly rent cost for a single bed if it’s a double room>,
+    "securityDepositMonths": <number | null: number of months of rent required as a security deposit if deducible from the text>,
+    "zone": <string | null: area or district within the city if deducible from the text>,
     "description": <string: 200-500 characters, professionally written in Italian, no personal references>,
     "targetRestrictions": <enum: "everyone", "males", "females", "students", "workers", "other">,
     "furnished": <boolean>,
     "availabilityStartDate": <date: start date if specified>,
     "availabilityEndDate": <date: end date if specified>,
-    "contractDuration": <string>,
+    "contractDurationMonths": <number>,
     "hasBalcony": <boolean>,
     "hasParking": <boolean>,
-    "internetIncluded": <boolean>
+    "address": <string: street, building number, city>,
+    "floorNumber": <number>,
+    "rooms": <number: number of rooms>,
+    "bathrooms": <number: number of bathrooms>,
+    "areaSqMeters": <number: square meters>,
+    "priceIncludesTaxes": <boolean: if the price includes taxes and condo fees>
 }

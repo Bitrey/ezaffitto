@@ -20,13 +20,13 @@ const logger_1 = require("./shared/logger");
 const app = (0, express_1.default)();
 app.use(body_parser_1.default.json());
 const parser = new edgegpt_1.Parser();
-app.get("/parse", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.post("/parse", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.body.text) {
-        return res.status(400).send("Missing text body parameter");
+        return res.status(400).json({ err: "Missing 'text' body parameter" });
     }
     const parsed = yield parser.parse(req.body.text);
     if (parsed) {
-        return res.status(200).json({ text: parsed });
+        return res.json(parsed);
     }
     else {
         return res.status(500).json({ err: "Error parsing text" });

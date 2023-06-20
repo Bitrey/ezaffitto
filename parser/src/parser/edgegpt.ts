@@ -5,22 +5,13 @@ import path from "path";
 import { logger } from "../shared/logger";
 import { RentalPost } from "../interfaces/RentalPost";
 import { config } from "../config/config";
-
-interface ParsedResponse {
-    text: string;
-    parsed?: Partial<RentalPost>;
-}
-
-interface EdgeGPTResponse {
-    text: string;
-    author: string;
-    sources: { [key: string]: any }[];
-    sources_text: string;
-    suggestions: string[];
-    messages_left: number;
-}
+import { EdgeGPTResponse } from "../interfaces/EdgeGPTResponse";
 
 export class Parser {
+    private static wait(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     private extractJSON = (input: string): RentalPost | null => {
         const match = input.match(/{[\s\S]*?}/);
 
@@ -62,7 +53,7 @@ export class Parser {
             python.on("error", function (data) {
                 logger.error("Error (error event) from Python parser script:");
                 logger.error(data);
-                reject(data);
+                return resolve(null);
             });
 
             python.stderr.on("data", data => {
@@ -70,7 +61,7 @@ export class Parser {
                     "Error (stderr.data event) from Python parser script:"
                 );
                 logger.error(data);
-                reject(data);
+                return resolve(null);
             });
 
             python.on("close", code => {
@@ -83,10 +74,60 @@ export class Parser {
                         "Error parsing JSON from Python parser script:"
                     );
                     logger.error(err);
-                    reject(err);
+                    return resolve(null);
                 }
             });
         });
+    }
+
+    private findMostConsistent(rentalPosts: RentalPost[]): RentalPost | null {
+        if (rentalPosts.length === 0) {
+            return null;
+        }
+
+        let scores = new Array(rentalPosts.length).fill(0);
+
+        for (let i = 0; i < rentalPosts.length; i++) {
+            for (let j = 0; j < rentalPosts.length; j++) {
+                if (i !== j) {
+                    scores[i] += this.calculateSimilarityScore(
+                        rentalPosts[i],
+                        rentalPosts[j]
+                    );
+                }
+            }
+        }
+
+        const maxIndex = scores.indexOf(Math.max(...scores));
+        return rentalPosts[maxIndex];
+    }
+
+    private calculateSimilarityScore(a: RentalPost, b: RentalPost): number {
+        let score = 0;
+
+        for (const key in a) {
+            if (
+                key !== "description" &&
+                Object.prototype.hasOwnProperty.call(a, key)
+            ) {
+                const aValue = a[key as keyof RentalPost];
+                const bValue = b[key as keyof RentalPost];
+
+                if (aValue instanceof Date && bValue instanceof Date) {
+                    // Compare dates
+                    if (aValue.getTime() === bValue.getTime()) {
+                        score++;
+                    }
+                } else {
+                    // Compare other properties
+                    if (aValue === bValue) {
+                        score++;
+                    }
+                }
+            }
+        }
+
+        return score;
     }
 
     public async parse(humanText: string): Promise<RentalPost | null> {
@@ -94,8 +135,9 @@ export class Parser {
         try {
             const fetchPromises: Promise<EdgeGPTResponse | null>[] = [];
 
-            for (let i = 0; i < config.NUM_RETRIES; i++) {
+            for (let i = 0; i < config.NUM_TRIES; i++) {
                 fetchPromises.push(this.fetchEdgeGpt(humanText));
+                await Parser.wait(config.DELAY_BETWEEN_TRIES_MS);
             }
 
             const fetchedResults = await Promise.all(fetchPromises);
@@ -121,7 +163,7 @@ export class Parser {
                 return null;
             }
 
-            const cleaned = cleanedArr[0];
+            const cleaned = this.findMostConsistent(cleanedArr);
 
             return cleaned;
         } catch (err) {

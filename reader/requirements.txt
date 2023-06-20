@@ -1,0 +1,4 @@
+facebook_scraper
+kafka_python==2.0.2
+python-dotenv==1.0.0
+selenium==4.10.0

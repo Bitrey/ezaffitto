@@ -20,6 +20,17 @@ services:
 
     networks:
       - kafka
+
+  kreader_test:
+    build: ./reader
+    volumes:
+      - ./reader:/usr/src/app
+
+    depends_on:
+      - kafka
+
+    networks:
+      - kafka
     #depends_on:
      #- remote_chrome
 

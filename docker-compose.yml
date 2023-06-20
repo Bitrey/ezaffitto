@@ -13,11 +13,11 @@ services:
     build: ./scraper
     volumes:
       - ./scraper:/usr/src/app
-    depends_on:
-      - remote_chrome
+    #depends_on:
+     #- remote_chrome
 
-    networks:
-      - remote_chrome
+    #networks:
+      #- remote_chrome
 
   kafka:
     image: 'bitnami/kafka:latest'
@@ -26,24 +26,22 @@ services:
     environment:
       - ALLOW_PLAINTEXT_LISTENER=yes
 
-  remote_chrome:
-    image: 'selenium/standalone-chrome'
-    shm_size: '1gb'
-    ports:
-      - "4444:4444"
-      - "7900:7900"
+   #remote_chrome:
+   #  image: 'selenium/standalone-chrome'
+   #  shm_size: '1gb'
+   #  ports:
+   #    - "4444:4444"
+   #    - "7900:7900"
 
-    networks:
-      - remote_chrome
+   #  networks:
+   #    - remote_chrome
 
 volumes:
-  zookeeper_data:
-    driver: local
   kafka_data:
     driver: local
 
 networks:
   kafka:
     driver: bridge
-  remote_chrome:
-    driver: bridge
+  #remote_chrome:
+    #driver: bridge

@@ -10,10 +10,10 @@ WORKDIR /usr/src/app
 COPY requirements.txt ./
 
 # Installare le dipendenze
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Copiare il codice sorgente nella directory di lavoro
 COPY . .
 
 # Avviare l'applicazione
-CMD [ "python", "./main.py" ]
+CMD [ "python", "-u" ,"./main.py" ]

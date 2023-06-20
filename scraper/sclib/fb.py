@@ -1,3 +1,4 @@
+from typing import Dict
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium import webdriver
@@ -9,7 +10,7 @@ from selenium.webdriver.remote.webdriver import WebDriver
 
 
 #TODO RETURN TYPE
-def login(driver: WebDriver, user, pwd) -> None:
+def login(driver: WebDriver, user, pwd):
   driver.get("https://www.facebook.com")
   assert "Facebook" in driver.title
   elem = driver.find_element(By.ID, "email")
@@ -19,8 +20,10 @@ def login(driver: WebDriver, user, pwd) -> None:
   elem.send_keys(pwd)
   elem=driver.find_element(By.CSS_SELECTOR, "button[data-testid='royal_login_button']")
   elem.send_keys(Keys.RETURN)
-  time.sleep(300)
+  cookies = driver.get_cookies()
   driver.quit()
+  return cookies
+
   # TODO:
   # Return cookies
   

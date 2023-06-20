@@ -1,0 +1,16 @@
+{
+    "isRental': true,
+    "isForRent': true,
+    "rentalType': "doubleRoom",
+    "monthlyPrice': 450,
+    "zone': "Mazzini",
+    "description': "Si affitta una camera doppia in un appartamento condiviso con altre quattro persone in zona Mazzini, vicino alla metro Ottaviano e ai Musei Vaticani. L'appartamento è arredato e dotato di riscaldamento. Le spese condominiali sono incluse nel prezzo, mentre le altre utenze sono escluse ma contenute. La caparra è di tre mensilità. La camera si libera da subito e si rivolge a ragazze.',
+    "targetRestrictions': "females",
+    "furnished': true,
+    "availabilityStartDate': null,
+    "availabilityEndDate': null,
+    "contractDuration': null,
+    "hasBalcony': null,
+    "hasParking': null,
+    "internetIncluded': null
+}

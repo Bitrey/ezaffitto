@@ -1,0 +1,29 @@
+{
+    "text": "Ecco la struttura JSON che ho creato a partire dal testo:\n\n```json\n{\n    'isRental': true,\n    'isForRent': true,\n    'rentalType': 'doubleRoom',\n    'monthlyPrice': 450,\n    'area': 'zona Mazzini',\n    'description': 'In zona Mazzini, vicino alla metro Ottaviano e ai Musei Vaticani, si affitta un posto letto in una camera doppia in un appartamento condiviso con altre quattro persone. L'appartamento è al secondo piano di uno stabile ristrutturato e ha ingresso, soggiorno, due camere da letto, cucina abitabile, bagno e ripostiglio. La camera è luminosa e arredata con due letti singoli, armadi e scrivanie. Il prezzo mensile è di 450 euro a persona e include le spese condominiali e il riscaldamento. Le altre utenze sono escluse ma contenute. La caparra richiesta è di tre mensilità.',\n    'targetRestrictions': 'females',\n    'furnished': true,\n    'availabilityStartDate': null,\n    'availabilityEndDate': null,\n    'contractDuration': null,\n    'hasBalcony': false,\n    'hasParking': false,\n    'internetIncluded': false\n}\n```",
+    "author": "bot",
+    "sources": [
+        {
+            "providerDisplayName": "I migliori ristoranti vicino a Piazza Giuseppe Mazzini - Tripadvisor",
+            "seeMoreUrl": "https://www.tripadvisor.it/RestaurantsNear-g187791-d10104953-Piazza_Giuseppe_Mazzini-Rome_Lazio.html",
+            "searchQuery": "zona Mazzini"
+        },
+        {
+            "providerDisplayName": "case in vendita zona Mazzini - Delle Vittorie a Roma",
+            "seeMoreUrl": "https://www.immobiliare.it/vendita-case/roma/mazzini-delle-vittorie/",
+            "searchQuery": "zona Mazzini"
+        },
+        {
+            "providerDisplayName": "monolocali in vendita zona Mazzini - Fossolo a Bologna",
+            "seeMoreUrl": "https://www.immobiliare.it/vendita-monolocali/bologna/mazzini-fossolo/",
+            "searchQuery": "zona Mazzini"
+        }
+    ],
+    "sources_text": "Learn more: [1. www.tripadvisor.it](https://www.tripadvisor.it/RestaurantsNear-g187791-d10104953-Piazza_Giuseppe_Mazzini-Rome_Lazio.html) [2. www.immobiliare.it](https://www.immobiliare.it/vendita-case/roma/mazzini-delle-vittorie/) [3. www.immobiliare.it](https://www.immobiliare.it/vendita-monolocali/bologna/mazzini-fossolo/)",
+    "suggestions": [
+        "Grazie per il tuo aiuto.",
+        "Puoi correggere questo errore?",
+        "Puoi aggiungere questa informazione?"
+    ],
+    "messages_left": 9,
+    "adaptive_text": "[1]: https://www.tripadvisor.it/RestaurantsNear-g187791-d10104953-Piazza_Giuseppe_Mazzini-Rome_Lazio.html \"I migliori ristoranti vicino a Piazza Giuseppe Mazzini - Tripadvisor\"\n[2]: https://www.immobiliare.it/vendita-case/roma/mazzini-delle-vittorie/ \"case in vendita zona Mazzini - Delle Vittorie a Roma\"\n[3]: https://www.immobiliare.it/vendita-monolocali/bologna/mazzini-fossolo/ \"monolocali in vendita zona Mazzini - Fossolo a Bologna\"\n\nEcco la struttura JSON che ho creato a partire dal testo:\n\n```json\n{\n    'isRental': true,\n    'isForRent': true,\n    'rentalType': 'doubleRoom',\n    'monthlyPrice': 450,\n    'area': 'zona Mazzini',\n    'description': 'In zona Mazzini, vicino alla metro Ottaviano e ai Musei Vaticani, si affitta un posto letto in una camera doppia in un appartamento condiviso con altre quattro persone. L'appartamento è al secondo piano di uno stabile ristrutturato e ha ingresso, soggiorno, due camere da letto, cucina abitabile, bagno e ripostiglio. La camera è luminosa e arredata con due letti singoli, armadi e scrivanie. Il prezzo mensile è di 450 euro a persona e include le spese condominiali e il riscaldamento. Le altre utenze sono escluse ma contenute. La caparra richiesta è di tre mensilità.',\n    'targetRestrictions': 'females',\n    'furnished': true,\n    'availabilityStartDate': null,\n    'availabilityEndDate': null,\n    'contractDuration': null,\n    'hasBalcony': false,\n    'hasParking': false,\n    'internetIncluded': false\n}\n```\n"
+}

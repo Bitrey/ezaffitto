@@ -1,7 +1,4 @@
-# parser/Dockerfile
-
-# Utilizzare l'immagine ufficiale di Node.js
-FROM node:18-alpine
+FROM nikolaik/python-nodejs:python3.11-nodejs18-alpine
 
 # Creare una directory di lavoro
 WORKDIR /usr/src/app
@@ -18,5 +15,8 @@ COPY . .
 # Esposizione della porta su cui l'applicazione sarà in ascolto
 EXPOSE 3000
 
+# Installa modulo EdgeGPT per Python
+RUN python3 -m pip install EdgeGPT --upgrade --root-user-action=ignore
+
 # Avviare l'applicazione
-CMD [ "node", "index.js" ]
+CMD [ "npm", "run", "dev" ]

@@ -1,0 +1,18 @@
+Struttura YAML:
+
+{
+    'isRental': true,
+    'isForRent': true,
+    'rentalType': 'doubleRoom',
+    'monthlyPrice': 450,
+    'zone': 'Mazzini',
+    'description': 'Si affitta una camera doppia in zona Mazzini, ideale per ragazze. La camera è spaziosa e luminosa, dotata di due letti singoli, armadi e scrivanie. L'appartamento è condiviso con altre quattro ragazze e dispone di due bagni, una cucina abitabile e un salotto. Le spese condominiali e il riscaldamento sono inclusi nel prezzo, mentre le altre utenze sono escluse ma modiche. La caparra è pari a tre mensilità. La camera è disponibile da subito.',
+    'targetRestrictions': 'females',
+    'furnished': true,
+    'availabilityStartDate': null,
+    'availabilityEndDate': null,
+    'contractDuration': null,
+    'hasBalcony': null,
+    'hasParking': null,
+    'internetIncluded': null
+}

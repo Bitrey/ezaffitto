@@ -1,13 +1,27 @@
 version: '3.8'
 
 services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "3000:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+
   parser:
     build: ./parser
-    ports:
-      - "3000:3000"
+    # ports:
+    #   - "3000:3000"
     volumes:
       - ./parser:/usr/src/app
     command: npm start
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - PYTHON_PARSER_PATH=./parser.py
+      - PROMPT_PATH=./prompt.txt
+    depends_on:
+      - nginx
 
   scraper:
     build: ./scraper

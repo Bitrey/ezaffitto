@@ -1,0 +1,13 @@
+{
+    "text": "Struttura YAML:\n\n{\n    'isRental': true,\n    'isForRent': true,\n    'rentalType': 'doubleRoom',\n    'monthlyPrice': 450,\n    'zone': 'Mazzini',\n    'description': 'Affittasi posto letto in camera doppia in zona Mazzini. La camera è parte di un appartamento condiviso con altre quattro persone. Il prezzo mensile include le spese condominiali e il riscaldamento, mentre le altre utenze sono escluse ma modiche. La caparra è di tre mensilità. L'appartamento è arredato e dispone di balcone. Si richiede il rispetto delle regole di convivenza.',\n    'targetRestrictions': 'females',\n    'furnished': true,\n    'availabilityStartDate': null,\n    'availabilityEndDate': null,\n    'contractDuration': null,\n    'hasBalcony': true,\n    'hasParking': false,\n    'internetIncluded': false\n}",
+    "author": "bot",
+    "sources": [],
+    "sources_text": "Struttura YAML:\n\n{\n    'isRental': true,\n    'isForRent': true,\n    'rentalType': 'doubleRoom',\n    'monthlyPrice': 450,\n    'zone': 'Mazzini',\n    'description': 'Affittasi posto letto in camera doppia in zona Mazzini. La camera è parte di un appartamento condiviso con altre quattro persone. Il prezzo mensile include le spese condominiali e il riscaldamento, mentre le altre utenze sono escluse ma modiche. La caparra è di tre mensilità. L'appartamento è arredato e dispone di balcone. Si richiede il rispetto delle regole di convivenza.',\n    'targetRestrictions': 'females',\n    'furnished': true,\n    'availabilityStartDate': null,\n    'availabilityEndDate': null,\n    'contractDuration': null,\n    'hasBalcony': true,\n    'hasParking': false,\n    'internetIncluded': false\n}\n",
+    "suggestions": [
+        "Grazie per il tuo aiuto.",
+        "Puoi scrivere la descrizione in inglese?",
+        "Puoi creare un annuncio simile per una camera singola?"
+    ],
+    "messages_left": 9,
+    "adaptive_text": "Struttura YAML:\n\n{\n    'isRental': true,\n    'isForRent': true,\n    'rentalType': 'doubleRoom',\n    'monthlyPrice': 450,\n    'zone': 'Mazzini',\n    'description': 'Affittasi posto letto in camera doppia in zona Mazzini. La camera è parte di un appartamento condiviso con altre quattro persone. Il prezzo mensile include le spese condominiali e il riscaldamento, mentre le altre utenze sono escluse ma modiche. La caparra è di tre mensilità. L'appartamento è arredato e dispone di balcone. Si richiede il rispetto delle regole di convivenza.',\n    'targetRestrictions': 'females',\n    'furnished': true,\n    'availabilityStartDate': null,\n    'availabilityEndDate': null,\n    'contractDuration': null,\n    'hasBalcony': true,\n    'hasParking': false,\n    'internetIncluded': false\n}\n"
+}

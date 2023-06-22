@@ -1,14 +1,28 @@
 import express from "express";
 import bodyParser from "body-parser";
-import { Parser } from "./parser/edgegpt";
+
+// DEVE essere primo senno' circular dependency => esplode
+import "./config/kafka";
+
 import { envs } from "./config/envs";
 import { logger } from "./shared/logger";
+import EventEmitter from "events";
+import {
+    ErrorEventEmitter,
+    ParsedDataEventEmitter,
+    ParsedPost,
+    RawDataEventEmitter
+} from "./interfaces/EventEmitters";
+import { runConsumer } from "./consumer";
+import { runProducer } from "./producer";
+import { EdgeGPTParser } from "./parser/edgegpt";
+import { Errors } from "./interfaces/Error";
 
 const app = express();
 
 app.use(bodyParser.json());
 
-const parser = new Parser();
+const parser = new EdgeGPTParser();
 
 app.post("/parse", async (req, res) => {
     if (!req.body.text) {
@@ -25,4 +39,36 @@ app.post("/parse", async (req, res) => {
 
 app.listen(envs.PORT, () => {
     logger.info(`Parser server listening on port ${envs.PORT}`);
+});
+
+export const rawDataEvent: RawDataEventEmitter = new EventEmitter();
+export const parsedDataEvent: ParsedDataEventEmitter = new EventEmitter();
+export const errorsEvent: ErrorEventEmitter = new EventEmitter();
+
+const run = async () => {
+    runProducer();
+    runConsumer();
+};
+
+run().catch(err => {
+    logger.error("Error in Kafka run:");
+    logger.error(err);
+});
+
+rawDataEvent.on("rawData", async rawData => {
+    try {
+        const [error, parsed] = await parser.parse(rawData.rawData.rawMessage);
+        if (error) throw new Error(error);
+        parsedDataEvent.emit("parsedData", {
+            scraperType: rawData.scraperType,
+            post: parsed
+        } as ParsedPost);
+    } catch (err) {
+        errorsEvent.emit("error", {
+            err:
+                (err instanceof Error && (err.message as Errors)) ||
+                (err?.toString() as Errors) ||
+                Errors.UNKNOWN_ERROR
+        });
+    }
 });

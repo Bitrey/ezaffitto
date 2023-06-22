@@ -6,8 +6,9 @@ import { logger } from "../shared/logger";
 import { RentalPost } from "../interfaces/RentalPost";
 import { config } from "../config/config";
 import { EdgeGPTResponse } from "../interfaces/EdgeGPTResponse";
+import { Errors } from "../interfaces/Error";
 
-export class Parser {
+export class EdgeGPTParser {
     private static wait(ms: number): Promise<void> {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
@@ -130,14 +131,16 @@ export class Parser {
         return score;
     }
 
-    public async parse(humanText: string): Promise<RentalPost | null> {
+    public async parse(
+        humanText: string
+    ): Promise<[err: Errors | null, post: RentalPost | null]> {
         logger.info(`Parsing: ${humanText}`);
         try {
             const fetchPromises: Promise<EdgeGPTResponse | null>[] = [];
 
             for (let i = 0; i < config.NUM_TRIES; i++) {
                 fetchPromises.push(this.fetchEdgeGpt(humanText));
-                await Parser.wait(config.DELAY_BETWEEN_TRIES_MS);
+                await EdgeGPTParser.wait(config.DELAY_BETWEEN_TRIES_MS);
             }
 
             const fetchedResults = await Promise.all(fetchPromises);
@@ -151,7 +154,7 @@ export class Parser {
 
             if (successfullyFetched.length === 0) {
                 logger.error("No successful fetches");
-                return null;
+                return [Errors.PARSER_NO_SUCCESSFUL_GPT_FETCH, null];
             }
 
             const cleanedArr = successfullyFetched
@@ -160,16 +163,16 @@ export class Parser {
 
             if (cleanedArr.length === 0) {
                 logger.error("JSON parsed array is empty");
-                return null;
+                return [Errors.PARSER_JSON_EXTRACTION_FAILED, null];
             }
 
             const cleaned = this.findMostConsistent(cleanedArr);
 
-            return cleaned;
+            return [null, cleaned];
         } catch (err) {
             logger.error(`Error parsing: ${humanText}`);
             logger.error(err);
-            return null;
+            return [Errors.UNKNOWN_ERROR, null];
         }
     }
 }

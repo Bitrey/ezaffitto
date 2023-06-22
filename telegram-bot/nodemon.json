@@ -1,0 +1,6 @@
+{
+    "watch": ["src", "parser.py"],
+    "ext": ".ts,.js",
+    "ignore": [],
+    "exec": "npx ts-node ./src/index.ts"
+}

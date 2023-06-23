@@ -26,7 +26,9 @@ export const runConsumer = async () => {
                 const [, scraperType] =
                     config.KAFKA_CONSUMER_TOPIC.exec(topic) || [];
                 if (!scraperType) {
-                    logger.error("Invalid topic received from Kafka.");
+                    logger.error(
+                        `Invalid topic received from Kafka: ${topic}.`
+                    );
                     throw new Error(Errors.KAFKA_RECEIVED_INVALID_TOPIC);
                 }
 
@@ -34,12 +36,22 @@ export const runConsumer = async () => {
                 try {
                     parsed = JSON.parse(message.value.toString("utf-8"));
                 } catch (err) {
-                    logger.error("Malformed JSON data received from Kafka.");
+                    logger.error(
+                        `Malformed JSON data received from Kafka: ${message.value}.`
+                    );
                     throw new Error(Errors.KAFKA_RECEIVED_MALFORMED_JSON_DATA);
                 }
 
-                if (!(config.RAW_DATA_MESSAGE_TO_PARSE_KEY in parsed)) {
-                    logger.error("Invalid raw data received from Kafka.");
+                if (
+                    !(config.RAW_DATA_MESSAGE_TO_PARSE_KEY in parsed) ||
+                    typeof parsed[config.RAW_DATA_MESSAGE_TO_PARSE_KEY] !==
+                        "string"
+                ) {
+                    logger.error(
+                        `Invalid raw data received from Kafka (missing ${
+                            config.RAW_DATA_MESSAGE_TO_PARSE_KEY
+                        }): ${JSON.stringify(parsed)}.`
+                    );
                     throw new Error(Errors.KAFKA_RECEIVED_INVALID_RAW_DATA);
                 }
 

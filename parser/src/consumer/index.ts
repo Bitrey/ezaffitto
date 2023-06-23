@@ -23,8 +23,9 @@ export const runConsumer = async () => {
                     throw new Error(Errors.KAFKA_RECEIVED_EMPTY_PAYLOAD);
                 }
 
-                const [, scraperType] =
-                    config.KAFKA_CONSUMER_TOPIC.exec(topic) || [];
+                //const [, scraperType] =
+                //    config.KAFKA_CONSUMER_TOPIC.exec(topic) || [];
+                let scraperType = "facebook"
                 if (!scraperType) {
                     logger.error(
                         `Invalid topic received from Kafka: ${topic}.`

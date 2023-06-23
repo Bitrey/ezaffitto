@@ -41,7 +41,8 @@ def push_to_kafka(posts):
         #pprint(post)
         kafka_data = {"scraperRawData": post, "rawMessage":post["text"]}
         #pprint(kafka_data)
-        producer.send(kafka_topic, json.dumps(kafka_data, default=str, cls=DateTimeEncoder).encode('UTF-8'))
+        print("[INFO] Sending")
+        producer.send(kafka_topic, json.dumps(kafka_data, cls=DateTimeEncoder).encode('UTF-8'))
     pass
 
 

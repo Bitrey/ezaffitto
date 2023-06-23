@@ -12,6 +12,7 @@ export const runConsumer = async () => {
     await consumer.connect();
     await consumer.subscribe({
         topic: config.KAFKA_CONSUMER_TOPIC,
+        //TODO: IS THIS NECESSARY?
         fromBeginning: true
     });
 
@@ -23,6 +24,7 @@ export const runConsumer = async () => {
                     throw new Error(Errors.KAFKA_RECEIVED_EMPTY_PAYLOAD);
                 }
 
+                //TODO:FIX
                 //const [, scraperType] =
                 //    config.KAFKA_CONSUMER_TOPIC.exec(topic) || [];
                 let scraperType = "facebook"

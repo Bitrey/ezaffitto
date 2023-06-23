@@ -62,8 +62,10 @@ rawDataEvent.on("rawData", async rawData => {
     try {
         const [error, parsed] = await parser.parse(rawData.rawData.rawMessage);
         if (error) throw new Error(error);
+        //TODO: think about this, do we want to just pass one part of json around or let everything through?
         parsedDataEvent.emit("parsedData", {
             scraperType: rawData.scraperType,
+            scraperRawContent: rawData.rawData,
             post: parsed
         } as ParsedPost);
     } catch (err) {

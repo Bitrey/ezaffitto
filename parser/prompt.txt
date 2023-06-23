@@ -13,7 +13,9 @@ Struttura JSON: {
     "latitude": <number | null: if the post includes a location, estimate the latitude of the property>,
     "longitude": <number | null: if the post includes a location, estimate the longitude of the property>
     "description": <string: 200-500 characters, professionally written in Italian, no personal references>,
-    "targetRestrictions": <enum: "everyone", "males", "females", "students", "workers", "other">,
+    "sexRestrictions": <enum: "everyone", "males", "females", "other">,
+    "occupationalRestrictions": <enum: "everyone", "students", "workers", "other">,
+    "lgbtFriendly": <boolean: true if specified, null elsewise>,
     "furnished": <boolean>,
     "availabilityStartDate": <date: start date if specified>,
     "availabilityEndDate": <date: end date if specified>,

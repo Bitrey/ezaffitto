@@ -45,7 +45,10 @@ export const rawDataEvent: RawDataEventEmitter = new EventEmitter();
 export const parsedDataEvent: ParsedDataEventEmitter = new EventEmitter();
 export const errorsEvent: ErrorEventEmitter = new EventEmitter();
 
+const delay = (ms:any) => new Promise(resolve => setTimeout(resolve, ms))
+
 const run = async () => {
+    await delay(10000);
     runProducer();
     runConsumer();
 };

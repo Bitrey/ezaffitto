@@ -15,8 +15,12 @@ user = os.environ.get("FB_UNAME")
 pwd = os.environ.get("FB_PWD")  # your facebook password
 kafka_server = os.environ.get("KAFKA_SERVER")
 kafka_topic = os.environ.get('KAFKA_TOPIC')
+group_id = os.environ.get('FB_GROUP_ID')
 
 # subclass JSONEncoder
+
+if user is None or pwd is None or kafka_server is None or kafka_topic is None or group_id is None:
+    raise Exception("Missing envs")
 
 
 class DateTimeEncoder(JSONEncoder):
@@ -39,17 +43,20 @@ def push_to_kafka(posts):
         #from pprint import pprint
         #pprint(DateTimeEncoder().encode(post))
         #pprint(post)
-        kafka_data = {"scraperRawData": post, "rawMessage":post["text"]}
+        kafka_data = {"scraperRawData": post, "rawMessage": post["text"]}
         #pprint(kafka_data)
-        print("[INFO] Sending")
-        producer.send(kafka_topic, json.dumps(kafka_data, cls=DateTimeEncoder).encode('UTF-8'))
+        print("[INFO] Sending to", kafka_topic)
+        producer.send(
+            kafka_topic,
+            json.dumps(kafka_data, cls=DateTimeEncoder).encode('UTF-8'))
     pass
 
 
 def main():
     time.sleep(10)
-    posts = get_posts(group="561217337952828", credentials=(
-        user, pwd), pages=DEFAULT_PAGES)
+    posts = get_posts(group=group_id,
+                      credentials=(user, pwd),
+                      pages=DEFAULT_PAGES)
     push_to_kafka(posts)
 
 

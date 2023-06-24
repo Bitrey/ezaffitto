@@ -61,6 +61,8 @@ services:
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
       - FIRST_BROKER_ID=1001
+    logging:
+      driver: none # DEBUG - togli se necessario
 
    #remote_chrome:
    #  image: 'selenium/standalone-chrome'

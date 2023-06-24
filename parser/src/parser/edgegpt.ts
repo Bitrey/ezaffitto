@@ -20,6 +20,7 @@ export class EdgeGPTParser {
             return match ? JSON.parse(match[0]) : null;
         } catch (error) {
             console.error("Errore durante il parsing del JSON:", error);
+            logger.error(input);
             return null;
         }
     };
@@ -67,6 +68,12 @@ export class EdgeGPTParser {
 
             python.on("close", code => {
                 logger.debug(`Child process close all stdio with code ${code}`);
+
+                logger.info(
+                    `Parser script exited with code ${code} (${
+                        code === 0 ? "SUCCESS!" : "error"
+                    })})`
+                );
 
                 try {
                     return resolve(JSON.parse(dataToSend) as EdgeGPTResponse);

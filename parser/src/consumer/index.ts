@@ -6,28 +6,45 @@ import { RawDataWithType } from "../interfaces/EventEmitters";
 import { RawData } from "../interfaces/RawData";
 import { logger } from "../shared/logger";
 
-const consumer = kafka.consumer({ groupId: config.KAFKA_GROUP_ID });
+const consumer = kafka.consumer({
+    allowAutoTopicCreation: true,
+    groupId: config.KAFKA_GROUP_ID
+});
 
 export const runConsumer = async () => {
     await consumer.connect();
     await consumer.subscribe({
-        topic: config.KAFKA_CONSUMER_TOPIC,
-        //TODO: IS THIS NECESSARY?
+        topics: [config.KAFKA_CONSUMER_TOPIC],
         fromBeginning: true
     });
+
+    logger.info(
+        "Kafka consumer listening on topic " +
+            config.KAFKA_CONSUMER_TOPIC +
+            "..."
+    );
 
     await consumer.run({
         eachMessage: async ({ topic, partition, message }) => {
             try {
+                let scraperType: string;
+
+                if (config.KAFKA_CONSUMER_TOPIC.test(topic)) {
+                    scraperType = topic.replace("scraper.scraped.", "");
+                } else {
+                    logger.error(
+                        `Topic ${topic} does not match the expected pattern ${config.KAFKA_CONSUMER_TOPIC}.`
+                    );
+                    throw new Error(Errors.KAFKA_RECEIVED_INVALID_TOPIC);
+                }
+
                 if (!message.value) {
                     logger.error("Empty payload received from Kafka.");
                     throw new Error(Errors.KAFKA_RECEIVED_EMPTY_PAYLOAD);
                 }
 
-                //TODO:FIX
-                //const [, scraperType] =
-                //    config.KAFKA_CONSUMER_TOPIC.exec(topic) || [];
-                let scraperType = "facebook"
+                logger.info(`Received message from "${scraperType}" scraper`);
+
                 if (!scraperType) {
                     logger.error(
                         `Invalid topic received from Kafka: ${topic}.`
@@ -59,14 +76,15 @@ export const runConsumer = async () => {
                 }
 
                 logger.info(
-                    `Received raw data: '${parsed}' from scraperType: ${scraperType}`
+                    `Data from "${scraperType}" scraper JSONified successfully`
                 );
+
                 rawDataEvent.emit("rawData", {
                     scraperType,
                     rawData: parsed
                 } as RawDataWithType);
             } catch (error) {
-                logger.debug("An error occurred in the Kafka consumer:", error);
+                logger.error("An error occurred in the Kafka consumer:", error);
                 throw error;
             }
         }

@@ -10,7 +10,7 @@ export const config = Object.freeze({
     KAFKA_CLIENT_ID: "parser",
     KAFKA_GROUP_ID: "parserGroup",
     KAFKA_BROKERS: ["kafka:9092"],
-    KAFKA_CONSUMER_TOPIC: /^scraper\.scraped\..+/, // scraper.scraped.*
+    KAFKA_CONSUMER_TOPIC: /scraper\.scraped\..*/,
     KAFKA_PRODUCER_TOPIC_PREFIX: "parser.parsed.",
     KAFKA_ERROR_TOPIC: "parser.error",
     RAW_DATA_MESSAGE_TO_PARSE_KEY: "rawMessage"

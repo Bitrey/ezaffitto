@@ -22,6 +22,30 @@ group_id = os.environ.get('FB_GROUP_ID')
 if user is None or pwd is None or kafka_server is None or kafka_topic is None or group_id is None:
     raise Exception("Missing envs")
 
+# OPTIONAL ENVS
+to_mock_data: bool = os.environ.get('MOCK_DATA') 
+
+
+MOCK_DATA = [
+#    {
+#      "text":  """
+#Affittasi posto in doppia zona Saragozza dall'1 Agosto. 
+#Villino ristrutturato in Viale del Risorgimento vicino alla facoltà di ingegneria.
+#Il contratto è un 4+4 e il costo ammonta a 270 euro mensili, utenze escluse.
+#Ci sarà da prendere a proprio nome un'utenza fra gas e TARI.
+#Per maggiori informazioni scrivetemi in privato.
+#"""
+#
+#    },
+    {
+      "text":  """
+Hello everyone!
+Announcement is only for boys. Bedspace in a double room will be available for the month of July. One year contract is also available from August. The room is in Via San Donato. There are two bedrooms, a large terrace, one kitchen, two bathrooms and a large living room in the house. 15 mins away from Via Zamboni by bus. Price is 370€ everything included. If you are interested, please write me in private.
+"""
+    },
+]
+
+
 
 class DateTimeEncoder(JSONEncoder):
     # Override the default method
@@ -53,11 +77,18 @@ def push_to_kafka(posts):
 
 
 def main():
-    time.sleep(10)
-    posts = get_posts(group=group_id,
-                      credentials=(user, pwd),
-                      pages=DEFAULT_PAGES)
-    push_to_kafka(posts)
+    while True:
+        time.sleep(10)
+        if to_mock_data:
+            posts = MOCK_DATA
+
+        else:
+            posts = get_posts(group=group_id,
+                          credentials=(user, pwd),
+                          pages=DEFAULT_PAGES)
+
+        push_to_kafka(posts)
+        time.sleep(10)
 
 
 if __name__ == "__main__":

@@ -60,6 +60,7 @@ services:
     environment:
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAKFA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
       - FIRST_BROKER_ID=1001
     logging:
       driver: none # DEBUG - togli se necessario

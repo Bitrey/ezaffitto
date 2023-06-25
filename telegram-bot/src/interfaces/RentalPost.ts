@@ -9,6 +9,9 @@ export interface RentalPost {
         | "house"
         | "other"; // enum: rental type options
     monthlyPrice: number | null; // monthly rent cost, converted if price is per day or week
+    monthlyPricePerBed: number | null; // monthly rent cost, converted if price is per day or week
+    sexRestrictions: "everyone" | "males" |  "females" | "other",
+    smokingAllowed: boolean | null
     area: string | null;
     description: string; // 200-500 characters, professionally written in Italian, no personal references
     targetRestrictions:

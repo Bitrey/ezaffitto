@@ -24,6 +24,7 @@ if user is None or pwd is None or kafka_server is None or kafka_topic is None or
 
 # OPTIONAL ENVS
 to_mock_data: bool = os.environ.get('MOCK_DATA') 
+no_login: bool = os.environ.get('NO_LOGIN') 
 
 
 MOCK_DATA = [
@@ -85,9 +86,12 @@ def main():
             push_to_kafka(posts)
             push_to_kafka(posts)
         else:
+            credentials=(user, pwd)
+            if no_login:
+                credentials = None
             posts = get_posts(group=group_id,
-                          credentials=(user, pwd),
-                          pages=DEFAULT_PAGES)
+                        credentials=credentials,
+                        pages=DEFAULT_PAGES)
 
             push_to_kafka(posts)
         time.sleep(60)

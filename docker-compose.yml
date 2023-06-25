@@ -73,7 +73,7 @@ services:
       - kafka
     healthcheck:
       test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server kafka:9092 --topic hc --create --if-not-exists && kafka-topics.sh --bootstrap-server kafka:9092 --topic hc --describe || exit 1"]
-      start_period: 10s
+      start_period: 30s
       interval: 5s
       timeout: 10s
       retries: 5

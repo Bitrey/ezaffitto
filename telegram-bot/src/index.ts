@@ -8,6 +8,7 @@ import { RentalPost } from "./interfaces/RentalPost";
 import { generateTelegramMessageFromJson } from "./messageformat";
 
 let KAFKA_PARSED_TOPIC = /^parsed\.parser\..+/
+const delay = (ms:any) => new Promise(resolve => setTimeout(resolve, ms))
 
 const consumer = kafka.consumer({ groupId: config.KAFKA_GROUP_ID });
 
@@ -42,8 +43,11 @@ export const runConsumer = async () => {
                     parsed = JSON.parse(message.value.toString("utf-8"))["post"];
                     //console.log(parsed)
                     // GUARDS GO HERE
-                    if(parsed.isRental){
+                    // TODO: extrapolate in another function maybe
+                    if(parsed.isRental && parsed.isForRent){
                         bot.telegram.sendMessage(envs.CHANNEL_ID, generateTelegramMessageFromJson(parsed), {parse_mode: "MarkdownV2"})
+                        console.log("Sleeping before sending next message...")
+                        delay(5000)
                     }
                 } catch (err) {
                     logger.error(
@@ -61,7 +65,6 @@ export const runConsumer = async () => {
     });
 }
 
-const delay = (ms:any) => new Promise(resolve => setTimeout(resolve, ms))
 const run = async () => {
     await delay(10000);
     runConsumer();

@@ -29,4 +29,4 @@ RUN python3 -m pip install EdgeGPT --root-user-action=ignore
 RUN apk add bind-tools
 COPY ./tor_proxy/proxychains.conf /etc/proxychains/proxychains.conf
 
-CMD [ "npm", "run", "dev" ]
+ENTRYPOINT [ "sh", "./start.sh" ]

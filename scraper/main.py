@@ -81,14 +81,16 @@ def main():
         time.sleep(10)
         if to_mock_data:
             posts = MOCK_DATA
-
+            push_to_kafka(posts)
+            push_to_kafka(posts)
+            push_to_kafka(posts)
         else:
             posts = get_posts(group=group_id,
                           credentials=(user, pwd),
                           pages=DEFAULT_PAGES)
 
-        push_to_kafka(posts)
-        time.sleep(10)
+            push_to_kafka(posts)
+        time.sleep(60)
 
 
 if __name__ == "__main__":

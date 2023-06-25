@@ -1,5 +1,7 @@
 FROM nikolaik/python-nodejs:python3.11-nodejs18-alpine
 
+RUN apk update
+RUN apk add proxychains-ng
 # Creare una directory di lavoro
 WORKDIR /usr/src/app
 
@@ -20,4 +22,11 @@ EXPOSE 3000
 RUN python3 -m pip install EdgeGPT --root-user-action=ignore
 
 # Avviare l'applicazione
+
+
+# PROXYCHAINS does not resolve DNS
+# so we have to resolve it ourselves
+RUN apk add bind-tools
+COPY ./tor_proxy/proxychains.conf /etc/proxychains/proxychains.conf
+
 CMD [ "npm", "run", "dev" ]

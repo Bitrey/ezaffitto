@@ -5,6 +5,7 @@ import { config } from "./config/config";
 import { logger } from "./shared/logger";
 import { Errors } from "./interfaces/Error";
 import { RentalPost } from "./interfaces/RentalPost";
+import { generateTelegramMessageFromJson } from "./messageformat";
 
 let KAFKA_PARSED_TOPIC = /^parsed\.parser\..+/
 
@@ -19,12 +20,12 @@ console.log("channel_id: ", envs.CHANNEL_ID)
 
 export const runConsumer = async () => {
     const delay = (ms:any) => new Promise(resolve => setTimeout(resolve, ms))
-    await delay(10000);
+    //await delay(10000);
     await consumer.connect();
     await consumer.subscribe({
         topic: config.KAFKA_CONSUMER_TOPIC,
         //TODO: IS THIS NECESSARY?
-        fromBeginning: true
+        fromBeginning: config.KAFKA_FROM_BEGINNING,
     });
 
     await consumer.run({
@@ -40,7 +41,10 @@ export const runConsumer = async () => {
                     console.log(message.value.toString("utf-8"))
                     parsed = JSON.parse(message.value.toString("utf-8"))["post"];
                     //console.log(parsed)
-                    bot.telegram.sendMessage(envs.CHANNEL_ID, JSON.stringify(parsed, null, 4))
+                    // GUARDS GO HERE
+                    if(parsed.isRental){
+                        bot.telegram.sendMessage(envs.CHANNEL_ID, generateTelegramMessageFromJson(parsed), {parse_mode: "MarkdownV2"})
+                    }
                 } catch (err) {
                     logger.error(
                         `Malformed JSON data received from Kafka: ${message.value}.`

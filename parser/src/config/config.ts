@@ -7,6 +7,7 @@ export const config = Object.freeze({
     PYTHON_PARSER_PATH: envs.PYTHON_PARSER_PATH,
     NUM_TRIES: 5,
     DELAY_BETWEEN_TRIES_MS: 3000,
+    KAFKA_FROM_BEGINNING: false,
     KAFKA_CLIENT_ID: "parser",
     KAFKA_GROUP_ID: "parserGroup",
     KAFKA_BROKERS: ["kafka:9092"],

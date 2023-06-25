@@ -15,7 +15,7 @@ export const runConsumer = async () => {
     await consumer.connect();
     await consumer.subscribe({
         topics: [config.KAFKA_CONSUMER_TOPIC],
-        fromBeginning: true
+        fromBeginning: config.KAFKA_FROM_BEGINNING
     });
 
     logger.info(

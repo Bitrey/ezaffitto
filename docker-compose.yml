@@ -14,7 +14,8 @@ services:
     ports:
       - "3000:3000" # DEBUG, in prod solo Kafka
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - kafka
 
@@ -30,8 +31,10 @@ services:
       - PYTHON_PARSER_PATH=./parser.py
       - PROMPT_PATH=./prompt.txt
     depends_on:
-      - parser
-      - kafka
+      parser:
+        condition: service_started
+      kafka:
+        condition: service_healthy
     networks:
       - kafka
 
@@ -40,7 +43,8 @@ services:
     volumes:
       - ./scraper:/usr/src/app
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - kafka
 
@@ -49,7 +53,8 @@ services:
     volumes:
       - ./reader:/usr/src/app
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - kafka
 
@@ -57,6 +62,12 @@ services:
     image: 'bitnami/kafka:latest'
     networks:
       - kafka
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server kafka:9092 --topic hc --create --if-not-exists && kafka-topics.sh --bootstrap-server kafka:9092 --topic hc --describe || exit 1"]
+      start_period: 10s
+      interval: 5s
+      timeout: 10s
+      retries: 5
     environment:
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1

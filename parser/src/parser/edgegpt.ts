@@ -41,12 +41,19 @@ export class EdgeGPTParser {
         return new Promise((resolve, reject) => {
             let dataToSend = "";
 
-            const python = spawn('proxychains', [
-                '-q',
-                "python3",
+            let python = spawn('python3', [
                 path.join(process.cwd(), envs.PYTHON_PARSER_PATH),
                 prompt
             ]);
+            
+            if (config.PROXYCHAIN_ON){
+                python = spawn('proxychains', [
+                    '-q',
+                    "python3",
+                    path.join(process.cwd(), envs.PYTHON_PARSER_PATH),
+                    prompt
+                ]);                
+            }
 
             python.stdout.on("data", function (data) {
                 logger.debug("\nPipe data from python script:");

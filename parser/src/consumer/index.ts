@@ -8,7 +8,8 @@ import { logger } from "../shared/logger";
 
 const consumer = kafka.consumer({
     allowAutoTopicCreation: true,
-    groupId: config.KAFKA_GROUP_ID
+    groupId: config.KAFKA_GROUP_ID,
+    metadataMaxAge: config.METADATA_MAX_AGE
 });
 
 export const runConsumer = async () => {

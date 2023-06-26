@@ -8,9 +8,12 @@ import { RentalPost } from "./interfaces/RentalPost";
 import { generateTelegramMessageFromJson } from "./messageformat";
 
 let KAFKA_PARSED_TOPIC = /^parsed\.parser\..+/
-const delay = (ms:any) => new Promise(resolve => setTimeout(resolve, ms))
+const delay = (ms: any) => new Promise(resolve => setTimeout(resolve, ms))
 
-const consumer = kafka.consumer({ groupId: config.KAFKA_GROUP_ID });
+const consumer = kafka.consumer({
+    groupId: config.KAFKA_GROUP_ID,
+    metadataMaxAge: config.METADATA_MAX_AGE
+});
 
 
 const bot = new Telegraf(envs.BOT_TOKEN)
@@ -20,7 +23,7 @@ console.log("channel_id: ", envs.CHANNEL_ID)
 
 
 export const runConsumer = async () => {
-    const delay = (ms:any) => new Promise(resolve => setTimeout(resolve, ms))
+    const delay = (ms: any) => new Promise(resolve => setTimeout(resolve, ms))
     //await delay(10000);
     await consumer.connect();
     await consumer.subscribe({
@@ -44,10 +47,10 @@ export const runConsumer = async () => {
                     //console.log(parsed)
                     // GUARDS GO HERE
                     // TODO: extrapolate in another function maybe
-                    if(parsed.isRental && parsed.isForRent){
-                        try{
-                            bot.telegram.sendMessage(envs.CHANNEL_ID, generateTelegramMessageFromJson(parsed), {parse_mode: "MarkdownV2"})
-                        } catch (err){
+                    if (parsed.isRental && parsed.isForRent) {
+                        try {
+                            bot.telegram.sendMessage(envs.CHANNEL_ID, generateTelegramMessageFromJson(parsed), { parse_mode: "MarkdownV2" })
+                        } catch (err) {
                             logger.error(
                                 `Telegram error`
                             );

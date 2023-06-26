@@ -5,6 +5,7 @@ export const config = Object.freeze({
     NUM_TRIES: 5,
     DELAY_BETWEEN_TRIES_MS: 3000,
     KAFKA_FROM_BEGINNING: false,
+    METADATA_MAX_AGE: 5000,
     KAFKA_CLIENT_ID: "telegramChannel",
     KAFKA_GROUP_ID: "telegramChannelAll",
     KAFKA_BROKERS: ["kafka:9092"],

@@ -27,7 +27,7 @@ function generateTelegramMessageFromJson(parsed: RentalPost) {
   const md_end_date = parsed.availabilityEndDate
     ? `\u{23f1} Data fine: ${parsed.availabilityEndDate}\n`
     : "";
-  const md_zone = parsed.zon
+  //const md_zone = parsed.zone
 
   const md_description = parsed.description 
   ? `${parsed.description}`

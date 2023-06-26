@@ -62,6 +62,8 @@ services:
 
   rotating_tor:
     image: 'mattes/rotating-proxy'
+    volumes:
+      - ./torproxy/torrc:/etc/tor/torrc
     environment:
       - tors=25
     networks:

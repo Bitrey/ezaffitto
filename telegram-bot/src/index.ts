@@ -45,7 +45,13 @@ export const runConsumer = async () => {
                     // GUARDS GO HERE
                     // TODO: extrapolate in another function maybe
                     if(parsed.isRental && parsed.isForRent){
-                        bot.telegram.sendMessage(envs.CHANNEL_ID, generateTelegramMessageFromJson(parsed), {parse_mode: "MarkdownV2"})
+                        try{
+                            bot.telegram.sendMessage(envs.CHANNEL_ID, generateTelegramMessageFromJson(parsed), {parse_mode: "MarkdownV2"})
+                        } catch (err){
+                            logger.error(
+                                `Telegram error`
+                            );
+                        }
                         console.log("Sleeping before sending next message...")
                         delay(5000)
                     }

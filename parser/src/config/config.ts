@@ -5,7 +5,7 @@ export const config = Object.freeze({
     NODE_ENV: envs.NODE_ENV,
     PROMPT_PATH: envs.PROMPT_PATH,
     PYTHON_PARSER_PATH: envs.PYTHON_PARSER_PATH,
-    NUM_TRIES: 5,
+    NUM_TRIES: 8,
     DELAY_BETWEEN_TRIES_MS: 3000,
     KAFKA_FROM_BEGINNING: false,
     KAFKA_CLIENT_ID: "parser",

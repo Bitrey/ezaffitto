@@ -8,11 +8,8 @@ services:
     command: npm start
     environment:
       - NODE_ENV=development
-      - PORT=3000
       - PYTHON_PARSER_PATH=./parser.py
       - PROMPT_PATH=./prompt.txt
-    ports:
-      - "3000:3000" # DEBUG, in prod solo Kafka
     depends_on:
       kafka:
         condition: service_healthy

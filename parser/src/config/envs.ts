@@ -8,6 +8,5 @@ export const envs = cleanEnv(process.env, {
     NODE_ENV: str({
         choices: ["development", "test", "production", "staging"]
     }),
-    PORT: num(),
     COOKIES_FILE_NAME: str()
 });

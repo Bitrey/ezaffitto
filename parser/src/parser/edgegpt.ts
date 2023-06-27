@@ -1,12 +1,12 @@
 import { readFile } from "fs/promises";
 import { envs } from "../config/envs";
-import { spawn } from "child_process";
 import path from "path";
 import { logger } from "../shared/logger";
-import { RentalPost } from "../interfaces/RentalPost";
 import { config } from "../config/config";
-import { EdgeGPTResponse } from "../interfaces/EdgeGPTResponse";
 import { fetchEventSource } from "@waylaidwanderer/fetch-event-source";
+import { RentalPost } from "../interfaces/RentalPost";
+import { Errors } from "../interfaces/Error";
+import moment from "moment";
 
 export class EdgeGPTParser {
     private static wait(ms: number): Promise<void> {
@@ -33,93 +33,30 @@ export class EdgeGPTParser {
         return basePrompt.replace("{0}", humanText);
     }
 
-    // private async fetchEdgeGpt(
-    //     humanText: string
-    // ): Promise<EdgeGPTResponse | null> {
-    //     const prompt = await this.getPrompt(humanText);
+    private findMostConsistent<T extends object>(arr: T[]): T | null {
+        logger.debug(
+            `Finding most consistent response from ${arr.length} items`
+        );
 
-    //     return new Promise((resolve, reject) => {
-    //         let dataToSend = "";
-
-    //         let python = spawn("python3", [
-    //             path.join(process.cwd(), envs.PYTHON_PARSER_PATH),
-    //             prompt
-    //         ]);
-
-    //         if (config.PROXYCHAIN_ON) {
-    //             python = spawn("proxychains", [
-    //                 "-q",
-    //                 "python3",
-    //                 path.join(process.cwd(), envs.PYTHON_PARSER_PATH),
-    //                 prompt
-    //             ]);
-    //         }
-
-    //         python.stdout.on("data", function (data) {
-    //             logger.debug("\nPipe data from python script:");
-    //             logger.debug(data.toString() + "\n");
-    //             dataToSend = data.toString();
-    //         });
-
-    //         python.on("error", function (data) {
-    //             logger.error("Error (error event) from Python parser script:");
-    //             logger.error(data);
-    //             return resolve(null);
-    //         });
-
-    //         python.stderr.on("data", data => {
-    //             logger.error(
-    //                 "Error (stderr.data event) from Python parser script:"
-    //             );
-    //             logger.error(data);
-    //             return resolve(null);
-    //         });
-
-    //         python.on("close", code => {
-    //             logger.debug(`Child process close all stdio with code ${code}`);
-
-    //             logger.info(
-    //                 `Parser script exited with code ${code} (${
-    //                     code === 0 ? "SUCCESS!" : "error"
-    //                 })`
-    //             );
-
-    //             try {
-    //                 return resolve(JSON.parse(dataToSend) as EdgeGPTResponse);
-    //             } catch (err) {
-    //                 logger.error(
-    //                     "Error parsing JSON from Python parser script:"
-    //                 );
-    //                 logger.error(err);
-    //                 return resolve(null);
-    //             }
-    //         });
-    //     });
-    // }
-
-    private findMostConsistent(rentalPosts: RentalPost[]): RentalPost | null {
-        if (rentalPosts.length === 0) {
+        if (arr.length === 0) {
             return null;
         }
 
-        let scores = new Array(rentalPosts.length).fill(0);
+        let scores = new Array(arr.length).fill(0);
 
-        for (let i = 0; i < rentalPosts.length; i++) {
-            for (let j = 0; j < rentalPosts.length; j++) {
+        for (let i = 0; i < arr.length; i++) {
+            for (let j = 0; j < arr.length; j++) {
                 if (i !== j) {
-                    scores[i] += this.calculateSimilarityScore(
-                        rentalPosts[i],
-                        rentalPosts[j]
-                    );
+                    scores[i] += this.calculateSimilarityScore(arr[i], arr[j]);
                 }
             }
         }
 
         const maxIndex = scores.indexOf(Math.max(...scores));
-        return rentalPosts[maxIndex];
+        return arr[maxIndex];
     }
 
-    private calculateSimilarityScore(a: RentalPost, b: RentalPost): number {
+    private calculateSimilarityScore<T>(a: T, b: T): number {
         let score = 0;
 
         for (const key in a) {
@@ -127,8 +64,8 @@ export class EdgeGPTParser {
                 key !== "description" &&
                 Object.prototype.hasOwnProperty.call(a, key)
             ) {
-                const aValue = a[key as keyof RentalPost];
-                const bValue = b[key as keyof RentalPost];
+                const aValue = a[key as keyof T];
+                const bValue = b[key as keyof T];
 
                 if (aValue instanceof Date && bValue instanceof Date) {
                     // Compare dates
@@ -147,26 +84,80 @@ export class EdgeGPTParser {
         return score;
     }
 
-    public async parse(humanText: string): Promise<any> {
-        logger.info(`Parsing: ${humanText}`);
+    private async fetchServerResponses(prompt: string): Promise<string[]> {
+        logger.debug(`Fetching ${config.NUM_TRIES} server responses`);
+
+        // Array of Promises with error handling
+        const promises = Array(config.NUM_TRIES)
+            .fill(null)
+            .map(() =>
+                this.callServerAPI(prompt).catch(err => {
+                    logger.error("Error fetching response from server");
+                    logger.error(err);
+                    return null;
+                })
+            );
+
+        // Await all responses and filter out any null values from failed requests
+        const responses = await Promise.all(promises);
+        return responses.filter(response => response !== null) as string[];
+    }
+
+    private extractValidJSONs<T extends object>(responses: string[]): T[] {
+        logger.debug(
+            `Extracting valid JSONs from ${responses.length} server responses`
+        );
+
+        return responses
+            .map(res => {
+                try {
+                    return this.extractJSON<T>(res);
+                } catch (err) {
+                    logger.error(
+                        "Error parsing JSON from one of the server responses"
+                    );
+                    logger.error(err);
+                    return null;
+                }
+            })
+            .filter(parsed => parsed !== null) as T[];
+    }
+
+    public async parse(humanText: string): Promise<RentalPost> {
+        logger.info(`Parsing: ${humanText.substring(0, 30)}...`);
+
+        const startDate = moment();
 
         const prompt = await this.getPrompt(humanText);
+        const responses = await this.fetchServerResponses(prompt);
+        const parsed = this.extractValidJSONs<RentalPost>(responses);
+        const mostConsistent = this.findMostConsistent<RentalPost>(parsed);
 
-        const res = await this.callServerAPI(prompt);
-
-        try {
-            // const parsed = JSON.parse(res).response;
-            const parsed = this.extractJSON<RentalPost>(res);
-            if (!parsed) throw new Error("Not parsed");
-            return parsed;
-        } catch (err) {
-            logger.error("Error parsing JSON from server response");
-            logger.error(err);
-            return res; // DEBUG
+        if (!mostConsistent) {
+            logger.error("No consistent response found");
+            throw new Error(Errors.PARSER_NO_SUCCESSFUL_GPT_FETCH);
         }
+
+        const endDate = moment();
+        const duration = moment.duration(endDate.diff(startDate));
+
+        logger.info(
+            `Parsing ${humanText.substring(
+                0,
+                30
+            )}... successful in ${duration.asSeconds()}s (${parsed.length}/${
+                config.NUM_TRIES
+            } successfully parsed responses)`
+        );
+
+        return mostConsistent;
     }
 
     private async callServerAPI(prompt: string): Promise<string> {
+        logger.debug(
+            `Calling server API for prompt: ${prompt.substring(0, 50)}...`
+        );
+
         const opts = {
             method: "POST",
             headers: {
@@ -210,8 +201,8 @@ export class EdgeGPTParser {
                             return;
                         }
                         if (message.event === "result") {
-                            const result = JSON.parse(message.data);
-                            console.log(result);
+                            // const result = JSON.parse(message.data);
+                            // console.log(result);
                             return;
                         }
                         reply += JSON.parse(message.data);

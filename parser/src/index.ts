@@ -17,6 +17,7 @@ import { Errors } from "./interfaces/Error";
 import express from "express";
 import bodyParser from "body-parser";
 import { envs } from "./config/envs";
+import { config } from "./config/config";
 
 const parser = new EdgeGPTParser();
 
@@ -27,29 +28,34 @@ export const errorsEvent: ErrorEventEmitter = new EventEmitter();
 const delay = (ms: any) => new Promise(resolve => setTimeout(resolve, ms));
 
 const run = async () => {
-    //await delay(10000);
+    if (config.NODE_ENV === "development") await delay(config.DEBUG_WAIT_MS);
+    logger.info("Starting Kafka producer and consumer...");
     runProducer();
     runConsumer();
 };
 
-// run().catch(err => {
-//     logger.error("Error in Kafka run:");
-//     logger.error(err);
-// });
+run().catch(err => {
+    logger.error("Error in Kafka run:");
+    logger.error(err);
+});
 
-if (envs.NODE_ENV === "development") {
+if (config.NODE_ENV === "development" && config.DEBUG_START_EXPRESS_SERVER) {
     logger.warn("Running in development mode, starting express server");
 
     const app = express();
     app.use(bodyParser.json());
 
     app.post("/parse", async (req, res) => {
+        if (!req.body.text) {
+            res.status(400).json({ error: "Missing text field" });
+            return;
+        }
         try {
             const resp = await parser.parse(req.body.text);
-            console.log(resp);
+            // console.log(resp);
             res.json(resp);
         } catch (err) {
-            console.error(err);
+            logger.error(err);
             res.status(500).json({ error: err });
         }
     });
@@ -59,14 +65,13 @@ if (envs.NODE_ENV === "development") {
     });
 } else {
     logger.info(
-        `Running in ${envs.NODE_ENV} mode, not starting express server`
+        `Running in ${envs.NODE_ENV} mode and not starting express server`
     );
 }
 
 rawDataEvent.on("rawData", async rawData => {
     try {
-        const [error, parsed] = await parser.parse(rawData.rawData.rawMessage);
-        if (error) throw new Error(error);
+        const parsed = await parser.parse(rawData.rawData.rawMessage);
         //TODO: think about this, do we want to just pass one part of json around or let everything through?
         parsedDataEvent.emit("parsedData", {
             scraperType: rawData.scraperType,

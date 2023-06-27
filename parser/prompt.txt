@@ -1,4 +1,4 @@
-Estrai le informazioni riguardanti la struttura abitativa a Bolgona dal seguente testo e restituiscile SOLO ed ESCLUSIVAMENTE in formato JSON, SENZA ALCUN testo aggiuntivo. Includi SOLO le proprietà che sono esplicitamente menzionate o che puoi dedurre con certezza dal testo. NON includere una proprietà se non è menzionata o deducibile. Rielabora leggermente la descrizione in lingua italiana, garantendo che sia ben scritta e priva di riferimenti personali, e che abbia una lunghezza compresa tra 200 e 500 caratteri. I campi "isRental" e "isForRent" devono essere sempre presenti. Il campo "isRental" deve essere true SOLAMENTE se il testo è da parte di un LOCATORE che OFFRE (e non CERCA) una struttura abitativa in AFFITTO, altrimenti DEVE ESSERE false. Se il prezzo è indicato su base giornaliera o settimanale, convertilo in un prezzo mensile (moltiplicalo per il numero appropriato di giorni o settimane). Se l'annuncio contiene informazioni su più stanze, includi solo le informazioni sulla stanza più opportuna. Se la proprietà è una stanza doppia, il campo "monthlyPricePerBed" deve specificare il prezzo per singolo letto.
+Estrai le informazioni riguardanti la struttura abitativa a Bologna dal seguente testo e restituiscile SOLO ed ESCLUSIVAMENTE in formato JSON, SENZA ALCUN testo aggiuntivo. Includi SOLO le proprietà che sono esplicitamente menzionate o che puoi dedurre con certezza dal testo. NON includere una proprietà se non è menzionata o deducibile. Rielabora leggermente la descrizione in lingua italiana, garantendo che sia ben scritta e priva di riferimenti personali, e che abbia una lunghezza compresa tra 200 e 500 caratteri. I campi "isRental" e "isForRent" devono essere sempre presenti. Il campo "isRental" deve essere true SOLAMENTE se il testo è da parte di un LOCATORE che OFFRE (e non CERCA) una struttura abitativa in AFFITTO, altrimenti DEVE ESSERE false. Se il prezzo è indicato su base giornaliera o settimanale, convertilo in un prezzo mensile (moltiplicalo per il numero appropriato di giorni o settimane). Se l'annuncio contiene informazioni su più stanze, includi solo le informazioni sulla stanza più opportuna. Se la proprietà è una stanza doppia, il campo "monthlyPricePerBed" deve specificare il prezzo per singolo letto.
 
 Testo da elaborare: {0}
 
@@ -15,9 +15,9 @@ Struttura JSON: {
     "occupationalRestrictions": <enum: "everyone", "students", "workers", "other", set to "everyone" unless explicitly written>,
     "lgbtFriendly": <boolean: true if specified, null elsewise>,
     "furnished": <boolean>,
-    "availabilityStartDate": <date: start date if specified>,
-    "availabilityEndDate": <date: end date if specified>,
-    "contractDurationMonths": <number>,
+    "availabilityStartDate": <date: start date, only if explicitly written>,
+    "availabilityEndDate": <date: end date, only if explicitly written>,
+    "contractDurationMonths": <number, only if explicitly written>,
     "hasBalcony": <boolean>,
     "hasParking": <boolean>,
     "address": <string: street, building number, city>,

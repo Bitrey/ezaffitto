@@ -3,6 +3,8 @@ import { envs } from "./envs";
 export const config = Object.freeze({
     NODE_ENV: envs.NODE_ENV,
     PROMPT_PATH: envs.PROMPT_PATH,
+    DEBUG_WAIT_MS: 0,
+    DEBUG_START_EXPRESS_SERVER: false,
     GPT_HOST: envs.GPT_HOST,
     GPT_PORT: envs.GPT_PORT,
     NUM_TRIES: 8,

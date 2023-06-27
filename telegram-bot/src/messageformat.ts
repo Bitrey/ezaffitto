@@ -25,9 +25,12 @@ function generateTelegramMessageFromJson(parsed: RentalPost) {
     ? `\u{23f1} Data inizio: ${parsed.availabilityStartDate}\n`
     : "";
   const md_end_date = parsed.availabilityEndDate
-    ? `\u{23f1} Data fine: ${parsed.availabilityEndDate}\n`
-    : "";
-  //const md_zone = parsed.zone
+  ? `\u{23f1} Data fine: ${parsed.availabilityEndDate}\n`
+  : "";
+  const md_zone = parsed.zone
+  ? `🎯 Zona: ${parsed.zone}\n`
+  : "";
+ 
 
   const md_description = parsed.description 
   ? `${parsed.description}`
@@ -38,9 +41,11 @@ function generateTelegramMessageFromJson(parsed: RentalPost) {
     md_prezzo +
     md_prezzo_letto +
     md_tipo_alloggio +
+    md_zone +
+    md_smoking+
+    '\n'+
     md_start +
     md_end_date +
-    md_smoking+
     '\n\n'+
     md_description
     ;

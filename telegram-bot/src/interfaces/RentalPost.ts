@@ -13,6 +13,7 @@ export interface RentalPost {
     sexRestrictions: "everyone" | "males" |  "females" | "other",
     smokingAllowed: boolean | null
     area: string | null;
+    zone: string | null;
     description: string; // 200-500 characters, professionally written in Italian, no personal references
     targetRestrictions:
         | "everyone"

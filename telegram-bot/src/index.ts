@@ -49,7 +49,7 @@ export const runConsumer = async () => {
                     // TODO: extrapolate in another function maybe
                     if (parsed.isRental && parsed.isForRent) {
                         try {
-                            bot.telegram.sendMessage(envs.CHANNEL_ID, generateTelegramMessageFromJson(parsed), { parse_mode: "MarkdownV2" })
+                            await bot.telegram.sendMessage(envs.CHANNEL_ID, generateTelegramMessageFromJson(parsed), { parse_mode: "MarkdownV2" })
                         } catch (err) {
                             logger.error(
                                 `Telegram error`

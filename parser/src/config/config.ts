@@ -8,7 +8,7 @@ export const config = Object.freeze({
     NUM_TRIES: 8,
     DELAY_BETWEEN_TRIES_MS: 3000,
     KAFKA_FROM_BEGINNING: false,
-    PROXYCHAIN_ON: false,
+    PROXYCHAIN_ON: true,
     METADATA_MAX_AGE: 50000,
     KAFKA_CLIENT_ID: "parser",
     KAFKA_GROUP_ID: "parserGroup",

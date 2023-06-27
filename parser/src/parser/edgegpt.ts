@@ -81,7 +81,7 @@ export class EdgeGPTParser {
                 logger.info(
                     `Parser script exited with code ${code} (${
                         code === 0 ? "SUCCESS!" : "error"
-                    })})`
+                    })`
                 );
 
                 try {

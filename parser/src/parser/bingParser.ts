@@ -3,10 +3,13 @@ import { KeyvFile } from "keyv-file";
 import { fileURLToPath } from "url";
 import path, { dirname } from "path";
 import fs from "fs";
-import { BingAIClient } from "../index.js";
+const chatgpt = require("@waylaidwanderer/chatgpt-api");
 
+const BingAIClient = chatgpt.BingAIClient
 class BingAIWorker {
-    constructor(config) {
+    bingAIClient:any
+    defaultToneStyle:string
+    constructor(config: any) {
         const {
             BING_USER_COOKIE,
             BING_PROXY,
@@ -15,11 +18,11 @@ class BingAIWorker {
             cookies = "",
             debug = false
         } = config;
-
+        
         const cacheOptions = {
             store: new KeyvFile({ filename: CACHE_FILE_PATH })
         };
-
+        
         this.bingAIClient = new BingAIClient({
             host,
             userToken: BING_USER_COOKIE,
@@ -40,7 +43,7 @@ class BingAIWorker {
      * @param {function(string): void} [options.onProgress] - Funzione di callback per il progresso dell'invio del messaggio. Viene chiamata con il token di progresso come argomento.
      * @returns {Promise<Object>} - La risposta della conversazione.
      */
-    async getResponse(message, options = {}) {
+    async getResponse(message:any, options:{[key: string]: any;} = {}) {
         const { toneStyle = this.defaultToneStyle, onProgress } = options;
 
         const response = await this.bingAIClient.sendMessage(message, {

@@ -6,14 +6,14 @@ import { logger } from "../shared/logger";
 import { RentalPost } from "../interfaces/RentalPost";
 import { config } from "../config/config";
 import { EdgeGPTResponse } from "../interfaces/EdgeGPTResponse";
-import { Errors } from "../interfaces/Error";
+import { fetchEventSource } from "@waylaidwanderer/fetch-event-source";
 
 export class EdgeGPTParser {
     private static wait(ms: number): Promise<void> {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    private extractJSON = (input: string): RentalPost | null => {
+    private extractJSON = <T>(input: string): T | null => {
         const match = input.match(/{[\s\S]*?}/);
 
         try {
@@ -33,69 +33,69 @@ export class EdgeGPTParser {
         return basePrompt.replace("{0}", humanText);
     }
 
-    private async fetchEdgeGpt(
-        humanText: string
-    ): Promise<EdgeGPTResponse | null> {
-        const prompt = await this.getPrompt(humanText);
+    // private async fetchEdgeGpt(
+    //     humanText: string
+    // ): Promise<EdgeGPTResponse | null> {
+    //     const prompt = await this.getPrompt(humanText);
 
-        return new Promise((resolve, reject) => {
-            let dataToSend = "";
+    //     return new Promise((resolve, reject) => {
+    //         let dataToSend = "";
 
-            let python = spawn('python3', [
-                path.join(process.cwd(), envs.PYTHON_PARSER_PATH),
-                prompt
-            ]);
-            
-            if (config.PROXYCHAIN_ON){
-                python = spawn('proxychains', [
-                    '-q',
-                    "python3",
-                    path.join(process.cwd(), envs.PYTHON_PARSER_PATH),
-                    prompt
-                ]);                
-            }
+    //         let python = spawn("python3", [
+    //             path.join(process.cwd(), envs.PYTHON_PARSER_PATH),
+    //             prompt
+    //         ]);
 
-            python.stdout.on("data", function (data) {
-                logger.debug("\nPipe data from python script:");
-                logger.debug(data.toString() + "\n");
-                dataToSend = data.toString();
-            });
+    //         if (config.PROXYCHAIN_ON) {
+    //             python = spawn("proxychains", [
+    //                 "-q",
+    //                 "python3",
+    //                 path.join(process.cwd(), envs.PYTHON_PARSER_PATH),
+    //                 prompt
+    //             ]);
+    //         }
 
-            python.on("error", function (data) {
-                logger.error("Error (error event) from Python parser script:");
-                logger.error(data);
-                return resolve(null);
-            });
+    //         python.stdout.on("data", function (data) {
+    //             logger.debug("\nPipe data from python script:");
+    //             logger.debug(data.toString() + "\n");
+    //             dataToSend = data.toString();
+    //         });
 
-            python.stderr.on("data", data => {
-                logger.error(
-                    "Error (stderr.data event) from Python parser script:"
-                );
-                logger.error(data);
-                return resolve(null);
-            });
+    //         python.on("error", function (data) {
+    //             logger.error("Error (error event) from Python parser script:");
+    //             logger.error(data);
+    //             return resolve(null);
+    //         });
 
-            python.on("close", code => {
-                logger.debug(`Child process close all stdio with code ${code}`);
+    //         python.stderr.on("data", data => {
+    //             logger.error(
+    //                 "Error (stderr.data event) from Python parser script:"
+    //             );
+    //             logger.error(data);
+    //             return resolve(null);
+    //         });
 
-                logger.info(
-                    `Parser script exited with code ${code} (${
-                        code === 0 ? "SUCCESS!" : "error"
-                    })})`
-                );
+    //         python.on("close", code => {
+    //             logger.debug(`Child process close all stdio with code ${code}`);
 
-                try {
-                    return resolve(JSON.parse(dataToSend) as EdgeGPTResponse);
-                } catch (err) {
-                    logger.error(
-                        "Error parsing JSON from Python parser script:"
-                    );
-                    logger.error(err);
-                    return resolve(null);
-                }
-            });
-        });
-    }
+    //             logger.info(
+    //                 `Parser script exited with code ${code} (${
+    //                     code === 0 ? "SUCCESS!" : "error"
+    //                 })`
+    //             );
+
+    //             try {
+    //                 return resolve(JSON.parse(dataToSend) as EdgeGPTResponse);
+    //             } catch (err) {
+    //                 logger.error(
+    //                     "Error parsing JSON from Python parser script:"
+    //                 );
+    //                 logger.error(err);
+    //                 return resolve(null);
+    //             }
+    //         });
+    //     });
+    // }
 
     private findMostConsistent(rentalPosts: RentalPost[]): RentalPost | null {
         if (rentalPosts.length === 0) {
@@ -147,48 +147,82 @@ export class EdgeGPTParser {
         return score;
     }
 
-    public async parse(
-        humanText: string
-    ): Promise<[err: Errors | null, post: RentalPost | null]> {
+    public async parse(humanText: string): Promise<any> {
         logger.info(`Parsing: ${humanText}`);
+
+        const prompt = await this.getPrompt(humanText);
+
+        const res = await this.callServerAPI(prompt);
+
         try {
-            const fetchPromises: Promise<EdgeGPTResponse | null>[] = [];
-
-            for (let i = 0; i < config.NUM_TRIES; i++) {
-                fetchPromises.push(this.fetchEdgeGpt(humanText));
-                await EdgeGPTParser.wait(config.DELAY_BETWEEN_TRIES_MS);
-            }
-
-            const fetchedResults = await Promise.all(fetchPromises);
-
-            logger.debug("Fetched from EdgeGPT:");
-            logger.debug(JSON.stringify(fetchedResults, null, 4));
-
-            const successfullyFetched = fetchedResults.filter(
-                e => e !== null && typeof e?.text === "string"
-            ) as EdgeGPTResponse[];
-
-            if (successfullyFetched.length === 0) {
-                logger.error("No successful fetches");
-                return [Errors.PARSER_NO_SUCCESSFUL_GPT_FETCH, null];
-            }
-
-            const cleanedArr = successfullyFetched
-                .map(e => this.extractJSON(e?.text as string))
-                .filter(e => e !== null) as RentalPost[];
-
-            if (cleanedArr.length === 0) {
-                logger.error("JSON parsed array is empty");
-                return [Errors.PARSER_JSON_EXTRACTION_FAILED, null];
-            }
-
-            const cleaned = this.findMostConsistent(cleanedArr);
-
-            return [null, cleaned];
+            // const parsed = JSON.parse(res).response;
+            const parsed = this.extractJSON<RentalPost>(res);
+            if (!parsed) throw new Error("Not parsed");
+            return parsed;
         } catch (err) {
-            logger.error(`Error parsing: ${humanText}`);
+            logger.error("Error parsing JSON from server response");
             logger.error(err);
-            return [Errors.UNKNOWN_ERROR, null];
+            return res; // DEBUG
+        }
+    }
+
+    private async callServerAPI(prompt: string): Promise<string> {
+        const opts = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: prompt,
+                // Set stream to true to receive each token as it is generated.
+                stream: true
+            })
+        };
+
+        let reply = "";
+
+        try {
+            const controller = new AbortController();
+            await fetchEventSource(
+                `http://${config.GPT_HOST}:${config.GPT_PORT}/conversation`,
+                {
+                    ...opts,
+                    signal: controller.signal,
+                    onopen: async (response: any) => {
+                        if (response.status !== 200) {
+                            throw new Error(
+                                `Failed to send message. HTTP ${response.status} - ${response.statusText}`
+                            );
+                        }
+                    },
+                    onclose: () => {
+                        throw new Error(
+                            "Failed to send message. Server closed the connection unexpectedly."
+                        );
+                    },
+                    onerror: (err: Error) => {
+                        throw err;
+                    },
+                    onmessage: (message: any) => {
+                        // { data: 'Hello', event: '', id: '', retry: undefined }
+                        if (message.data === "[DONE]") {
+                            controller.abort();
+                            return;
+                        }
+                        if (message.event === "result") {
+                            const result = JSON.parse(message.data);
+                            console.log(result);
+                            return;
+                        }
+                        reply += JSON.parse(message.data);
+                    }
+                } as any
+            );
+
+            return reply;
+        } catch (err) {
+            logger.error("Error while calling server API", err);
+            throw err;
         }
     }
 }

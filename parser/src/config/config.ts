@@ -1,10 +1,10 @@
 import { envs } from "./envs";
 
 export const config = Object.freeze({
-    PORT: envs.PORT,
     NODE_ENV: envs.NODE_ENV,
     PROMPT_PATH: envs.PROMPT_PATH,
-    PYTHON_PARSER_PATH: envs.PYTHON_PARSER_PATH,
+    GPT_HOST: envs.GPT_HOST,
+    GPT_PORT: envs.GPT_PORT,
     NUM_TRIES: 8,
     DELAY_BETWEEN_TRIES_MS: 3000,
     KAFKA_FROM_BEGINNING: false,

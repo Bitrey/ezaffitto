@@ -14,6 +14,10 @@ import { runProducer } from "./producer";
 import { EdgeGPTParser } from "./parser/edgegpt";
 import { Errors } from "./interfaces/Error";
 
+import express from "express";
+import bodyParser from "body-parser";
+import { envs } from "./config/envs";
+
 const parser = new EdgeGPTParser();
 
 export const rawDataEvent: RawDataEventEmitter = new EventEmitter();
@@ -28,10 +32,36 @@ const run = async () => {
     runConsumer();
 };
 
-run().catch(err => {
-    logger.error("Error in Kafka run:");
-    logger.error(err);
-});
+// run().catch(err => {
+//     logger.error("Error in Kafka run:");
+//     logger.error(err);
+// });
+
+if (envs.NODE_ENV === "development") {
+    logger.warn("Running in development mode, starting express server");
+
+    const app = express();
+    app.use(bodyParser.json());
+
+    app.post("/parse", async (req, res) => {
+        try {
+            const resp = await parser.parse(req.body.text);
+            console.log(resp);
+            res.json(resp);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: err });
+        }
+    });
+
+    app.listen(3000, () => {
+        logger.debug("Listening on port 3000");
+    });
+} else {
+    logger.info(
+        `Running in ${envs.NODE_ENV} mode, not starting express server`
+    );
+}
 
 rawDataEvent.on("rawData", async rawData => {
     try {
@@ -41,7 +71,7 @@ rawDataEvent.on("rawData", async rawData => {
         parsedDataEvent.emit("parsedData", {
             scraperType: rawData.scraperType,
             scraperRawContent: rawData.rawData,
-            post: parsed
+            post: parsed as any
         } as ParsedPost);
     } catch (err) {
         errorsEvent.emit("error", {

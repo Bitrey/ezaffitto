@@ -8,15 +8,39 @@ services:
     command: npm start
     environment:
       - NODE_ENV=development
-      - PYTHON_PARSER_PATH=./parser.py
       - PROMPT_PATH=./prompt.txt
-    depends_on:
-      kafka:
-        condition: service_healthy
+      - GPT_HOST=gptserver
+      - GPT_PORT=6969
+    ports:
+      - '3000:3000' # DEBUG!!
+    # depends_on:
+    #   kafka:
+    #     condition: service_healthy
     networks:
       - kafka
       - rotating_tor
 
+  gptserver:
+    build:
+      context: ./node-chatgpt-api
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    environment:
+      - STORAGE_FILE_PATH=./cache.json
+      - API_PORT=6969
+      - API_HOST=0.0.0.0
+      # - REVERSE_PROXY_URL=https://bypass.churchless.tech/api/conversation
+      # - ACCESS_TOKEN=...
+      # - OPENAI_COOKIES=...
+      # - BING_U_COOKIE=...
+      - PROXY_URL=http://rotating_tor:5566
+    volumes:
+      - ./node-chatgpt-api/settings.js:/app/settings.js:cached
+    ports:
+      - '6969:6969'
+    networks:
+      - kafka
+      - rotating_tor
 
   telegram-bot:
     build: ./telegram-bot
@@ -26,7 +50,6 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3000
-      - PYTHON_PARSER_PATH=./parser.py
       - PROMPT_PATH=./prompt.txt
     depends_on:
       parser:

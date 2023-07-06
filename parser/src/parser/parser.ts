@@ -1,28 +1,26 @@
 import { readFile } from "fs/promises";
-import { envs } from "../config/envs";
 import path from "path";
+import moment from "moment";
+import { spawn } from "child_process";
+import { envs } from "../config/envs";
 import { logger } from "../shared/logger";
 import { config } from "../config/config";
-import { fetchEventSource } from "@waylaidwanderer/fetch-event-source";
 import { RentalPost } from "../interfaces/RentalPost";
 import { Errors } from "../interfaces/Error";
-import moment from "moment";
+import axios, { AxiosResponse } from "axios";
+import { ChatCompletionResponse } from "../interfaces/ChatCompletionResponse";
 
-export class EdgeGPTParser {
+class Parser {
     private static wait(ms: number): Promise<void> {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    private extractJSON = <T>(input: string): T | null => {
+    private extractJSON = <T>(input: string): T => {
         const match = input.match(/{[\s\S]*?}/);
 
-        try {
-            return match ? JSON.parse(match[0]) : null;
-        } catch (error) {
-            console.error("Errore durante il parsing del JSON:", error);
-            logger.error(input);
-            return null;
-        }
+        if (!match) throw new Error(Errors.PARSER_JSON_EXTRACTION_FAILED);
+
+        return JSON.parse(match[0]);
     };
 
     private async getPrompt(humanText: string): Promise<string> {
@@ -84,15 +82,18 @@ export class EdgeGPTParser {
         return score;
     }
 
-    private async fetchServerResponses(prompt: string): Promise<string[]> {
+    private async fetchMultipleServerResponses(
+        prompt: string,
+        apiFunction: (input: string) => Promise<any>
+    ): Promise<string[]> {
         logger.debug(`Fetching ${config.NUM_TRIES} server responses`);
 
         // Array of Promises with error handling
         const promises = Array(config.NUM_TRIES)
             .fill(null)
             .map(() =>
-                this.callServerAPI(prompt).catch(err => {
-                    logger.error("Error fetching response from server");
+                apiFunction(prompt).catch(err => {
+                    logger.error("Error fetching response");
                     logger.error(err);
                     return null;
                 })
@@ -129,7 +130,9 @@ export class EdgeGPTParser {
         const startDate = moment();
 
         const prompt = await this.getPrompt(humanText);
-        const responses = await this.fetchServerResponses(prompt);
+        const responses = await this.fetchMultipleServerResponses(prompt, () =>
+            this.fetchGpt(prompt)
+        );
         const parsed = this.extractValidJSONs<RentalPost>(responses);
         const mostConsistent = this.findMostConsistent<RentalPost>(parsed);
 
@@ -153,67 +156,31 @@ export class EdgeGPTParser {
         return mostConsistent;
     }
 
-    private async callServerAPI(prompt: string): Promise<string> {
-        logger.debug(
-            `Calling server API for prompt: ${prompt.substring(0, 50)}...`
-        );
-
-        const opts = {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                message: prompt,
-                // Set stream to true to receive each token as it is generated.
-                stream: true
-            })
-        };
-
-        let reply = "";
-
-        try {
-            const controller = new AbortController();
-            await fetchEventSource(
-                `http://${config.GPT_HOST}:${config.GPT_PORT}/conversation`,
-                {
-                    ...opts,
-                    signal: controller.signal,
-                    onopen: async (response: any) => {
-                        if (response.status !== 200) {
-                            throw new Error(
-                                `Failed to send message. HTTP ${response.status} - ${response.statusText}`
-                            );
-                        }
+    async fetchGpt(prompt: string): Promise<string> {
+        const res = (await axios.post(
+            "https://free.churchless.tech/v1/chat/completions",
+            {
+                messages: [
+                    {
+                        role: "system",
+                        content: config.GPT_ROLE
                     },
-                    onclose: () => {
-                        throw new Error(
-                            "Failed to send message. Server closed the connection unexpectedly."
-                        );
-                    },
-                    onerror: (err: Error) => {
-                        throw err;
-                    },
-                    onmessage: (message: any) => {
-                        // { data: 'Hello', event: '', id: '', retry: undefined }
-                        if (message.data === "[DONE]") {
-                            controller.abort();
-                            return;
-                        }
-                        if (message.event === "result") {
-                            // const result = JSON.parse(message.data);
-                            // console.log(result);
-                            return;
-                        }
-                        reply += JSON.parse(message.data);
+                    {
+                        role: "user",
+                        content: prompt
                     }
-                } as any
-            );
+                ],
+                model: "gpt-3.5-turbo",
+                temperature: 1,
+                presence_penalty: 0,
+                top_p: 1,
+                frequency_penalty: 0,
+                stream: false
+            }
+        )) as ChatCompletionResponse;
 
-            return reply;
-        } catch (err) {
-            logger.error("Error while calling server API", err);
-            throw err;
-        }
+        return res.data.choices[0].message.content;
     }
 }
+
+export default Parser;

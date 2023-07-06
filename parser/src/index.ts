@@ -11,7 +11,7 @@ import {
 } from "./interfaces/EventEmitters";
 import { runConsumer } from "./consumer";
 import { runProducer } from "./producer";
-import { EdgeGPTParser } from "./parser/edgegpt";
+import Parser from "./parser/parser";
 import { Errors } from "./interfaces/Error";
 
 import express from "express";
@@ -19,7 +19,7 @@ import bodyParser from "body-parser";
 import { envs } from "./config/envs";
 import { config } from "./config/config";
 
-const parser = new EdgeGPTParser();
+const parser = new Parser();
 
 export const rawDataEvent: RawDataEventEmitter = new EventEmitter();
 export const parsedDataEvent: ParsedDataEventEmitter = new EventEmitter();
@@ -34,10 +34,10 @@ const run = async () => {
     runConsumer();
 };
 
-run().catch(err => {
-    logger.error("Error in Kafka run:");
-    logger.error(err);
-});
+// run().catch(err => {
+//     logger.error("Error in Kafka run:");
+//     logger.error(err);
+// });
 
 if (config.NODE_ENV === "development" && config.DEBUG_START_EXPRESS_SERVER) {
     logger.warn("Running in development mode, starting express server");

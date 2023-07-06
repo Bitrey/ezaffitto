@@ -1,11 +1,10 @@
 #import sclib.fb as _fb
-from selenium import webdriver
 import time
 import json
 import os
 from dotenv import load_dotenv
-from facebook_scraper import get_posts
 from kafka import KafkaConsumer
+import logging
 
 load_dotenv()
 
@@ -29,12 +28,20 @@ def read_from_kafka():
                 post = message_value.get("post")
                 if post:
                     print(post)
+                    logging.info(post)
         # print(event.items())
         print()
 
 
 def main():
-    time.sleep(10)
+    # Configure logging
+    logging.basicConfig(
+        filename='logs/app.log',
+        filemode='a',
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logging.getLogger().setLevel(logging.INFO)
+
+    time.sleep(5)
     print("Listening on topic", kafka_topic)
     read_from_kafka()
 

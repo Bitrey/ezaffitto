@@ -1,13 +1,14 @@
+import path from "path";
 import { envs } from "./envs";
 
 export const config = Object.freeze({
     NODE_ENV: envs.NODE_ENV,
     PROMPT_PATH: envs.PROMPT_PATH,
     DEBUG_WAIT_MS: 0,
-    DEBUG_START_EXPRESS_SERVER: false,
+    DEBUG_START_EXPRESS_SERVER: true,
     GPT_HOST: envs.GPT_HOST,
     GPT_PORT: envs.GPT_PORT,
-    NUM_TRIES: 8,
+    NUM_TRIES: 3,
     DELAY_BETWEEN_TRIES_MS: 3000,
     KAFKA_FROM_BEGINNING: false,
     PROXYCHAIN_ON: true,
@@ -18,5 +19,8 @@ export const config = Object.freeze({
     KAFKA_CONSUMER_TOPIC: /scraper\.scraped\..*/,
     KAFKA_PRODUCER_TOPIC_PREFIX: "parser.parsed.",
     KAFKA_ERROR_TOPIC: "parser.error",
-    RAW_DATA_MESSAGE_TO_PARSE_KEY: "rawMessage"
+    RAW_DATA_MESSAGE_TO_PARSE_KEY: "rawMessage",
+    EDGEGPT_FILE_PATH: path.join(process.cwd(), "parser.py"),
+    GPT_ROLE:
+        "You are ChatGPT, a large language model trained by OpenAI.\nYour task is to parse housing rental posts in JSON format and provide relevant information."
 });

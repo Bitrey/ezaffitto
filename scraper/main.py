@@ -8,6 +8,7 @@ import os
 from dotenv import load_dotenv
 from facebook_scraper import get_posts
 from kafka import KafkaProducer
+import logging
 
 load_dotenv()
 
@@ -23,29 +24,28 @@ if user is None or pwd is None or kafka_server is None or kafka_topic is None or
     raise Exception("Missing envs")
 
 # OPTIONAL ENVS
-to_mock_data: bool = os.environ.get('MOCK_DATA') 
-no_login: bool = os.environ.get('NO_LOGIN') 
-
+to_mock_data: bool = os.environ.get('MOCK_DATA')
+no_login: bool = os.environ.get('NO_LOGIN')
 
 MOCK_DATA = [
-#    {
-#      "text":  """
-#Affittasi posto in doppia zona Saragozza dall'1 Agosto. 
-#Villino ristrutturato in Viale del Risorgimento vicino alla facoltà di ingegneria.
-#Il contratto è un 4+4 e il costo ammonta a 270 euro mensili, utenze escluse.
-#Ci sarà da prendere a proprio nome un'utenza fra gas e TARI.
-#Per maggiori informazioni scrivetemi in privato.
-#"""
-#
-#    },
+    #    {
+    #      "text":  """
+    #Affittasi posto in doppia zona Saragozza dall'1 Agosto.
+    #Villino ristrutturato in Viale del Risorgimento vicino alla facoltà di ingegneria.
+    #Il contratto è un 4+4 e il costo ammonta a 270 euro mensili, utenze escluse.
+    #Ci sarà da prendere a proprio nome un'utenza fra gas e TARI.
+    #Per maggiori informazioni scrivetemi in privato.
+    #"""
+    #
+    #    },
     {
-      "text":  """
+        "text":
+        """
 Hello everyone!
 Announcement is only for boys. Bedspace in a double room will be available for the month of July. One year contract is also available from August. The room is in Via San Donato. There are two bedrooms, a large terrace, one kitchen, two bathrooms and a large living room in the house. 15 mins away from Via Zamboni by bus. Price is 370€ everything included. If you are interested, please write me in private.
 """
     },
 ]
-
 
 
 class DateTimeEncoder(JSONEncoder):
@@ -71,6 +71,8 @@ def push_to_kafka(posts):
         kafka_data = {"scraperRawData": post, "rawMessage": post["text"]}
         #pprint(kafka_data)
         print("[INFO] Sending to", kafka_topic)
+        logging.info(
+            json.dumps(kafka_data, cls=DateTimeEncoder).encode('UTF-8'))
         producer.send(
             kafka_topic,
             json.dumps(kafka_data, cls=DateTimeEncoder).encode('UTF-8'))
@@ -78,6 +80,13 @@ def push_to_kafka(posts):
 
 
 def main():
+    # Configure logging
+    logging.basicConfig(
+        filename='logs/app.log',
+        filemode='a',
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logging.getLogger().setLevel(logging.INFO)
+
     while True:
         time.sleep(10)
         if to_mock_data:
@@ -86,12 +95,12 @@ def main():
             push_to_kafka(posts)
             push_to_kafka(posts)
         else:
-            credentials=(user, pwd)
+            credentials = (user, pwd)
             if no_login:
                 credentials = None
             posts = get_posts(group=group_id,
-                        credentials=credentials,
-                        pages=DEFAULT_PAGES)
+                              credentials=credentials,
+                              pages=DEFAULT_PAGES)
 
             push_to_kafka(posts)
         time.sleep(60)

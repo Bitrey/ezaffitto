@@ -1,5 +1,4 @@
 import mongoose, { Schema } from "mongoose";
-import { scraperTypes } from "../config/scraperTypes";
 import { config } from "../config";
 
 interface IScrapedRawDataSchema extends mongoose.Document {
@@ -10,9 +9,9 @@ interface IScrapedRawDataSchema extends mongoose.Document {
 
 const scrapedRawDataSchema = new Schema<IScrapedRawDataSchema>(
     {
-        type: {
+        source: {
             type: String,
-            enum: Object.values(scraperTypes),
+            enum: Object.values(config.SCRAPER_TYPES),
             required: true
         },
         [config.RAW_DATA_MESSAGE_TO_PARSE_KEY]: {

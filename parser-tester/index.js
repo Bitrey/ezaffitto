@@ -7,7 +7,7 @@ const arr = require("./data.json");
 console.warn("Starting parser tester...");
 
 // Interval in seconds
-const n = 3;
+const n = 0.25;
 
 // Create logger
 const logger = winston.createLogger({
@@ -33,7 +33,7 @@ const makeRequest = async () => {
         const response = await axios.post("http://parser:3000/parse", {
             text
         });
-        logger.info("Risposta OK:", JSON.stringify(response.data));
+        logger.info("Risposta OK:", response.data);
     } catch (err) {
         logger.error("Errore:", err);
     }

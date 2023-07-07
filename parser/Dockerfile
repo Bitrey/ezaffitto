@@ -1,9 +1,6 @@
-FROM nikolaik/python-nodejs:python3.11-nodejs20-slim
+FROM node:18-alpine
 
 WORKDIR /usr/src/app
-
-ADD ./requirements.txt ./requirements.txt
-RUN pip install -r requirements.txt --root-user-action=ignore
 
 COPY package*.json ./
 

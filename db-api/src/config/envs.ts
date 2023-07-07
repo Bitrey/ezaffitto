@@ -6,6 +6,5 @@ export const envs = cleanEnv(process.env, {
     NODE_ENV: str({
         choices: ["development", "test", "production", "staging"]
     }),
-    PORT: num(),
-    VALID_SCRAPER_TYPES: str()
+    PORT: num()
 });

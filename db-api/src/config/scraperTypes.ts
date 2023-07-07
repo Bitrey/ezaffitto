@@ -1,5 +1,6 @@
+import { config } from ".";
 import { logger } from "../shared/logger";
-import { envs } from "./envs";
 
-export const scraperTypes = envs.VALID_SCRAPER_TYPES.split(",");
-logger.info("Using scraper types: " + scraperTypes);
+export type ScraperType = (typeof config.SCRAPER_TYPES)[number];
+
+logger.info("Using scraper types: " + config.SCRAPER_TYPES);

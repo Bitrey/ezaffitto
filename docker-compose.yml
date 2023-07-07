@@ -8,15 +8,10 @@ services:
     environment:
       - NODE_ENV=development
       - PROMPT_PATH=./prompt.txt
-      - GPT_PROXY_URL=http://rotating_tor:5566
     ports:
       - '3000:3000' # DEBUG!!
-    # depends_on:
-    #   rotating_tor:
-    #     condition: service_healthy
     networks:
       - kafka
-      - rotating_tor
 
   # telegram-bot:
   #   build: ./telegram-bot
@@ -68,7 +63,6 @@ services:
         condition: service_started
     networks:
       - kafka
-      - rotating_tor
 
 
   # rotating_tor:

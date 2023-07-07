@@ -23,90 +23,18 @@ enum OccupationalRestrictions {
     OTHER = "other"
 }
 
-class RentalPost {
+export class RentalPostClass {
     @prop({ required: true })
     public isRental!: boolean;
 
     @prop({ required: true })
     public isForRent!: boolean;
 
-    @prop({ required: true, enum: RentalType })
-    public rentalType!: RentalType;
-
-    @prop({ required: true })
-    public monthlyPrice!: number;
-
-    @prop()
-    public monthlyPricePerBed?: number;
-
-    @prop()
-    public securityDepositMonths?: number;
-
     @prop({ required: true })
     public description!: string;
 
-    @prop({ required: true, enum: SexRestrictions })
-    public sexRestrictions!: SexRestrictions;
-
-    @prop({ required: true, enum: OccupationalRestrictions })
-    public occupationalRestrictions!: OccupationalRestrictions;
-
-    @prop()
-    public lgbtFriendly?: boolean;
-
-    @prop({ required: true })
-    public furnished!: boolean;
-
-    @prop()
-    public availabilityStartDate?: Date;
-
-    @prop()
-    public availabilityEndDate?: Date;
-
-    @prop({ required: true })
-    public contractDurationMonths!: number;
-
-    @prop({ required: true })
-    public hasBalcony!: boolean;
-
-    @prop({ required: true })
-    public hasParking!: boolean;
-
-    @prop({ required: true })
-    public address!: string;
-
-    @prop({ required: true })
-    public floorNumber!: number;
-
-    @prop({ required: true })
-    public rooms!: number;
-
-    @prop({ required: true })
-    public bathrooms!: number;
-
-    @prop({ required: true })
-    public areaSqMeters!: number;
-
-    @prop({ required: true })
-    public priceIncludesTaxes!: boolean;
-
-    @prop()
-    public smokingAllowed?: boolean;
-
-    @prop()
-    public zone?: string;
-
-    @prop()
-    public latitude?: number;
-
-    @prop()
-    public longitude?: number;
-
-    @prop({ default: Date.now })
-    public createdAt?: Date;
-
-    @prop({ default: Date.now })
-    public updatedAt?: Date;
+    @prop({ required: false, enum: RentalType })
+    public rentalType?: RentalType;
 
     @prop({ required: true })
     public sourceType!: string;
@@ -119,8 +47,74 @@ class RentalPost {
 
     @prop({ ref: () => "ScrapedRawData" })
     public rawData?: Ref<"ScrapedRawData">;
+
+    @prop({ required: false })
+    public monthlyPrice?: number | null;
+
+    @prop({ required: false })
+    public monthlyPricePerBed?: number | null;
+
+    @prop({ required: false })
+    public securityDepositMonths?: number | null;
+
+    @prop({ required: false })
+    public zone?: string | null;
+
+    @prop({ required: false, enum: SexRestrictions })
+    public sexRestrictions?: SexRestrictions;
+
+    @prop({ required: false, enum: OccupationalRestrictions })
+    public occupationalRestrictions?: OccupationalRestrictions;
+
+    @prop({ required: false })
+    public lgbtFriendly?: boolean | null;
+
+    @prop({ required: false })
+    public furnished?: boolean;
+
+    @prop({ required: false })
+    public availabilityStartDate?: Date;
+
+    @prop({ required: false })
+    public availabilityEndDate?: Date;
+
+    @prop({ required: false })
+    public contractDurationMonths?: number;
+
+    @prop({ required: false })
+    public hasBalcony?: boolean;
+
+    @prop({ required: false })
+    public hasParking?: boolean;
+
+    @prop({ required: false })
+    public address?: string;
+
+    @prop({ required: false })
+    public floorNumber?: number;
+
+    @prop({ required: false })
+    public rooms?: number;
+
+    @prop({ required: false })
+    public bathrooms?: number;
+
+    @prop({ required: false })
+    public areaSqMeters?: number;
+
+    @prop({ required: false })
+    public priceIncludesTaxes?: boolean;
+
+    @prop({ required: false })
+    public smokingAllowed?: boolean | null;
+
+    @prop({ required: false })
+    public latitude?: number;
+
+    @prop({ required: false })
+    public longitude?: number;
 }
 
-const RentalPostModel = getModelForClass(RentalPost);
+const RentalPost = getModelForClass(RentalPostClass);
 
-export { RentalPost, RentalPostModel };
+export default RentalPost;

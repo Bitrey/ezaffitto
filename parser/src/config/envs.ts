@@ -7,7 +7,6 @@ export const envs = cleanEnv(process.env, {
     NODE_ENV: str({
         choices: ["development", "test", "production", "staging"]
     }),
-    GPT_HOST: str(),
-    GPT_PORT: num(),
-    COOKIES_JSON_PATH: str()
+    GPT_PROXY_URL: str(),
+    OPENAI_ACCESS_TOKEN: str()
 });

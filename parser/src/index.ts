@@ -46,6 +46,8 @@ if (config.NODE_ENV === "development" && config.DEBUG_START_EXPRESS_SERVER) {
     app.use(bodyParser.json());
 
     app.post("/parse", async (req, res) => {
+        logger.debug("Received POST request to /parse");
+
         if (!req.body.text) {
             res.status(400).json({ error: "Missing text field" });
             return;

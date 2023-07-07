@@ -1,14 +1,16 @@
 import { readFile } from "fs/promises";
 import path from "path";
 import moment from "moment";
-import { spawn } from "child_process";
 import { envs } from "../config/envs";
 import { logger } from "../shared/logger";
 import { config } from "../config/config";
 import { RentalPost } from "../interfaces/RentalPost";
 import { Errors } from "../interfaces/Error";
-import axios, { AxiosResponse } from "axios";
 import { ChatCompletionResponse } from "../interfaces/ChatCompletionResponse";
+import axios, { AxiosError } from "axios";
+import { spawn } from "child_process";
+
+logger.info("GPT_PROXY_URL set to: " + envs.GPT_PROXY_URL);
 
 class Parser {
     private static wait(ms: number): Promise<void> {
@@ -93,8 +95,10 @@ class Parser {
             .fill(null)
             .map(() =>
                 apiFunction(prompt).catch(err => {
-                    logger.error("Error fetching response");
-                    logger.error(err);
+                    logger.error(
+                        "Error fetching response",
+                        err?.response?.data || err
+                    );
                     return null;
                 })
             );
@@ -131,7 +135,7 @@ class Parser {
 
         const prompt = await this.getPrompt(humanText);
         const responses = await this.fetchMultipleServerResponses(prompt, () =>
-            this.fetchGpt(prompt)
+            this.spawnPythonGpt(prompt)
         );
         const parsed = this.extractValidJSONs<RentalPost>(responses);
         const mostConsistent = this.findMostConsistent<RentalPost>(parsed);
@@ -156,30 +160,94 @@ class Parser {
         return mostConsistent;
     }
 
-    async fetchGpt(prompt: string): Promise<string> {
-        const res = (await axios.post(
-            "https://free.churchless.tech/v1/chat/completions",
-            {
-                messages: [
+    private async fetchGpt(prompt: string): Promise<string> {
+        const proxyUrl = new URL(envs.GPT_PROXY_URL);
+
+        try {
+            const res = (
+                await axios.post(
+                    config.GPT_REVERSE_PROXY_URL,
                     {
-                        role: "system",
-                        content: config.GPT_ROLE
+                        messages: [
+                            {
+                                role: "system",
+                                content: config.GPT_ROLE
+                            },
+                            {
+                                role: "user",
+                                content: prompt
+                            }
+                        ],
+                        model: "gpt-3.5-turbo",
+                        temperature: 1,
+                        presence_penalty: 0,
+                        top_p: 1,
+                        frequency_penalty: 0,
+                        stream: false
                     },
                     {
-                        role: "user",
-                        content: prompt
+                        headers: {
+                            authority: "free.churchless.tech",
+                            accept: "*/*",
+                            "accept-language":
+                                "en-GB,en;q=0.9,it-IT;q=0.8,it;q=0.7,en-US;q=0.6",
+                            "content-type": "application/json",
+                            origin: "https://bettergpt.chat",
+                            referer: "https://bettergpt.chat/",
+                            "sec-ch-ua":
+                                '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+                            "sec-ch-ua-mobile": "?0",
+                            "sec-ch-ua-platform": '"Linux"',
+                            "sec-fetch-dest": "empty",
+                            "sec-fetch-mode": "cors",
+                            "sec-fetch-site": "cross-site",
+                            "user-agent":
+                                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+                        },
+                        proxy: config.DEBUG_USE_PROXY && {
+                            host: proxyUrl.hostname,
+                            port: parseInt(proxyUrl.port),
+                            protocol: proxyUrl.protocol
+                        }
                     }
-                ],
-                model: "gpt-3.5-turbo",
-                temperature: 1,
-                presence_penalty: 0,
-                top_p: 1,
-                frequency_penalty: 0,
-                stream: false
-            }
-        )) as ChatCompletionResponse;
+                )
+            ).data as ChatCompletionResponse;
 
-        return res.data.choices[0].message.content;
+            return res.choices[0].message.content;
+        } catch (err) {
+            logger.error("Error fetching GPT response", err);
+            logger.error((err as AxiosError)?.response?.data || err);
+            throw new Error(Errors.PARSER_GPT_ERROR);
+        }
+    }
+
+    private async spawnPythonGpt(prompt: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const process = spawn("python3", [
+                config.EDGEGPT_FILE_PATH,
+                prompt
+            ]);
+            logger.info(`#${process.pid} process spawned`);
+
+            let response = "";
+
+            process.stdout.on("data", data => {
+                response += data;
+            });
+
+            process.stderr.on("data", data => {
+                logger.error(`#${process.pid} stderr: ${data}`);
+                return reject(data);
+            });
+
+            process.on("close", code => {
+                if (code === 0) {
+                    resolve(response);
+                } else {
+                    reject(code);
+                }
+            });
+        });
     }
 }
 

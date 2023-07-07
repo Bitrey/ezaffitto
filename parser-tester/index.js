@@ -33,13 +33,9 @@ const makeRequest = async () => {
         const response = await axios.post("http://parser:3000/parse", {
             text
         });
-        logger.info(JSON.stringify(response.data));
-    } catch (error) {
-        logger.error(
-            typeof error?.response?.data === "object"
-                ? JSON.stringify(error.response.data)
-                : error
-        );
+        logger.info("Risposta OK:", JSON.stringify(response.data));
+    } catch (err) {
+        logger.error("Errore:", err);
     }
 };
 

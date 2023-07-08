@@ -54,35 +54,15 @@ services:
   #     - kafka
 
   # NOTA: usato SOLO COME DEBUG per il parser, TOGLI IN PRODUZIONE
-  parser-tester:
-    build: ./parser-tester
-    volumes:
-      - ./parser-tester:/usr/src/app
-    depends_on:
-      parser:
-        condition: service_started
-    networks:
-      - kafka
-
-
-  # rotating_tor:
-  #   image: 'mattes/rotating-proxy'
-  #   restart: unless-stopped
-  #   # volumes:
-  #   #   - ./torproxy/torrc:/etc/tor/torrc
-  #   ports: # expose solo per debug
-  #     - "5566:5566"
-  #     - "4444:4444"
-  #   environment:
-  #     - tors=25
+  # parser-tester:
+  #   build: ./parser-tester
+  #   volumes:
+  #     - ./parser-tester:/usr/src/app
+  #   depends_on:
+  #     parser:
+  #       condition: service_started
   #   networks:
-  #     - rotating_tor
-  #   healthcheck:
-  #     test: ["CMD", "curl", "--proxy", "http://rotating_tor:5566", "https://api.myip.com/"]
-  #     interval: 15s
-  #     timeout: 5s
-  #     retries: 3
-  #     start_period: 30s
+  #     - kafka
 
   # kafka:
   #   image: 'bitnami/kafka:latest'
@@ -112,15 +92,44 @@ services:
    #  networks:
    #    - remote_chrome
 
+  mongodb:
+    image: mongo:6.0.7-jammy
+    ports:
+      - '27018:27017'
+    volumes:
+      - dbdata:/data/db
+    networks:
+      - kafka
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  db-api:
+    build: ./db-api
+    volumes:
+      - ./db-api:/usr/src/app
+    ports:
+      - '5500:5500'
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/debug
+      - PORT=5500
+    depends_on:
+      mongodb:
+        condition: service_started
+        # condition: service_healthy
+    networks:
+      - kafka
+
 volumes:
   kafka_data:
+    driver: local
+  dbdata:
     driver: local
 
 networks:
   kafka:
     driver: bridge
-
-  rotating_tor:
-    driver: bridge
-  #remote_chrome:
-    #driver: bridge

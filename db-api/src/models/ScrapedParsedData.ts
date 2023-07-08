@@ -1,4 +1,9 @@
-import { prop, getModelForClass, Ref } from "@typegoose/typegoose";
+import {
+    prop,
+    getModelForClass,
+    Ref,
+    modelOptions
+} from "@typegoose/typegoose";
 
 enum RentalType {
     SINGLE_ROOM = "singleRoom",
@@ -9,12 +14,16 @@ enum RentalType {
     OTHER = "other"
 }
 
+export const rentalTypes = Object.values(RentalType);
+
 enum SexRestrictions {
     EVERYONE = "everyone",
     MALES = "males",
     FEMALES = "females",
     OTHER = "other"
 }
+
+export const sexRestrictions = Object.values(SexRestrictions);
 
 enum OccupationalRestrictions {
     EVERYONE = "everyone",
@@ -23,7 +32,13 @@ enum OccupationalRestrictions {
     OTHER = "other"
 }
 
-export class RentalPostClass {
+export const occupationalRestrictions = Object.values(OccupationalRestrictions);
+
+@modelOptions({
+    schemaOptions: { timestamps: true },
+    options: { customName: "scrapedparseddatas" }
+})
+export class ScrapedParsedDataClass {
     @prop({ required: true })
     public isRental!: boolean;
 
@@ -49,16 +64,16 @@ export class RentalPostClass {
     public rawData?: Ref<"ScrapedRawData">;
 
     @prop({ required: false })
-    public monthlyPrice?: number | null;
+    public monthlyPrice?: number;
 
     @prop({ required: false })
-    public monthlyPricePerBed?: number | null;
+    public monthlyPricePerBed?: number;
 
     @prop({ required: false })
-    public securityDepositMonths?: number | null;
+    public securityDepositMonths?: number;
 
     @prop({ required: false })
-    public zone?: string | null;
+    public zone?: string;
 
     @prop({ required: false, enum: SexRestrictions })
     public sexRestrictions?: SexRestrictions;
@@ -67,7 +82,7 @@ export class RentalPostClass {
     public occupationalRestrictions?: OccupationalRestrictions;
 
     @prop({ required: false })
-    public lgbtFriendly?: boolean | null;
+    public lgbtFriendly?: boolean;
 
     @prop({ required: false })
     public furnished?: boolean;
@@ -106,7 +121,7 @@ export class RentalPostClass {
     public priceIncludesTaxes?: boolean;
 
     @prop({ required: false })
-    public smokingAllowed?: boolean | null;
+    public smokingAllowed?: boolean;
 
     @prop({ required: false })
     public latitude?: number;
@@ -115,6 +130,6 @@ export class RentalPostClass {
     public longitude?: number;
 }
 
-const RentalPost = getModelForClass(RentalPostClass);
+const ScrapedParsedData = getModelForClass(ScrapedParsedDataClass);
 
-export default RentalPost;
+export default ScrapedParsedData;

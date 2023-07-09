@@ -112,7 +112,7 @@ services:
     volumes:
       - ./db-api:/usr/src/app
     ports:
-      - '5500:5500'
+      - '5500:5500' # attenzione che e' hard-coded nella config di kafka-db-consumer
     environment:
       - NODE_ENV=development
       - MONGODB_URI=mongodb://mongodb:27017/debug

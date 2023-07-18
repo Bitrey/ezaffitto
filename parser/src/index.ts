@@ -1,6 +1,3 @@
-// DEVE essere primo senno' circular dependency => esplode
-import "./config/kafka";
-
 import { logger } from "./shared/logger";
 import EventEmitter from "events";
 import {
@@ -29,13 +26,13 @@ const delay = (ms: any) => new Promise(resolve => setTimeout(resolve, ms));
 
 const run = async () => {
     if (config.NODE_ENV === "development") await delay(config.DEBUG_WAIT_MS);
-    logger.info("Starting Kafka producer and consumer...");
+    logger.info("Starting RabbitMQ producer and consumer...");
     runProducer();
     runConsumer();
 };
 
 // run().catch(err => {
-//     logger.error("Error in Kafka run:");
+//     logger.error("Error in RabbitMQ run:");
 //     logger.error(err);
 // });
 
@@ -71,13 +68,13 @@ if (config.NODE_ENV === "development" && config.DEBUG_START_EXPRESS_SERVER) {
     );
 }
 
-rawDataEvent.on("rawData", async rawData => {
+rawDataEvent.on("rawData", async ({ rawData, scraperType }) => {
     try {
-        const parsed = await parser.parse(rawData.rawData.rawMessage);
-        //TODO: think about this, do we want to just pass one part of json around or let everything through?
+        const parsed = await parser.parse(rawData.rawMessage);
+
         parsedDataEvent.emit("parsedData", {
-            scraperType: rawData.scraperType,
-            scraperRawContent: rawData.rawData,
+            scraperType: scraperType,
+            scraperRawContent: rawData,
             post: parsed as any
         } as ParsedPost);
     } catch (err) {

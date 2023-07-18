@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ScrapedParsedData",
+    "type": "object",
+    "properties": {
+        "isRental": { "type": "boolean" },
+        "isForRent": { "type": "boolean" },
+        "description": { "type": "string" },
+        "rentalType": {
+            "enum": [
+                "singleRoom",
+                "doubleRoom",
+                "studio",
+                "apartment",
+                "house",
+                "other"
+            ]
+        },
+        "sourceType": { "type": "string" },
+        "pictures": { "type": "array", "items": { "type": "string" } },
+        "url": { "type": "string" },
+        "rawData": { "type": "string" },
+        "monthlyPrice": { "type": "number" },
+        "monthlyPricePerBed": { "type": "number" },
+        "securityDepositMonths": { "type": "number" },
+        "zone": { "type": "string" },
+        "sexRestrictions": {
+            "enum": ["everyone", "males", "females", "other"]
+        },
+        "occupationalRestrictions": {
+            "enum": ["everyone", "students", "workers", "other"]
+        },
+        "lgbtFriendly": { "type": "boolean" },
+        "furnished": { "type": "boolean" },
+        "availabilityStartDate": { "type": "string", "format": "date-time" },
+        "availabilityEndDate": { "type": "string", "format": "date-time" },
+        "contractDurationMonths": { "type": "number" },
+        "hasBalcony": { "type": "boolean" },
+        "hasParking": { "type": "boolean" },
+        "address": { "type": "string" },
+        "floorNumber": { "type": "number" },
+        "rooms": { "type": "number" },
+        "bathrooms": { "type": "number" },
+        "areaSqMeters": { "type": "number" },
+        "priceIncludesTaxes": { "type": "boolean" },
+        "smokingAllowed": { "type": "boolean" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" }
+    },
+    "required": ["isRental", "isForRent", "description", "sourceType", "url"]
+}

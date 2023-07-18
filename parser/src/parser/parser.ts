@@ -9,6 +9,7 @@ import { Errors } from "../interfaces/Error";
 import { ChatCompletionResponse } from "../interfaces/ChatCompletionResponse";
 import { AxiosError } from "axios";
 import { Configuration, OpenAIApi } from "openai";
+import Ajv from "ajv";
 const configuration = new Configuration({
     organization: "org-BbXm9BbLn4ZtxoPh9K5hOGB2",
     apiKey: process.env.OPENAI_API_KEY
@@ -131,38 +132,6 @@ class Parser {
             .filter(parsed => parsed !== null) as T[];
     }
 
-    public async parse(humanText: string): Promise<RentalPost> {
-        logger.info(`Parsing: ${humanText.substring(0, 30)}...`);
-
-        const startDate = moment();
-
-        const prompt = await this.getPrompt(humanText);
-        const responses = await this.fetchMultipleServerResponses(prompt, () =>
-            this.fetchGpt(prompt)
-        );
-        const parsed = this.extractValidJSONs<RentalPost>(responses);
-        const mostConsistent = this.findMostConsistent<RentalPost>(parsed);
-
-        if (!mostConsistent) {
-            logger.error("No consistent response found");
-            throw new Error(Errors.PARSER_NO_SUCCESSFUL_GPT_FETCH);
-        }
-
-        const endDate = moment();
-        const duration = moment.duration(endDate.diff(startDate));
-
-        logger.info(
-            `Parsing ${humanText.substring(
-                0,
-                30
-            )}... successful in ${duration.asSeconds()}s (${parsed.length}/${
-                config.NUM_TRIES
-            } successfully parsed responses)`
-        );
-
-        return mostConsistent;
-    }
-
     private async fetchGpt(prompt: string): Promise<string> {
         try {
             const res = (
@@ -181,6 +150,50 @@ class Parser {
             logger.error((err as AxiosError)?.response?.data || err);
             throw new Error(Errors.PARSER_GPT_ERROR);
         }
+    }
+
+    public async parse(humanText: string): Promise<RentalPost> {
+        logger.info(`Parsing: ${humanText.substring(0, 30)}...`);
+
+        const startDate = moment();
+
+        const prompt = await this.getPrompt(humanText);
+        const responses = await this.fetchMultipleServerResponses(prompt, () =>
+            this.fetchGpt(prompt)
+        );
+        const parsed = this.extractValidJSONs<RentalPost>(responses);
+        const mostConsistent = this.findMostConsistent<RentalPost>(parsed);
+
+        if (!mostConsistent) {
+            logger.error("No consistent response found");
+            throw new Error(Errors.PARSER_NO_SUCCESSFUL_GPT_FETCH);
+        }
+
+        // Controlla che sia aderente allo schema
+        const ajv = new Ajv();
+        const schema = await readFile(config.PARSED_JSON_SCHEMA_PATH, "utf-8");
+
+        const validate = ajv.compile(JSON.parse(schema));
+        const valid = validate(parsed);
+
+        if (!valid) {
+            logger.error("Parsed GPT data not adherent to JSON schema");
+            throw new Error(Errors.PARSER_DATA_NOT_ADHERENT_TO_SCHEMA);
+        }
+
+        const endDate = moment();
+        const duration = moment.duration(endDate.diff(startDate));
+
+        logger.info(
+            `Parsing ${humanText.substring(
+                0,
+                30
+            )}... successful in ${duration.asSeconds()}s (${parsed.length}/${
+                config.NUM_TRIES
+            } successfully parsed responses)`
+        );
+
+        return mostConsistent;
     }
 }
 

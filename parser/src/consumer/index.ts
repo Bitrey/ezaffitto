@@ -1,93 +1,84 @@
+import Ajv from "ajv";
 import { rawDataEvent } from "..";
 import { config } from "../config/config";
-import { kafka } from "../config/kafka";
 import { Errors } from "../interfaces/Error";
 import { RawDataWithType } from "../interfaces/EventEmitters";
 import { RawData } from "../interfaces/RawData";
 import { logger } from "../shared/logger";
 
-const consumer = kafka.consumer({
-    allowAutoTopicCreation: true,
-    groupId: config.KAFKA_GROUP_ID,
-    metadataMaxAge: config.METADATA_MAX_AGE
-});
+import * as amqp from "amqplib";
+import { readFile } from "fs/promises";
 
 export const runConsumer = async () => {
-    await consumer.connect();
-    await consumer.subscribe({
-        topics: [config.KAFKA_CONSUMER_TOPIC],
-        fromBeginning: config.KAFKA_FROM_BEGINNING
+    const connection = await amqp.connect(config.RABBITMQ_URL);
+    const channel = await connection.createChannel();
+
+    await channel.assertExchange(config.RABBITMQ_EXCHANGE, "topic", {
+        durable: false
     });
 
+    const queue = await channel.assertQueue("", { exclusive: true });
+
+    channel.bindQueue(queue.queue, config.RABBITMQ_EXCHANGE, config.RAW_TOPIC);
+
     logger.info(
-        "Kafka consumer listening on topic " +
-            config.KAFKA_CONSUMER_TOPIC +
-            "..."
+        "RabbitMQ consumer listening on topics " + config.RAW_TOPIC + "..."
     );
 
-    await consumer.run({
-        eachMessage: async ({ topic, partition, message }) => {
-            try {
-                let scraperType: string;
-
-                if (config.KAFKA_CONSUMER_TOPIC.test(topic)) {
-                    scraperType = topic.replace("scraper.scraped.", "");
-                } else {
-                    logger.error(
-                        `Topic ${topic} does not match the expected pattern ${config.KAFKA_CONSUMER_TOPIC}.`
-                    );
-                    throw new Error(Errors.KAFKA_RECEIVED_INVALID_TOPIC);
-                }
-
-                if (!message.value) {
-                    logger.error("Empty payload received from Kafka.");
-                    throw new Error(Errors.KAFKA_RECEIVED_EMPTY_PAYLOAD);
-                }
-
-                logger.info(`Received message from "${scraperType}" scraper`);
-
-                if (!scraperType) {
-                    logger.error(
-                        `Invalid topic received from Kafka: ${topic}.`
-                    );
-                    throw new Error(Errors.KAFKA_RECEIVED_INVALID_TOPIC);
-                }
-
-                let parsed: RawData;
-                try {
-                    parsed = JSON.parse(message.value.toString("utf-8"));
-                } catch (err) {
-                    logger.error(
-                        `Malformed JSON data received from Kafka: ${message.value}.`
-                    );
-                    throw new Error(Errors.KAFKA_RECEIVED_MALFORMED_JSON_DATA);
-                }
-
-                if (
-                    !(config.RAW_DATA_MESSAGE_TO_PARSE_KEY in parsed) ||
-                    typeof parsed[config.RAW_DATA_MESSAGE_TO_PARSE_KEY] !==
-                        "string"
-                ) {
-                    logger.error(
-                        `Invalid raw data received from Kafka (missing ${
-                            config.RAW_DATA_MESSAGE_TO_PARSE_KEY
-                        }): ${JSON.stringify(parsed)}.`
-                    );
-                    throw new Error(Errors.KAFKA_RECEIVED_INVALID_RAW_DATA);
-                }
-
-                logger.info(
-                    `Data from "${scraperType}" scraper JSONified successfully`
-                );
-
-                rawDataEvent.emit("rawData", {
-                    scraperType,
-                    rawData: parsed
-                } as RawDataWithType);
-            } catch (error) {
-                logger.error("An error occurred in the Kafka consumer:", error);
-                throw error;
+    channel.consume(queue.queue, async msg => {
+        try {
+            if (msg === null) {
+                logger.error("Received null message from RabbitMQ");
+                throw new Error(Errors.RABBITMQ_RECEIVED_NULL_MESSAGE);
             }
+
+            const topic = msg.fields.routingKey;
+
+            logger.debug(
+                `Received message from RabbitMQ at topic "${topic}": ${
+                    msg.content.toString().substring(0, 30) + "..."
+                }`
+            );
+
+            const scraperType = topic.replace("scraper.scraped.", "");
+
+            if (!scraperType) {
+                logger.error(`Invalid topic received from RabbitMQ: ${topic}.`);
+                throw new Error(Errors.RABBITMQ_RECEIVED_INVALID_SCRAPER_TYPE);
+            }
+
+            let parsed: RawData;
+            try {
+                parsed = JSON.parse(msg.content.toString("utf-8"));
+            } catch (err) {
+                logger.error(
+                    `Malformed JSON data received from RabbitMQ: ${msg}.`
+                );
+                throw new Error(Errors.RABBITMQ_RECEIVED_MALFORMED_RAW_DATA);
+            }
+
+            // Controlla che abbia rawMessage
+            const ajv = new Ajv();
+            const schema = await readFile(config.RAW_JSON_SCHEMA_PATH, "utf-8");
+
+            const validate = ajv.compile(JSON.parse(schema));
+            const valid = validate(parsed);
+
+            if (!valid) {
+                logger.error("Error while validating raw message");
+                throw new Error(Errors.RABBITMQ_RECEIVED_INVALID_RAW_DATA);
+            }
+
+            logger.debug(
+                `Data from "${scraperType}" scraper JSONified successfully`
+            );
+
+            rawDataEvent.emit("rawData", {
+                scraperType,
+                rawData: parsed
+            } as RawDataWithType);
+        } catch (error) {
+            logger.error("An error occurred in the RabbitMQ consumer:", error);
         }
     });
 };

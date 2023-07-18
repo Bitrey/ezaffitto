@@ -1,0 +1,8 @@
+{
+    "type": "object",
+    "properties": {
+        "postId": { "type": "string" },
+        "rawMessage": { "type": "string" }
+    },
+    "required": ["rawMessage"]
+}

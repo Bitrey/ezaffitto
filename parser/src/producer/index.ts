@@ -1,32 +1,44 @@
 import { errorsEvent, parsedDataEvent } from "..";
 import { config } from "../config/config";
-import { kafka } from "../config/kafka";
 import { AppError } from "../interfaces/Error";
 import { ParsedPost } from "../interfaces/EventEmitters";
 import { logger } from "../shared/logger";
 
-const producer = kafka.producer();
+import * as amqp from "amqplib";
+import { readFile } from "fs/promises";
 
 export const runProducer = async () => {
-    await producer.connect();
+    const connection = await amqp.connect(config.RABBITMQ_URL);
+    const channel = await connection.createChannel();
+
+    await channel.assertExchange(config.RABBITMQ_EXCHANGE, "topic", {
+        durable: false
+    });
+
+    logger.info(
+        `RabbitMQ publisher publishing on topic ${config.PARSED_TOPIC_PREFIX}*...`
+    );
+
     parsedDataEvent.on("parsedData", async data => {
-        // Invia al topic Kafka
-        const topic = config.KAFKA_PRODUCER_TOPIC_PREFIX + data.scraperType;
-        logger.info("Sending data to Kafka on topic " + topic + "...");
-        await producer.send({
+        const topic = config.PARSED_TOPIC_PREFIX + data.scraperType;
+
+        logger.info("Sending data to RabbitMQ on topic " + topic + "...");
+
+        channel.publish(
+            config.RABBITMQ_EXCHANGE,
             topic,
-            messages: [{ value: JSON.stringify(data as ParsedPost) }]
-        });
+            Buffer.from(JSON.stringify(data as ParsedPost))
+        );
     });
     errorsEvent.on("error", async error => {
         logger.info(
-            "Sending error to Kafka on topic " +
-                config.KAFKA_ERROR_TOPIC +
-                "..."
+            `Sending error to RabbitMQ on topic ${config.ERROR_TOPIC}...`
         );
-        await producer.send({
-            topic: config.KAFKA_ERROR_TOPIC,
-            messages: [{ value: JSON.stringify(error as AppError) }]
-        });
+
+        channel.publish(
+            config.RABBITMQ_EXCHANGE,
+            config.ERROR_TOPIC,
+            Buffer.from(JSON.stringify(error as AppError))
+        );
     });
 };

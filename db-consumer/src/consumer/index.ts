@@ -57,7 +57,7 @@ export const runConsumer = async () => {
                 );
             } else {
                 logger.error(
-                    `Topic ${topic} does not match the expected patterns.`
+                    `Topic ${topic} does not match the expected patterns!`
                 );
                 throw new Error(Errors.RABBITMQ_RECEIVED_INVALID_TOPIC);
             }

@@ -2,8 +2,7 @@ import { config } from "../config";
 import { logger } from "../shared/logger";
 import axios, { AxiosResponse } from "axios";
 import { Errors } from "../interfaces/Error";
-import Ajv from "ajv";
-import { readFile } from "fs/promises";
+import { scrapedRawDataSchema } from "../schemas/ScrapedRawData";
 
 export async function rawDataHandler(scraperType: string, message: string) {
     logger.debug(`Saving raw data for scraperType ${scraperType}`);
@@ -12,15 +11,10 @@ export async function rawDataHandler(scraperType: string, message: string) {
 
     const url = `http://${config.DB_API_SERVICE_HOST}:${config.DB_API_SERVICE_PORT}${config.DB_API_RAW_ROUTE}`;
 
-    const ajv = new Ajv();
-    const schema = await readFile(config.RAW_JSON_SCHEMA_PATH, "utf-8");
-
-    const validate = ajv.compile(JSON.parse(schema));
-    const valid = validate(JSON.parse(message));
-
-    if (!valid) {
-        logger.error("Error while validating raw message");
-        throw new Error(Errors.RAW_VALIDATION_FAILED);
+    const { error, value } = scrapedRawDataSchema.validate(JSON.parse(message));
+    if (error) {
+        logger.error("Error in Joi validation");
+        throw new Error(Errors.PARSED_VALIDATION_FAILED);
     }
 
     let data: AxiosResponse;

@@ -1,9 +1,0 @@
-{
-    "type": "object",
-    "properties": {
-        "postId": { "type": "string" },
-        "rawMessage": { "type": "string" },
-        "scraperRawData": { "type": "object" }
-    },
-    "required": ["rawMessage", "scraperRawData"]
-}

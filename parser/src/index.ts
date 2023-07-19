@@ -15,6 +15,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import { envs } from "./config/envs";
 import { config } from "./config/config";
+import axios from "axios";
 
 const parser = new Parser();
 
@@ -27,14 +28,14 @@ const delay = (ms: any) => new Promise(resolve => setTimeout(resolve, ms));
 const run = async () => {
     if (config.NODE_ENV === "development") await delay(config.DEBUG_WAIT_MS);
     logger.info("Starting RabbitMQ producer and consumer...");
+    // runConsumer();
     runProducer();
-    runConsumer();
 };
 
-// run().catch(err => {
-//     logger.error("Error in RabbitMQ run:");
-//     logger.error(err);
-// });
+run().catch(err => {
+    logger.error("Error in RabbitMQ run:");
+    logger.error(err);
+});
 
 if (config.NODE_ENV === "development" && config.DEBUG_START_EXPRESS_SERVER) {
     logger.warn("Running in development mode, starting express server");
@@ -68,15 +69,28 @@ if (config.NODE_ENV === "development" && config.DEBUG_START_EXPRESS_SERVER) {
     );
 }
 
-rawDataEvent.on("rawData", async ({ rawData, scraperType }) => {
+const instance = axios.create({
+    baseURL: config.DB_API_BASE_URL
+});
+
+rawDataEvent.on("rawData", async ({ postId, source, rawMessage }) => {
     try {
-        const parsed = await parser.parse(rawData.rawMessage);
+        // check if already exists (salva soldi, non fare parsing inutile)
+        const { data } = await instance.get(`/raw/postid/${postId}`);
+        if (data) {
+            logger.debug(
+                `Raw data for postId ${postId} already exists, skipping...`
+            );
+            return;
+        }
+
+        const parsed = await parser.parse(rawMessage);
 
         parsedDataEvent.emit("parsedData", {
-            scraperType: scraperType,
-            scraperRawContent: rawData,
-            post: parsed as any
-        } as ParsedPost);
+            postId,
+            source,
+            post: parsed
+        });
     } catch (err) {
         errorsEvent.emit("error", {
             err:

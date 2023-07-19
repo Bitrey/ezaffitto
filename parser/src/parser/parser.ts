@@ -1,15 +1,17 @@
 import { readFile } from "fs/promises";
 import path from "path";
 import moment from "moment";
+import { AxiosError } from "axios";
+import { Configuration, OpenAIApi } from "openai";
+import Joi from "joi";
+import { encoding_for_model } from "@dqbd/tiktoken";
 import { envs } from "../config/envs";
 import { logger } from "../shared/logger";
 import { config } from "../config/config";
 import { RentalPost } from "../interfaces/RentalPost";
 import { Errors } from "../interfaces/Error";
 import { ChatCompletionResponse } from "../interfaces/ChatCompletionResponse";
-import { AxiosError } from "axios";
-import { Configuration, OpenAIApi } from "openai";
-import Ajv from "ajv";
+
 const configuration = new Configuration({
     organization: "org-BbXm9BbLn4ZtxoPh9K5hOGB2",
     apiKey: process.env.OPENAI_API_KEY
@@ -17,8 +19,24 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 class Parser {
+    constructor() {
+        logger.info("Parser initialized");
+        logger.info(`Using GPT model: ${config.GPT_MODEL}`);
+        this.getPrompt("{0}").then(prompt => {
+            logger.info("Prompt:");
+            logger.info(prompt);
+        });
+    }
+
     private static wait(ms: number): Promise<void> {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    private getTokenNumber(prompt: string): number {
+        const enc = encoding_for_model("gpt-3.5-turbo");
+        const n = enc.encode(prompt).length;
+        enc.free();
+        return n;
     }
 
     private extractJSON = <T>(input: string): T => {
@@ -112,7 +130,10 @@ class Parser {
         return responses.filter(response => response !== null) as string[];
     }
 
-    private extractValidJSONs<T extends object>(responses: string[]): T[] {
+    private extractValidJSONs<T extends object>(
+        responses: string[],
+        schema?: Joi.ObjectSchema
+    ): T[] {
         logger.debug(
             `Extracting valid JSONs from ${responses.length} server responses`
         );
@@ -120,7 +141,21 @@ class Parser {
         return responses
             .map(res => {
                 try {
-                    return this.extractJSON<T>(res);
+                    const j = this.extractJSON<T>(res);
+                    if (schema) {
+                        // Controlla che sia aderente allo schema
+                        const { error, value } = schema.validate(j);
+                        if (error) {
+                            logger.error(
+                                "Error in Joi validation for extracted JSON:",
+                                j
+                            );
+                            logger.error(error);
+                            return null;
+                        }
+                        return value;
+                    }
+                    return j;
                 } catch (err) {
                     logger.error(
                         "Error parsing JSON from one of the server responses"
@@ -130,6 +165,27 @@ class Parser {
                 }
             })
             .filter(parsed => parsed !== null) as T[];
+    }
+
+    private cleanEmptyStrings<T extends object>(_objs: T[]): T[] {
+        const objs = [];
+
+        for (const obj of _objs) {
+            const newObj = {} as T;
+
+            for (const key in obj) {
+                if (
+                    Object.prototype.hasOwnProperty.call(obj, key) &&
+                    obj[key as keyof T] !== ""
+                ) {
+                    newObj[key as keyof T] = obj[key as keyof T];
+                }
+            }
+
+            objs.push(newObj);
+        }
+
+        return objs;
     }
 
     private async fetchGpt(prompt: string): Promise<string> {
@@ -158,28 +214,35 @@ class Parser {
         const startDate = moment();
 
         const prompt = await this.getPrompt(humanText);
+
+        const reqTokens = this.getTokenNumber(prompt);
+        if (reqTokens > config.MAX_GPT_TOKENS) {
+            logger.error(
+                `Input text is too long (${reqTokens} tokens, max ${config.MAX_GPT_TOKENS})`
+            );
+            throw new Error(Errors.GPT_TOKENS_EXCEEDED);
+        }
+
+        logger.debug(
+            `Prompt length: ${reqTokens}/${config.MAX_GPT_TOKENS} tokens`
+        );
+
         const responses = await this.fetchMultipleServerResponses(prompt, () =>
             this.fetchGpt(prompt)
         );
         const parsed = this.extractValidJSONs<RentalPost>(responses);
-        const mostConsistent = this.findMostConsistent<RentalPost>(parsed);
+        const cleaned = this.cleanEmptyStrings<RentalPost>(parsed);
+        const mostConsistent = this.findMostConsistent<RentalPost>(cleaned);
 
         if (!mostConsistent) {
             logger.error("No consistent response found");
             throw new Error(Errors.PARSER_NO_SUCCESSFUL_GPT_FETCH);
         }
 
-        // Controlla che sia aderente allo schema
-        const ajv = new Ajv();
-        const schema = await readFile(config.PARSED_JSON_SCHEMA_PATH, "utf-8");
-
-        const validate = ajv.compile(JSON.parse(schema));
-        const valid = validate(parsed);
-
-        if (!valid) {
-            logger.error("Parsed GPT data not adherent to JSON schema");
-            throw new Error(Errors.PARSER_DATA_NOT_ADHERENT_TO_SCHEMA);
-        }
+        const resTokens = this.getTokenNumber(JSON.stringify(mostConsistent));
+        logger.debug(
+            `Response length: ${resTokens}/${config.MAX_GPT_TOKENS} tokens`
+        );
 
         const endDate = moment();
         const duration = moment.duration(endDate.diff(startDate));
@@ -188,9 +251,11 @@ class Parser {
             `Parsing ${humanText.substring(
                 0,
                 30
-            )}... successful in ${duration.asSeconds()}s (${parsed.length}/${
+            )}... successful in ${duration.asSeconds()}s (${cleaned.length}/${
                 config.NUM_TRIES
-            } successfully parsed responses)`
+            } successfully parsed responses) (${reqTokens + resTokens}/${
+                config.MAX_GPT_TOKENS
+            } tokens)`
         );
 
         return mostConsistent;

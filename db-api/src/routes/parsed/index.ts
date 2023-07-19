@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { logger } from "../../shared/logger";
 import { validate } from "../../middlewares/validate";
 import { OK } from "http-status";
+import { config } from "../../config";
 
 const router = Router();
 
@@ -18,10 +19,19 @@ router.get("/", async (req: Request, res: Response) => {
     return res.json(data);
 });
 
+router.get("/postid/:id", async (req: Request, res: Response) => {
+    logger.debug("Getting parsed data by postId");
+
+    const data = await ScrapedParsedData.findOne({ postId: req.params.id });
+    logger.debug("Parsed data retrieved successfully by postId");
+
+    return res.json(data);
+});
+
 router.get("/:id", async (req: Request, res: Response) => {
     logger.debug("Getting parsed data by id");
 
-    const data = await ScrapedParsedData.findById(req.params.id);
+    const data = await ScrapedParsedData.findOne({ _id: req.params.id });
     logger.debug("Parsed data retrieved successfully");
 
     return res.json(data);

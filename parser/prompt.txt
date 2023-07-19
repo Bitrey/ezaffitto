@@ -10,7 +10,7 @@ Struttura JSON: {
     "monthlyPricePerBed": <number | null: monthly rent cost per person (for a single bed) if it’s a double room>,
     "securityDepositMonths": <number | null: number of months of rent required as a security deposit if deducible from the text>,
     "zone": <string | null: area or district within the city if deducible from the text>,
-    "description": <string: 200-500 characters, professionally written in Italian, no personal references>,
+    "description": <string: 200-500 characters in Italian, professionally written, remove requests to contact privately or send messages>,
     "sexRestrictions": <enum: "everyone", "males", "females", "other", set to "everyone" unless explicitly written>,
     "occupationalRestrictions": <enum: "everyone", "students", "workers", "other", set to "everyone" unless EXPLICITLY written>,
     "lgbtFriendly": <boolean: true if specified, null elsewise>,

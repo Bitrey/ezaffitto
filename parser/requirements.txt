@@ -1,2 +1,0 @@
-free_proxy==1.1.1
-revChatGPT==6.7.6

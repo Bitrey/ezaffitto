@@ -9,7 +9,7 @@ export const config = Object.freeze({
     NUM_TRIES: 1,
     DELAY_BETWEEN_TRIES_MS: 3000,
 
-    RABBITMQ_URL: "amqp://localhost",
+    RABBITMQ_URL: "amqp://rabbitmq",
     RABBITMQ_EXCHANGE: "topic_exchange",
 
     RAW_TOPIC: "scraper.scraped.*",
@@ -25,10 +25,16 @@ export const config = Object.freeze({
         "/schemas/ScrapedParsedDataWithoutMetadata.json"
     ),
 
-    RAW_DATA_POST_ID_KEY: "postId",
-    RAW_DATA_MESSAGE_TO_PARSE_KEY: "rawMessage",
+    POST_ID_KEY: "postId",
+    RAW_MESSAGE_KEY: "rawMessage",
+    SCRAPER_RAW_DATA_KEY: "scraperRawData",
+
+    RAW_DATA_SOURCE_KEY: "source",
 
     GPT_MODEL: "gpt-3.5-turbo",
     GPT_ROLE:
-        "You are ChatGPT, a large language model trained by OpenAI.\nYour task is to parse housing rental posts in JSON format and provide relevant information."
+        "You are ChatGPT, a large language model trained by OpenAI.\nYour task is to parse housing rental posts in JSON format and provide relevant information.",
+    MAX_GPT_TOKENS: 4096,
+
+    DB_API_BASE_URL: "http://db-api:5500/api"
 });

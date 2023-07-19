@@ -3,18 +3,16 @@ import { RawData } from "./RawData";
 import { RentalPost } from "./RentalPost";
 
 export interface ParsedPost {
-    scraperType: string;
+    postId: string;
+    source: string;
     post: RentalPost;
 }
 
-export interface RawDataWithType {
-    scraperType: string;
-    rawData: RawData;
-}
+export type ParsedPostWithoutSource = Omit<ParsedPost, "source">;
 
 export interface RawDataEventEmitter {
-    on(event: "rawData", listener: (data: RawDataWithType) => void): this;
-    emit(event: "rawData", data: RawDataWithType): boolean;
+    on(event: "rawData", listener: (data: RawData) => void): this;
+    emit(event: "rawData", data: RawData): boolean;
 }
 
 export interface ParsedDataEventEmitter {

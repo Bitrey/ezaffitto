@@ -52,7 +52,10 @@ export class ScrapedParsedDataClass {
     public rentalType?: RentalType;
 
     @prop({ required: true })
-    public sourceType!: string;
+    public postId!: string;
+
+    @prop({ required: true })
+    public source!: string;
 
     @prop({ type: String })
     public pictures?: string[];

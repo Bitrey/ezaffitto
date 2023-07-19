@@ -1,7 +1,10 @@
 import { config } from "../config/config";
 
 export interface RawData {
-    [config.RAW_DATA_POST_ID_KEY]: string;
-    [config.RAW_DATA_MESSAGE_TO_PARSE_KEY]: string;
-    [key: string]: unknown;
+    [config.POST_ID_KEY]: string;
+    [config.RAW_DATA_SOURCE_KEY]: string;
+    [config.RAW_MESSAGE_KEY]: string;
+    [config.SCRAPER_RAW_DATA_KEY]: {
+        [key: string]: unknown;
+    };
 }

@@ -5,24 +5,34 @@ import { logger } from "../../shared/logger";
 import { validate } from "../../middlewares/validate";
 import scrapedRawDataSchema from "../../validators/raw";
 import { ScrapedRawData } from "../../models/ScrapedRawData";
-import { OK } from "http-status";
+import { CREATED, OK } from "http-status";
+import { config } from "../../config";
 
 const router = Router();
 
 router.get("/", async (req: Request, res: Response) => {
-    logger.debug("Getting all parsed data");
+    logger.debug("Getting all raw data");
 
     const data = await ScrapedRawData.find({});
-    logger.debug("Parsed data retrieved successfully");
+    logger.debug("Raw data retrieved successfully");
+
+    return res.json(data);
+});
+
+router.get("/postid/:id", async (req: Request, res: Response) => {
+    logger.debug("Getting raw data by postId");
+
+    const data = await ScrapedRawData.findOne({ postId: req.params.id });
+    logger.debug("Raw data retrieved successfully by postId");
 
     return res.json(data);
 });
 
 router.get("/:id", async (req: Request, res: Response) => {
-    logger.debug("Getting parsed data by id");
+    logger.debug("Getting raw data by id");
 
-    const data = await ScrapedRawData.findById(req.params.id);
-    logger.debug("Parsed data retrieved successfully");
+    const data = await ScrapedRawData.findOne({ _id: req.params.id });
+    logger.debug("Raw data retrieved successfully");
 
     return res.json(data);
 });
@@ -34,13 +44,21 @@ router.post(
     async (req: Request, res: Response) => {
         logger.debug("Creating new raw data");
 
+        const existing = await ScrapedRawData.findOne({
+            postId: req.body[config.POST_ID_KEY]
+        });
+        if (existing) {
+            logger.debug("Raw data already exists");
+            return res.json(existing);
+        }
+
         const data = new ScrapedRawData(req.body);
 
         try {
             await data.save();
             logger.debug("Raw data saved successfully");
 
-            return res.json(data);
+            return res.status(CREATED).json(data);
         } catch (err) {
             if (err instanceof mongoose.Error.ValidationError) {
                 logger.debug("Validation error");

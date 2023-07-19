@@ -7,164 +7,135 @@ import {
 
 const scrapedParsedDataSchema: Schema = {
     isRental: {
-        isBoolean: true,
-        errorMessage: "Invalid value for isRental"
+        isBoolean: true
     },
     isForRent: {
-        isBoolean: true,
-        errorMessage: "Invalid value for isForRent"
+        isBoolean: true
     },
     description: {
-        isString: true,
-        errorMessage: "Invalid description"
+        isString: true
     },
     rentalType: {
         optional: true,
         isIn: {
-            options: [Object.values(rentalTypes)],
-            errorMessage: "Invalid rentalType"
+            options: [Object.values(rentalTypes)]
         }
     },
-    sourceType: {
-        isString: true,
-        errorMessage: "Invalid sourceType"
+    postId: {
+        isString: true
+    },
+    source: {
+        isString: true
     },
     pictures: {
         optional: true,
         isArray: true,
-        errorMessage: "Invalid pictures",
         custom: {
             options: value =>
                 Array.isArray(value) &&
-                value.every(item => typeof item === "string"),
-            errorMessage: "Invalid pictures"
+                value.every(item => typeof item === "string")
         }
     },
     url: {
-        isURL: {
-            errorMessage: "Invalid URL"
-        }
+        isURL: {}
     },
     rawData: {
         optional: true,
-        isMongoId: true,
-        errorMessage: "Invalid rawData"
+        isMongoId: true
     },
     monthlyPrice: {
         optional: true,
-        isNumeric: true,
-        errorMessage: "Invalid monthlyPrice"
+        isNumeric: true
     },
     monthlyPricePerBed: {
         optional: true,
-        isNumeric: true,
-        errorMessage: "Invalid monthlyPricePerBed"
+        isNumeric: true
     },
     securityDepositMonths: {
         optional: true,
-        isNumeric: true,
-        errorMessage: "Invalid securityDepositMonths"
+        isNumeric: true
     },
     zone: {
         optional: true,
-        isString: true,
-        errorMessage: "Invalid zone"
+        isString: true
     },
     sexRestrictions: {
         optional: true,
         isIn: {
-            options: [Object.values(sexRestrictions)],
-            errorMessage: "Invalid sexRestrictions"
+            options: [Object.values(sexRestrictions)]
         }
     },
     occupationalRestrictions: {
         optional: true,
         isIn: {
-            options: [Object.values(occupationalRestrictions)],
-            errorMessage: "Invalid occupationalRestrictions"
+            options: [Object.values(occupationalRestrictions)]
         }
     },
     lgbtFriendly: {
         optional: true,
-        isBoolean: true,
-        errorMessage: "Invalid value for lgbtFriendly"
+        isBoolean: true
     },
     furnished: {
         optional: true,
-        isBoolean: true,
-        errorMessage: "Invalid value for furnished"
+        isBoolean: true
     },
     availabilityStartDate: {
         optional: true,
         isISO8601: true,
-        toDate: true,
-        errorMessage: "Invalid availabilityStartDate"
+        toDate: true
     },
     availabilityEndDate: {
         optional: true,
         isISO8601: true,
-        toDate: true,
-        errorMessage: "Invalid availabilityEndDate"
+        toDate: true
     },
     contractDurationMonths: {
         optional: true,
-        isNumeric: true,
-        errorMessage: "Invalid contractDurationMonths"
+        isNumeric: true
     },
     hasBalcony: {
         optional: true,
-        isBoolean: true,
-        errorMessage: "Invalid value for hasBalcony"
+        isBoolean: true
     },
     hasParking: {
         optional: true,
-        isBoolean: true,
-        errorMessage: "Invalid value for hasParking"
+        isBoolean: true
     },
     address: {
         optional: true,
-        isString: true,
-        errorMessage: "Invalid address"
+        isString: true
     },
     floorNumber: {
         optional: true,
-        isNumeric: true,
-        errorMessage: "Invalid floorNumber"
+        isNumeric: true
     },
     rooms: {
         optional: true,
-        isNumeric: true,
-        errorMessage: "Invalid number of rooms"
+        isNumeric: true
     },
     bathrooms: {
         optional: true,
-        isNumeric: true,
-        errorMessage: "Invalid number of bathrooms"
+        isNumeric: true
     },
     areaSqMeters: {
         optional: true,
-        isNumeric: true,
-        errorMessage: "Invalid area in square meters"
+        isNumeric: true
     },
     priceIncludesTaxes: {
         optional: true,
-        isBoolean: true,
-        errorMessage: "Invalid value for priceIncludesTaxes"
+        isBoolean: true
     },
     smokingAllowed: {
         optional: true,
-        isBoolean: true,
-        errorMessage: "Invalid value for smokingAllowed"
+        isBoolean: true
     },
     latitude: {
         optional: true,
-        isNumeric: true,
-        errorMessage: "Invalid latitude"
+        isNumeric: true
     },
     longitude: {
         optional: true,
-        isNumeric: true,
-        errorMessage: "Invalid longitude"
+        isNumeric: true
     }
 };
 

@@ -12,6 +12,7 @@ services:
       - "3000:3000" # DEBUG!!
     networks:
       - rabbitmq-network
+      - db-api-network
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -34,40 +35,20 @@ services:
   #   networks:
   #     - rabbitmq-network
 
-  # scraper:
-  #   build: ./scraper
-  #   volumes:
-  #     - ./scraper:/usr/src/app
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #     db-consumer:
-  #       condition: service_healthy
-  #   networks:
-  #     - rabbitmq
-
-  # kreader_test:
-  #   build: ./reader
-  #   volumes:
-  #     - ./reader:/usr/src/app
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #     scraper:
-  #       condition: service_started
-  #   networks:
-  #     - rabbitmq-network
-
-  # NOTA: usato SOLO COME DEBUG per il parser, TOGLI IN PRODUZIONE CHE DIVENTI POVERO
-  # parser-tester:
-  #   build: ./parser-tester
-  #   volumes:
-  #     - ./parser-tester:/usr/src/app
-  #   depends_on:
-  #     parser:
-  #       condition: service_started
-  #   networks:
-  #     - rabbitmq
+  fb-scraper:
+    build: ./fb-scraper
+    volumes:
+      - ./fb-scraper:/usr/src/app
+    environment:
+      - NO_LOGIN=true
+      - FB_GROUP_ID=bolognaaffitti
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      db-consumer:
+        condition: service_healthy
+    networks:
+      - rabbitmq-network
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -116,11 +97,12 @@ services:
         condition: service_healthy
     networks:
       - rabbitmq-network
+      - db-api-network
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O- http://localhost:3434/ping || exit 1"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
+      interval: 5s
+      timeout: 5s
+      retries: 3
       start_period: 5s
 
   db-api:
@@ -138,7 +120,7 @@ services:
         condition: service_healthy
     networks:
       - db-network
-      - rabbitmq-network
+      - db-api-network
     healthcheck:
       test:
         ["CMD-SHELL", "wget -q -O- http://localhost:5500/api/ping || exit 1"]
@@ -157,4 +139,6 @@ networks:
   rabbitmq-network:
     driver: bridge
   db-network:
+    driver: bridge
+  db-api-network:
     driver: bridge

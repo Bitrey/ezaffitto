@@ -1,6 +1,12 @@
 import Joi from "joi";
 
-export const scrapedRawDataSchema = Joi.object({
+interface IScrapedRawData {
+    postId: string;
+    rawMessage: string;
+    scraperRawData: unknown;
+}
+
+export const scrapedRawDataSchema = Joi.object<IScrapedRawData>({
     postId: Joi.string(),
     rawMessage: Joi.string().required(),
     scraperRawData: Joi.object().required()

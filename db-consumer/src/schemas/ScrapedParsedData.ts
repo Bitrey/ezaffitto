@@ -11,12 +11,13 @@ const rentalTypes = [
 const sexRestrictions = ["everyone", "males", "females", "other"];
 const occupationalRestrictions = ["everyone", "students", "workers", "other"];
 
-export const scrapedParsedDataSchema = Joi.object({
+export const rentalPostSchema = Joi.object({
     isRental: Joi.boolean().required(),
     isForRent: Joi.boolean().required(),
     description: Joi.string().required(),
     rentalType: Joi.string().valid(...rentalTypes),
-    sourceType: Joi.string().required(),
+    postId: Joi.string().required(),
+    source: Joi.string().required(),
     pictures: Joi.array().items(Joi.string()),
     url: Joi.string().required(),
     rawData: Joi.string(),
@@ -42,4 +43,9 @@ export const scrapedParsedDataSchema = Joi.object({
     smokingAllowed: Joi.boolean(),
     latitude: Joi.number(),
     longitude: Joi.number()
+});
+
+export const scrapedParsedDataSchema = Joi.object({
+    postId: Joi.string().required(),
+    post: rentalPostSchema.required()
 });

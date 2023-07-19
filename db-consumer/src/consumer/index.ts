@@ -5,10 +5,16 @@ import { rawDataHandler } from "./rawHandler";
 import { parsedDataHandler } from "./parsedHandler";
 
 import * as amqp from "amqplib";
+import exitHook from "async-exit-hook";
 
 export const runConsumer = async () => {
     const connection = await amqp.connect(config.RABBITMQ_URL);
     const channel = await connection.createChannel();
+
+    exitHook(() => {
+        logger.info(`Closing RabbitMQ producer connection...`);
+        connection.close();
+    });
 
     await channel.assertExchange(config.RABBITMQ_EXCHANGE, "topic", {
         durable: false
@@ -29,39 +35,45 @@ export const runConsumer = async () => {
             "..."
     );
 
-    channel.consume(
-        queue.queue,
-        msg => {
-            if (msg === null) {
-                logger.error("Received null message from RabbitMQ");
-                throw new Error(Errors.RABBITMQ_RECEIVED_NULL_MESSAGE);
-            }
+    channel.consume(queue.queue, msg => {
+        if (msg === null) {
+            logger.error("Received null message from RabbitMQ");
+            throw new Error(Errors.RABBITMQ_RECEIVED_NULL_MESSAGE);
+        }
 
-            const topic = msg.fields.routingKey;
+        const topic = msg.fields.routingKey;
 
-            logger.debug(
-                `Received message from RabbitMQ at topic "${topic}": ${
-                    msg.content.toString().substring(0, 30) + "..."
-                }`
-            );
+        logger.debug(
+            `Received message from RabbitMQ at topic "${topic}": ${
+                msg.content.toString().substring(0, 30) + "..."
+            }`
+        );
 
-            if (topic.startsWith(config.RAW_TOPIC)) {
+        if (topic.startsWith(config.RAW_TOPIC_PREFIX)) {
+            try {
                 rawDataHandler(
-                    topic.replace(config.RAW_TOPIC, ""),
+                    topic.replace(config.RAW_TOPIC_PREFIX, ""),
                     msg.content.toString()
                 );
-            } else if (topic.startsWith(config.PARSED_TOPIC)) {
-                parsedDataHandler(
-                    topic.replace(config.PARSED_TOPIC, ""),
-                    msg.content.toString()
-                );
-            } else {
-                logger.error(
-                    `Topic ${topic} does not match the expected patterns!`
-                );
-                throw new Error(Errors.RABBITMQ_RECEIVED_INVALID_TOPIC);
+                channel.ack(msg);
+            } catch (err) {
+                logger.error(err);
             }
-        },
-        { noAck: true }
-    );
+        } else if (topic.startsWith(config.PARSED_TOPIC_PREFIX)) {
+            try {
+                parsedDataHandler(
+                    topic.replace(config.PARSED_TOPIC_PREFIX, ""),
+                    msg.content.toString()
+                );
+                channel.ack(msg);
+            } catch (err) {
+                logger.error(err);
+            }
+        } else {
+            logger.error(
+                `Topic ${topic} does not match the expected patterns!`
+            );
+            throw new Error(Errors.RABBITMQ_RECEIVED_INVALID_TOPIC);
+        }
+    });
 };

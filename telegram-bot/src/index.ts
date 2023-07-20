@@ -19,7 +19,7 @@ export const runConsumer = async () => {
     const channel = await connection.createChannel();
 
     await channel.assertExchange(config.RABBITMQ_EXCHANGE, "topic", {
-        durable: false
+        durable: true
     });
 
     const queue = await channel.assertQueue("", { exclusive: true });

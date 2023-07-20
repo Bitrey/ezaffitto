@@ -1,3 +1,7 @@
+DA FARE (19/07/2023): MAPPA RAW DATA A PARSED E SALVA SU DB
+
+Devi gestire quanto isRental o isForRent son false
+
 `scraper` butta fuori un JSON con:
 "postId": string
 "rawMessage": string

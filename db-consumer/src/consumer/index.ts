@@ -12,12 +12,12 @@ export const runConsumer = async () => {
     const channel = await connection.createChannel();
 
     exitHook(() => {
-        logger.info(`Closing RabbitMQ producer connection...`);
+        logger.info(`Closing RabbitMQ consumer connection...`);
         connection.close();
     });
 
     await channel.assertExchange(config.RABBITMQ_EXCHANGE, "topic", {
-        durable: false
+        durable: true
     });
 
     const queue = await channel.assertQueue("", { exclusive: true });
@@ -70,9 +70,7 @@ export const runConsumer = async () => {
                 logger.error(err);
             }
         } else {
-            logger.error(
-                `Topic ${topic} does not match the expected patterns!`
-            );
+            logger.error(`Topic ${topic} does not match the expected patterns`);
             throw new Error(Errors.RABBITMQ_RECEIVED_INVALID_TOPIC);
         }
     });

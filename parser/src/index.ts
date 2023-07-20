@@ -28,7 +28,7 @@ const delay = (ms: any) => new Promise(resolve => setTimeout(resolve, ms));
 const run = async () => {
     if (config.NODE_ENV === "development") await delay(config.DEBUG_WAIT_MS);
     logger.info("Starting RabbitMQ producer and consumer...");
-    // runConsumer();
+    runConsumer();
     runProducer();
 };
 
@@ -37,7 +37,7 @@ run().catch(err => {
     logger.error(err);
 });
 
-if (config.NODE_ENV === "development" && config.DEBUG_START_EXPRESS_SERVER) {
+if (config.NODE_ENV === "development" && envs.DEBUG_START_EXPRESS_SERVER) {
     logger.warn("Running in development mode, starting express server");
 
     const app = express();
@@ -76,15 +76,22 @@ const instance = axios.create({
 rawDataEvent.on("rawData", async ({ postId, source, rawMessage }) => {
     try {
         // check if already exists (salva soldi, non fare parsing inutile)
-        const { data } = await instance.get(`/raw/postid/${postId}`);
+        const { data } = await instance.get(`/parsed/postid/${postId}`);
         if (data) {
             logger.debug(
-                `Raw data for postId ${postId} already exists, skipping...`
+                `Parsed data for postId ${postId} already exists, skipping...`
             );
             return;
         }
 
         const parsed = await parser.parse(rawMessage);
+
+        if (!parsed.isRental || !parsed.isForRent) {
+            logger.warn(
+                `Parsed data for postId ${postId} is not a rental, skipping...`
+            );
+            return;
+        }
 
         parsedDataEvent.emit("parsedData", {
             postId,

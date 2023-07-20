@@ -1,4 +1,4 @@
-import { cleanEnv, str, num } from "envalid";
+import { cleanEnv, str, num, bool } from "envalid";
 
 import "dotenv/config";
 
@@ -8,5 +8,6 @@ export const envs = cleanEnv(process.env, {
         choices: ["development", "test", "production", "staging"]
     }),
     OPENAI_ORGANIZATION_ID: str(),
-    OPENAI_API_KEY: str()
+    OPENAI_API_KEY: str(),
+    DEBUG_START_EXPRESS_SERVER: bool()
 });

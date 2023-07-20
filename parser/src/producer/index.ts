@@ -20,7 +20,7 @@ export const runProducer = async () => {
     });
 
     await channel.assertExchange(config.RABBITMQ_EXCHANGE, "topic", {
-        durable: false
+        durable: true
     });
 
     logger.info(

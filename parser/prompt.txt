@@ -4,7 +4,7 @@ Testo da elaborare: {0}
 
 Struttura JSON: {
     "isRental": <boolean: if the post is about a rental>,
-    "isForRent": <boolean: if the property is for rent and not for sale>,
+    "isForRent": <boolean: if the property is FOR RENT and not about FINDING A RENT>,
     "rentalType": <enum: "singleRoom", "doubleRoom", "studio", "apartment", "house", "other">,
     "monthlyPrice": <number | null: monthly rent cost, converted if price is per day or week>,
     "monthlyPricePerBed": <number | null: monthly rent cost per person (for a single bed) if it’s a double room>,

@@ -2,7 +2,8 @@ import { config } from "../config";
 import { logger } from "../shared/logger";
 import axios, { AxiosError } from "axios";
 import { Errors } from "../interfaces/Error";
-import { scrapedParsedDataSchema } from "../schemas/ScrapedParsedData";
+import { ParsedData, RentalPost } from "../interfaces/RentalPost";
+import { mapFBPostToFullDoc } from "../mapRawToParsed/facebook";
 
 const instance = axios.create({
     baseURL: config.DB_API_BASE_URL
@@ -11,24 +12,30 @@ const instance = axios.create({
 export async function parsedDataHandler(scraperType: string, message: string) {
     logger.debug(`Saving parsed data for scraperType ${scraperType}`);
 
-    const { error, value } = scrapedParsedDataSchema.validate(
-        JSON.parse(message)
-    );
-    if (error) {
-        logger.error(`Error in Joi validation while validating ${message}:`);
-        logger.error(error);
-        throw new Error(Errors.PARSED_VALIDATION_FAILED);
+    let rabbitMqJson: { postId: string; post: ParsedData };
+    try {
+        rabbitMqJson = JSON.parse(message);
+        if (!rabbitMqJson.postId) {
+            logger.error("Missing postId in parsedHandler");
+            throw new Error("Missing postId");
+        }
+    } catch (err) {
+        logger.error("Error while JSON parsing message");
+        throw new Error(Errors.PARSED_MALFORMED_JSON);
     }
 
-    // Se è true è un serio problema: il parser ha girato su dati già parsati,
-    // abbiamo perso soldi
+    const { post } = rabbitMqJson;
 
+    // Se questo è true è un serio problema: il parser ha
+    // girato su dati già parsati, abbiamo perso soldi
     try {
-        const exists = await instance.get(`/parsed/postid/${value.postId}`);
+        const exists = await instance.get(
+            `/parsed/postid/${rabbitMqJson.postId}`
+        );
 
         if (exists.data) {
             logger.warn(
-                `Parsed data for postId ${value.postId} already exists, skipping...`
+                `Parsed data for postId ${rabbitMqJson.postId} already exists, skipping...`
             );
             return exists.data;
         }
@@ -38,18 +45,72 @@ export async function parsedDataHandler(scraperType: string, message: string) {
         throw new Error(Errors.PARSED_DB_CHECK_FAILED);
     }
 
-    let data;
+    let raw = null;
+    try {
+        const { data } = await instance.get(
+            `/raw/postid/${rabbitMqJson.postId}`
+        );
+        raw = data;
+    } catch (err) {
+        logger.error("Error while fetching raw data");
+        logger.error((err as AxiosError).response?.data || err);
+        throw new Error(Errors.ERROR_FETCHING_RAW_DATA);
+    }
+
+    if (!raw) {
+        logger.error(
+            `Raw data for postId ${rabbitMqJson.postId} does not exist`
+        );
+        throw new Error(Errors.RAW_DATA_NOT_FOUND);
+    }
+
+    let mapped: RentalPost;
+
+    if (scraperType === "facebook") {
+        try {
+            mapped = await mapFBPostToFullDoc(
+                rabbitMqJson.postId,
+                raw[config.SCRAPER_RAW_DATA_KEY],
+                post,
+                raw._id
+            );
+        } catch (err) {
+            logger.error(
+                "Error while mapping raw Facebook data to parsed data"
+            );
+            logger.error((err as AxiosError).response?.data || err);
+            throw new Error(Errors.FB_PARSING_FAILED);
+        }
+    } else {
+        logger.error(`Scraper type ${scraperType} not supported`);
+        throw new Error(Errors.RECEIVED_INVALID_SCRAPER_TYPE);
+    }
 
     try {
-        const res = await instance.post("/parsed", value);
-        data = res.data;
+        await instance.post("/parsed/validate", mapped);
+    } catch (err) {
+        logger.error("Error while validating parsed data");
+        logger.error((err as AxiosError).response?.data || err);
+        logger.error("Parsed data:");
+        logger.error(mapped);
+        throw new Error(Errors.PARSED_VALIDATION_FAILED);
+    }
+
+    let dbObj;
+
+    try {
+        const { data } = await instance.post("/parsed", mapped);
+        dbObj = data;
     } catch (err) {
         logger.error("Error while saving parsed message to DB");
         logger.error((err as AxiosError).response?.data || err);
         throw new Error(Errors.PARSED_DB_SAVE_FAILED);
     }
 
-    logger.debug(`Saved parsed data to DB (postId: ${data.postId})`);
+    logger.info(`Saved parsed data to DB (postId: ${dbObj.postId})`);
 
-    return data;
+    logger.debug("dbObj:");
+    logger.debug(dbObj);
+
+    return dbObj;
 }

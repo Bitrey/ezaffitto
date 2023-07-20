@@ -2,7 +2,6 @@ import axios, { AxiosError } from "axios";
 import { config } from "../config";
 import { logger } from "../shared/logger";
 import { Errors } from "../interfaces/Error";
-import { scrapedRawDataSchema } from "../schemas/ScrapedRawData";
 
 const instance = axios.create({
     baseURL: config.DB_API_BASE_URL
@@ -11,18 +10,39 @@ const instance = axios.create({
 export async function rawDataHandler(scraperType: string, message: string) {
     logger.debug(`Saving raw data for scraperType ${scraperType}`);
 
-    const { error, value } = scrapedRawDataSchema.validate(JSON.parse(message));
-    if (error) {
-        logger.error(`Error in Joi validation while validating ${message}:`);
-        logger.error(error);
-        throw new Error(Errors.PARSED_VALIDATION_FAILED);
+    let value;
+
+    try {
+        value = JSON.parse(message);
+        if (!value.postId) {
+            logger.error("Missing postId in rawDataHandler");
+            throw new Error("Missing postId");
+        }
+    } catch (err) {
+        logger.error("Error while JSON parsing message");
+        throw new Error(Errors.RAW_MALFORMED_JSON);
+    }
+
+    // prendi source da suffisso topic RabbitMQ
+    const obj = {
+        [config.SCRAPER_TYPE_DB_KEY]: scraperType,
+        ...value
+    };
+
+    try {
+        await instance.post("/raw/validate", obj);
+    } catch (err) {
+        logger.error("Error while validating raw data");
+        logger.error((err as AxiosError).response?.data || err);
+        throw new Error(Errors.RAW_VALIDATION_FAILED);
     }
 
     try {
         const exists = await instance.get(`/raw/postid/${value.postId}`);
 
         if (exists.data) {
-            logger.warn(
+            // TODO: deve essere warning? (DEBUG)
+            logger.debug(
                 `Raw data for postId ${value.postId} already exists, skipping...`
             );
             return exists.data;
@@ -32,11 +52,6 @@ export async function rawDataHandler(scraperType: string, message: string) {
         logger.error((err as AxiosError).response?.data || err);
         throw new Error(Errors.PARSED_DB_CHECK_FAILED);
     }
-
-    const obj = {
-        [config.SCRAPER_TYPE_DB_KEY]: scraperType,
-        ...value
-    };
 
     let data;
 

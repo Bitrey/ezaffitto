@@ -4,7 +4,6 @@ import { envs } from "./envs";
 export const config = Object.freeze({
     NODE_ENV: envs.NODE_ENV,
     DEBUG_WAIT_MS: 0,
-    DEBUG_START_EXPRESS_SERVER: true,
 
     NUM_TRIES: 1,
     DELAY_BETWEEN_TRIES_MS: 3000,

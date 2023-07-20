@@ -1,19 +1,16 @@
 import { Request, Response, Router } from "express";
-import { checkSchema } from "express-validator";
-import mongoose from "mongoose";
 import { logger } from "../../shared/logger";
-import { validate } from "../../middlewares/validate";
-import scrapedRawDataSchema from "../../validators/raw";
-import { ScrapedRawData } from "../../models/ScrapedRawData";
-import { CREATED, OK } from "http-status";
+import RawData from "../../models/RawData";
+import { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, OK } from "http-status";
 import { config } from "../../config";
+import { validateModel } from "../../middlewares/validateModel";
 
 const router = Router();
 
 router.get("/", async (req: Request, res: Response) => {
     logger.debug("Getting all raw data");
 
-    const data = await ScrapedRawData.find({});
+    const data = await RawData.find({});
     logger.debug("Raw data retrieved successfully");
 
     return res.json(data);
@@ -22,16 +19,22 @@ router.get("/", async (req: Request, res: Response) => {
 router.get("/postid/:id", async (req: Request, res: Response) => {
     logger.debug("Getting raw data by postId");
 
-    const data = await ScrapedRawData.findOne({ postId: req.params.id });
+    const data = await RawData.findOne({ postId: req.params.id });
     logger.debug("Raw data retrieved successfully by postId");
 
     return res.json(data);
 });
 
+router.post("/validate", validateModel(RawData), async (req, res) => {
+    logger.debug("Validated raw data");
+
+    return res.sendStatus(OK);
+});
+
 router.get("/:id", async (req: Request, res: Response) => {
     logger.debug("Getting raw data by id");
 
-    const data = await ScrapedRawData.findOne({ _id: req.params.id });
+    const data = await RawData.findOne({ _id: req.params.id });
     logger.debug("Raw data retrieved successfully");
 
     return res.json(data);
@@ -39,51 +42,50 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 router.post(
     "/",
-    checkSchema(scrapedRawDataSchema),
-    validate,
+    validateModel(RawData),
     async (req: Request, res: Response) => {
         logger.debug("Creating new raw data");
 
-        const existing = await ScrapedRawData.findOne({
+        const existing = await RawData.findOne({
             postId: req.body[config.POST_ID_KEY]
         });
         if (existing) {
-            logger.debug("Raw data already exists");
+            logger.warn(
+                `Raw data already exists for postId ${
+                    req.body[config.POST_ID_KEY]
+                }`
+            );
             return res.json(existing);
         }
 
-        const data = new ScrapedRawData(req.body);
+        const data = new RawData(req.body);
 
         try {
             await data.save();
-            logger.debug("Raw data saved successfully");
+            logger.info(
+                `Raw data with postId ${data.postId} saved successfully`
+            );
 
             return res.status(CREATED).json(data);
         } catch (err) {
-            if (err instanceof mongoose.Error.ValidationError) {
-                logger.debug("Validation error");
-                logger.debug(err.message);
-                return res.json({ err: err.message });
-            }
             logger.error("Error saving data");
             logger.error(err);
-            return res.json({ err });
+            return res.status(INTERNAL_SERVER_ERROR).json({ err });
         }
     }
 );
 
 router.put(
     "/:id",
-    checkSchema(scrapedRawDataSchema),
-    validate,
+    validateModel(RawData),
     async (req: Request, res: Response) => {
         logger.debug("Updating raw data");
 
-        const data = await ScrapedRawData.findById(req.params.id);
+        const data = await RawData.findById(req.params.id);
 
         if (!data) {
             logger.debug("Raw data not found");
-            return res.json({ err: "Raw data not found" });
+            return res.status(BAD_REQUEST).json({ err: "Raw data not found" });
         }
 
         data.updateOne(req.body);
@@ -94,14 +96,9 @@ router.put(
 
             return res.json(data);
         } catch (err) {
-            if (err instanceof mongoose.Error.ValidationError) {
-                logger.debug("Validation error");
-                logger.debug(err.message);
-                return res.json({ err: err.message });
-            }
             logger.error("Error saving data");
             logger.error(err);
-            return res.json({ err });
+            return res.status(INTERNAL_SERVER_ERROR).json({ err });
         }
     }
 );
@@ -109,11 +106,11 @@ router.put(
 router.delete("/:id", async (req: Request, res: Response) => {
     logger.debug("Deleting raw data");
 
-    const data = await ScrapedRawData.findById(req.params.id);
+    const data = await RawData.findById(req.params.id);
 
     if (!data) {
         logger.debug("Raw data not found");
-        return res.json({ err: "Raw data not found" });
+        return res.status(BAD_REQUEST).json({ err: "Raw data not found" });
     }
 
     try {
@@ -124,7 +121,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     } catch (err) {
         logger.error("Error deleting data");
         logger.error(err);
-        return res.json({ err });
+        return res.status(INTERNAL_SERVER_ERROR).json({ err });
     }
 });
 

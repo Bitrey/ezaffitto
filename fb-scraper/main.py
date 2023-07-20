@@ -65,7 +65,8 @@ def connect_to_rabbitmq():
         pika.ConnectionParameters(host=rabbitmq_host))
     rabbitmq_channel = rabbitmq_connection.channel()
     rabbitmq_channel.exchange_declare(exchange=rabbitmq_exchange,
-                                      exchange_type='topic')
+                                      exchange_type='topic',
+                                      durable=True)
 
 
 def publish_to_rabbitmq(source_type, post):

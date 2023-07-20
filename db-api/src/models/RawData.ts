@@ -1,14 +1,16 @@
 import mongoose, { Schema } from "mongoose";
 import { config } from "../config";
 
-interface IScrapedRawDataSchema extends mongoose.Document {
+interface IRawDataSchema extends mongoose.Document {
     [config.POST_ID_KEY]: string;
     [config.SOURCE_TYPE_KEY]: string;
     [config.RAW_MESSAGE_KEY]: string;
-    [key: string]: unknown;
+    [config.SCRAPER_RAW_DATA_KEY]: {
+        [key: string]: unknown;
+    };
 }
 
-const scrapedRawDataSchema = new Schema<IScrapedRawDataSchema>(
+export const rawDataSchema = new Schema<IRawDataSchema>(
     {
         [config.POST_ID_KEY]: {
             type: String,
@@ -16,18 +18,20 @@ const scrapedRawDataSchema = new Schema<IScrapedRawDataSchema>(
         },
         [config.SOURCE_TYPE_KEY]: {
             type: String,
-            enum: Object.values(config.SCRAPER_TYPES),
             required: true
         },
         [config.RAW_MESSAGE_KEY]: {
             type: String,
             required: true
+        },
+        [config.SCRAPER_RAW_DATA_KEY]: {
+            type: Schema.Types.Mixed,
+            required: true
         }
     },
-    { strict: false, timestamps: true }
+    { timestamps: true }
 );
 
-export const ScrapedRawData = mongoose.model<IScrapedRawDataSchema>(
-    "ScrapedRawData",
-    scrapedRawDataSchema
-);
+const RawData = mongoose.model<IRawDataSchema>("RawData", rawDataSchema);
+
+export default RawData;

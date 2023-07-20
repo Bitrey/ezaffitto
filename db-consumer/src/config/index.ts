@@ -14,7 +14,13 @@ export const config = Object.freeze({
 
     DB_API_BASE_URL: "http://db-api:5500/api",
 
-    SCRAPER_TYPE_DB_KEY: "source"
+    SCRAPER_TYPE_DB_KEY: "source",
+
+    POST_ID_KEY: "postId",
+    RAW_MESSAGE_KEY: "rawMessage",
+    SCRAPER_RAW_DATA_KEY: "scraperRawData",
+
+    RAW_DATA_SOURCE_KEY: "source"
 });
 
 logger.debug("Config: " + JSON.stringify(config, null, 4));

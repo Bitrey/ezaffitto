@@ -18,10 +18,10 @@ export const runConsumer = async () => {
     });
 
     await channel.assertExchange(config.RABBITMQ_EXCHANGE, "topic", {
-        durable: false
+        durable: true
     });
 
-    const queue = await channel.assertQueue("", { exclusive: true });
+    const queue = await channel.assertQueue("", { durable: true });
 
     channel.bindQueue(queue.queue, config.RABBITMQ_EXCHANGE, config.RAW_TOPIC);
 

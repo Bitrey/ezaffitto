@@ -6,5 +6,6 @@ export const envs = cleanEnv(process.env, {
     NODE_ENV: str({
         choices: ["development", "test", "production", "staging"]
     }),
-    PING_SERVER_PORT: num()
+    PING_SERVER_PORT: num(),
+    GEOLOCATION_API_KEY: str()
 });

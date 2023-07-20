@@ -3,12 +3,14 @@ version: "3.8"
 services:
   parser:
     build: ./parser
+    restart: unless-stopped
     volumes:
       - ./parser:/usr/src/app
     environment:
       - NODE_ENV=development
       - PROMPT_PATH=./prompt.txt
       - DEBUG_START_EXPRESS_SERVER=false
+      - RUN_PARSER=false
     ports:
       - "3000:3000" # DEBUG!!
     networks:
@@ -20,29 +22,35 @@ services:
       db-consumer:
         condition: service_healthy
 
-  # telegram-bot:
-  #   build: ./telegram-bot
-  #   volumes:
-  #     - ./telegram-bot:/usr/src/app
-  #   environment:
-  #     - NODE_ENV=development
-  #     - PORT=3000
-  #     - PROMPT_PATH=./prompt.txt
-  #   depends_on:
-  #     parser:
-  #       condition: service_started
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   networks:
-  #     - rabbitmq-network
+  telegram-bot:
+    build: ./telegram-bot
+    restart: unless-stopped
+    volumes:
+      - ./telegram-bot:/usr/src/app
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - PROMPT_PATH=./prompt.txt
+    depends_on:
+      db-api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - rabbitmq-network
+      - db-api-network
+      - redis-network
 
   fb-scraper:
     build: ./fb-scraper
+    restart: unless-stopped
     volumes:
       - ./fb-scraper:/usr/src/app
     environment:
       - NO_LOGIN=true
-      - FB_GROUP_ID=bolognaaffitti
+      - GROUPS_FILE=groups.json
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -53,6 +61,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
+    restart: unless-stopped
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 10s
@@ -69,6 +78,7 @@ services:
 
   mongodb:
     image: mongo:6.0.7-jammy
+    restart: unless-stopped
     ports:
       - "27018:27017" # per non collidere con il db locale
     volumes:
@@ -84,6 +94,7 @@ services:
 
   db-consumer:
     build: ./db-consumer
+    restart: unless-stopped
     volumes:
       - ./db-consumer:/usr/src/app
     ports:
@@ -108,10 +119,11 @@ services:
 
   db-api:
     build: ./db-api
+    restart: unless-stopped
     volumes:
       - ./db-api:/usr/src/app
     ports:
-      - "5500:5500" # DEBUG - hard-coded nella config di db-consumer
+      - "5500:5500" # hard-coded in giro, non cambiare
     environment:
       - NODE_ENV=development
       - MONGODB_URI=mongodb://mongodb:27017/ezaffitto-dev
@@ -130,10 +142,25 @@ services:
       retries: 5
       start_period: 5s
 
+  redis:
+    image: redis:7.0.12-alpine
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+    ports:
+      - "6380:6379" # per non collidere con il redis locale
+    networks:
+      - redis-network
+    command: redis-server --loglevel warning
+    volumes:
+      - redis-data:/data
+
 volumes:
   db-data:
     driver: local
   rabbitmq-data:
+    driver: local
+  redis-data:
     driver: local
 
 networks:
@@ -142,4 +169,6 @@ networks:
   db-network:
     driver: bridge
   db-api-network:
+    driver: bridge
+  redis-network:
     driver: bridge

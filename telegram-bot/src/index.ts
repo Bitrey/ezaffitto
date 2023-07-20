@@ -4,15 +4,17 @@ import { config } from "./config/config";
 import { logger } from "./shared/logger";
 import { Errors } from "./interfaces/Error";
 import { RentalPost } from "./interfaces/RentalPost";
-import { generateTelegramMessageFromJson } from "./messageformat";
+import { generateTelegramMessageFromJson } from "./_messageformat";
 
 import * as amqp from "amqplib";
+import { setupBot } from "./bot";
+import { startRedis } from "./redis";
 
 const delay = (ms: any) => new Promise(resolve => setTimeout(resolve, ms));
 
-const bot = new Telegraf(envs.BOT_TOKEN);
-//bot.telegram.sendMessage(envs.CHANNEL_ID, 'AM ALIVE')
-logger.info("channel_id: ", envs.CHANNEL_ID);
+export const bot = new Telegraf(envs.BOT_TOKEN);
+
+logger.info("channel_id: " + envs.CHANNEL_ID);
 
 export const runConsumer = async () => {
     const connection = await amqp.connect(config.RABBITMQ_URL);
@@ -60,19 +62,17 @@ export const runConsumer = async () => {
             //console.log(parsed)
             // GUARDS GO HERE
             // TODO: extrapolate in another function maybe
-            if (parsed.isRental && parsed.isForRent) {
-                try {
-                    await bot.telegram.sendMessage(
-                        envs.CHANNEL_ID,
-                        generateTelegramMessageFromJson(parsed),
-                        { parse_mode: "MarkdownV2" }
-                    );
-                } catch (err) {
-                    logger.error(`Telegram error`);
-                }
-                logger.debug("Sleeping before sending next message...");
-                delay(5000);
+            try {
+                await bot.telegram.sendMessage(
+                    envs.CHANNEL_ID,
+                    generateTelegramMessageFromJson(parsed),
+                    { parse_mode: "MarkdownV2" }
+                );
+            } catch (err) {
+                logger.error(`Telegram error`);
             }
+            logger.debug("Sleeping before sending next message...");
+            await delay(5000);
         } catch (err) {
             logger.error(
                 `Malformed JSON data received from RabbitMQ: ${msg.content.toString(
@@ -85,8 +85,9 @@ export const runConsumer = async () => {
 };
 
 const run = async () => {
-    await delay(10000);
-    runConsumer();
+    // runConsumer();
+    setupBot();
+    startRedis();
 };
 
 run().catch(err => {

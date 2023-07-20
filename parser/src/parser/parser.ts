@@ -232,7 +232,9 @@ class Parser {
         );
         const parsed = this.extractValidJSONs<RentalPost>(responses);
         const cleaned = this.cleanEmptyStrings<RentalPost>(parsed);
-        const mostConsistent = this.findMostConsistent<RentalPost>(cleaned);
+        const nonRental = cleaned.find(e => !e.isForRent || !e.isRental);
+        const mostConsistent =
+            nonRental || this.findMostConsistent<RentalPost>(cleaned);
 
         if (!mostConsistent) {
             logger.error("No consistent response found");

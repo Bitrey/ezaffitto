@@ -1,32 +1,47 @@
-export interface RentalPost {
-    isRental: boolean; // true if the post is about a rental
-    isForRent: boolean; // true if the property is for rent and not for sale
-    rentalType:
-        | "singleRoom"
-        | "doubleRoom"
-        | "studio"
-        | "apartment"
-        | "house"
-        | "other"; // enum: rental type options
-    monthlyPrice: number | null; // monthly rent cost, converted if price is per day or week
-    monthlyPricePerBed: number | null; // monthly rent cost, converted if price is per day or week
-    sexRestrictions: "everyone" | "males" |  "females" | "other",
-    smokingAllowed: boolean | null
-    area: string | null;
-    zone: string | null;
-    description: string; // 200-500 characters, professionally written in Italian, no personal references
-    targetRestrictions:
-        | "everyone"
-        | "males"
-        | "females"
-        | "students"
-        | "workers"
-        | "other"; // enum: target restrictions options
-    furnished: boolean;
-    availabilityStartDate: Date | null; // start date if specified
-    availabilityEndDate: Date | null; // end date if specified
-    contractDuration: string;
-    hasBalcony: boolean;
-    hasParking: boolean;
-    internetIncluded: boolean;
+export interface PostMetadata {
+    postId: string;
+    rawData: string;
+    source: string;
+    date: Date;
+    images: string[];
+    url?: string;
+    authorUserId?: string;
+    authorUsername?: string;
+    authorUrl?: string;
+    latitude?: number;
+    longitude?: number;
+}
+
+export interface ParsedData {
+    isRental: boolean;
+    isForRent: boolean;
+    description?: string;
+    rentalType?: string;
+    monthlyPrice?: number;
+    monthlyPricePerBed?: number;
+    securityDepositMonths?: number;
+    zone?: string;
+    sexRestrictions?: string;
+    occupationalRestrictions?: string;
+    lgbtFriendly?: boolean;
+    furnished?: boolean;
+    availabilityStartDate?: Date;
+    availabilityEndDate?: Date;
+    contractDurationMonths?: number;
+    hasBalcony?: boolean;
+    hasParking?: boolean;
+    address?: string;
+    floorNumber?: number;
+    rooms?: number;
+    bathrooms?: number;
+    areaSqMeters?: number;
+    priceIncludesTaxes?: boolean;
+    smokingAllowed?: boolean;
+}
+
+export interface RentalPost extends PostMetadata, ParsedData {}
+
+export interface ScrapedParsedData {
+    postId: string;
+    post: ParsedData;
 }

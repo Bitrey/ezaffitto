@@ -1,13 +1,10 @@
 import { config } from "../config";
 import { logger } from "../shared/logger";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { Errors } from "../interfaces/Error";
 import { ParsedData, RentalPost } from "../interfaces/RentalPost";
 import { mapFBPostToFullDoc } from "../mapRawToParsed/facebook";
-
-const instance = axios.create({
-    baseURL: config.DB_API_BASE_URL
-});
+import { instance } from "..";
 
 export async function parsedDataHandler(scraperType: string, message: string) {
     logger.debug(`Saving parsed data for scraperType ${scraperType}`);

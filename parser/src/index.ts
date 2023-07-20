@@ -16,6 +16,7 @@ import bodyParser from "body-parser";
 import { envs } from "./config/envs";
 import { config } from "./config/config";
 import axios from "axios";
+import { syncJob } from "./syncJob";
 
 const parser = new Parser();
 
@@ -27,9 +28,14 @@ const delay = (ms: any) => new Promise(resolve => setTimeout(resolve, ms));
 
 const run = async () => {
     if (config.NODE_ENV === "development") await delay(config.DEBUG_WAIT_MS);
+
     logger.info("Starting RabbitMQ producer and consumer...");
-    runConsumer();
+    envs.RUN_PARSER
+        ? runConsumer()
+        : logger.warn("RUN_PARSER is false, not running consumer");
     runProducer();
+
+    syncJob.start();
 };
 
 run().catch(err => {
@@ -87,7 +93,7 @@ rawDataEvent.on("rawData", async ({ postId, source, rawMessage }) => {
         const parsed = await parser.parse(rawMessage);
 
         if (!parsed.isRental || !parsed.isForRent) {
-            logger.warn(
+            logger.info(
                 `Parsed data for postId ${postId} is not a rental, skipping...`
             );
             return;

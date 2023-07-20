@@ -4,7 +4,7 @@ from json import JSONEncoder
 import os
 from dotenv import load_dotenv
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import atexit
 
 import pika
@@ -14,7 +14,7 @@ load_dotenv()
 
 user = os.environ.get("FB_UNAME")
 pwd = os.environ.get("FB_PWD")  # your facebook password
-group_id = os.environ.get('FB_GROUP_ID')
+groups_file = os.environ.get('GROUPS_FILE')
 
 cookies_file = os.environ.get('COOKIES_FILE')
 
@@ -29,10 +29,10 @@ rabbitmq_channel = None
 start_timeout = 10
 seconds_between_scrapes = 60
 
-# if user is None or pwd is None or group_id is None:
+# if user is None or pwd is None or groups_file is None:
 #     raise Exception("Missing env variables")
 
-if cookies_file is None or group_id is None:
+if cookies_file is None or groups_file is None:
     raise Exception("Missing env variables")
 
 # OPTIONAL ENVS
@@ -87,12 +87,32 @@ def publish_to_rabbitmq(source_type, post):
     logging.info("Sent %r:%r" % (routing_key, f'{message[0:30]}...'))
 
 
+def is_unix_timestamp_older_than_3_days(timestamp_str):
+    try:
+        timestamp = int(timestamp_str)
+        timestamp_datetime = datetime.utcfromtimestamp(timestamp)
+        current_datetime = datetime.utcnow()
+        three_days_ago = current_datetime - timedelta(days=3)
+
+        return timestamp_datetime < three_days_ago
+    except ValueError:
+        return False
+
+
 def push_multiple_to_rabbitmq(source, posts):
     for post in posts:
+        if is_unix_timestamp_older_than_3_days(post["timestamp"]):
+            continue
         publish_to_rabbitmq(source, post)
 
 
-def scrape_fb():
+# read and parse groups.json file, get only object keys
+with open('groups.json') as json_file:
+    groups = json.load(json_file)
+    group_ids = list(groups.keys())
+
+
+def scrape_fb(group_id):
     return get_posts(
         group=group_id,
         pages=pages_to_scrape,
@@ -115,9 +135,13 @@ def main():
 
     time.sleep(start_timeout)
 
+    cur_group = 0
+
     while True:
         try:
-            posts = mock_data if to_mock_data else scrape_fb()
+            posts = mock_data if to_mock_data else scrape_fb(
+                group_ids[cur_group])
+            cur_group = (cur_group + 1) % len(group_ids)
 
             push_multiple_to_rabbitmq("facebook", posts)
         except Exception as e:

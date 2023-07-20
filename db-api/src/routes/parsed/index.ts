@@ -1,19 +1,46 @@
 import { Request, Response, Router } from "express";
-import ParsedData from "../../models/ParsedData";
+import ParsedData, { RentalTypes } from "../../models/ParsedData";
 import { logger } from "../../shared/logger";
 import { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, OK } from "http-status";
 import { validateModel } from "../../middlewares/validateModel";
 import { config } from "../../config";
+import { query } from "express-validator";
+import { validate } from "../../middlewares/expressValidator";
 
 const router = Router();
 
-router.get("/", async (req: Request, res: Response) => {
-    logger.debug("Getting all parsed data");
+router.get(
+    "/",
+    query("limit").isInt().optional(),
+    query("skip").isInt().optional(),
+    query("rentalType").isString().isIn(Object.values(RentalTypes)).optional(),
+    validate,
+    async (req: Request, res: Response) => {
+        logger.debug("Getting all parsed data");
 
-    const data = await ParsedData.find({});
-    logger.debug("Parsed data retrieved successfully");
+        const data = ParsedData.find({}).sort({ date: -1 });
+        if (req.query.limit) {
+            data.limit(parseInt(req.query.limit as string));
+        }
+        if (req.query.skip) {
+            data.skip(parseInt(req.query.skip as string));
+        }
 
-    return res.json(data);
+        const result = await data.exec();
+
+        logger.debug("Parsed data retrieved successfully");
+
+        return res.json(result);
+    }
+);
+
+router.get("/count", async (req: Request, res: Response) => {
+    logger.debug("Getting parsed data count");
+
+    const count = await ParsedData.countDocuments();
+    logger.debug("Parsed data count retrieved successfully");
+
+    return res.json({ count });
 });
 
 router.get("/postid/:id", async (req: Request, res: Response) => {

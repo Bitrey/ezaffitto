@@ -1,11 +1,8 @@
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { config } from "../config";
 import { logger } from "../shared/logger";
 import { Errors } from "../interfaces/Error";
-
-const instance = axios.create({
-    baseURL: config.DB_API_BASE_URL
-});
+import { instance } from "..";
 
 export async function rawDataHandler(scraperType: string, message: string) {
     logger.debug(`Saving raw data for scraperType ${scraperType}`);

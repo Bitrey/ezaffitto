@@ -1,4 +1,4 @@
-import { cleanEnv, str, num } from "envalid";
+import { cleanEnv, str } from "envalid";
 
 import "dotenv/config";
 
@@ -7,5 +7,5 @@ export const envs = cleanEnv(process.env, {
     BOT_TOKEN: str(),
     NODE_ENV: str({
         choices: ["development", "test", "production", "staging"]
-    }),
+    })
 });

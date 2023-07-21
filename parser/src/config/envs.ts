@@ -9,6 +9,5 @@ export const envs = cleanEnv(process.env, {
     }),
     OPENAI_ORGANIZATION_ID: str(),
     OPENAI_API_KEY: str(),
-    DEBUG_START_EXPRESS_SERVER: bool(),
-    RUN_PARSER: bool()
+    DEBUG_START_EXPRESS_SERVER: bool()
 });

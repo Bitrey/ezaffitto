@@ -23,12 +23,12 @@ export async function geolocate(
             { params }
         );
 
-        if (data.data.results.length === 0) {
+        if (data.data.length === 0) {
             logger.warn(`No results found for address ${address}`);
             return null;
         }
 
-        const { latitude, longitude } = data.data.results[0];
+        const { latitude, longitude } = data.data[0];
 
         return { latitude, longitude };
     } catch (err) {

@@ -106,8 +106,5 @@ export async function parsedDataHandler(scraperType: string, message: string) {
 
     logger.info(`Saved parsed data to DB (postId: ${dbObj.postId})`);
 
-    logger.debug("dbObj:");
-    logger.debug(dbObj);
-
     return dbObj;
 }

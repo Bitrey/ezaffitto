@@ -30,7 +30,7 @@ const run = async () => {
     if (config.NODE_ENV === "development") await delay(config.DEBUG_WAIT_MS);
 
     logger.info("Starting RabbitMQ producer and consumer...");
-    envs.RUN_PARSER
+    config.RUN_PARSER
         ? runConsumer()
         : logger.warn("RUN_PARSER is false, not running consumer");
     runProducer();

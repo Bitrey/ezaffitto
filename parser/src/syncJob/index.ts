@@ -16,7 +16,9 @@ async function parseUnparsedPosts() {
     let parsed: RawData[];
 
     try {
-        const { data } = await instance.get("/raw", { params: { limit: 100 } });
+        const { data } = await instance.get("/raw", {
+            params: { limit: config.MAX_RAW_DOCS_TO_SYNC }
+        });
         parsed = data;
     } catch (err) {
         logger.error("Error while fetching raw posts");

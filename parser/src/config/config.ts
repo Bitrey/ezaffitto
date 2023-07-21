@@ -5,8 +5,12 @@ export const config = Object.freeze({
     NODE_ENV: envs.NODE_ENV,
     DEBUG_WAIT_MS: 0,
 
+    // post raw che verranno fetchati ed eventualmente parsati (cron job)
+    MAX_RAW_DOCS_TO_SYNC: 100,
+
     NUM_TRIES: 1,
     DELAY_BETWEEN_TRIES_MS: 3000,
+    RUN_PARSER: true,
 
     RABBITMQ_URL: "amqp://rabbitmq",
     RABBITMQ_EXCHANGE: "topic_exchange",

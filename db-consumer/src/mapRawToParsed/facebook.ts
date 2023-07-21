@@ -15,6 +15,8 @@ export async function mapFBPostToFullDoc(
     if (parsed.address) {
         try {
             coords = await geolocate(parsed.address);
+            logger.info(`Fetched lat and lon for postId ${postId}:`);
+            logger.info(coords);
         } catch (err) {
             logger.error("Error while geolocating address");
             logger.error(err);

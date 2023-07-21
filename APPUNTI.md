@@ -1,6 +1,12 @@
 DA FARE (19/07/2023): MAPPA RAW DATA A PARSED E SALVA SU DB
 
+PER UN PARSING MIGLIORE: Fai primo round in cui chiedi struttura JSON SENZA DESCRIZIONE, e poi SECONDO ROUND SOLO DESCRIZIONE sennò viene merda 2 volte su 5
+
 Aggiungi healthcheck al bot
+
+fixa i tuoi node_modules quando non sei in svizzera
+
+usa scroller infinito in frontend gui (guarda vhfesuperiori/social)
 
 `scraper` butta fuori un JSON con:
 "postId": string

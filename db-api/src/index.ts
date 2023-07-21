@@ -2,10 +2,13 @@ import express from "express";
 
 import apiRoutes from "./routes";
 import { envs } from "./config/envs";
-import { logger } from "./shared/logger";
+import { LoggerStream, logger } from "./shared/logger";
 import { NOT_FOUND } from "http-status";
+import morgan from "morgan";
 
 const app = express();
+
+app.use(morgan("dev", { stream: new LoggerStream() }));
 
 app.use("/api", apiRoutes);
 

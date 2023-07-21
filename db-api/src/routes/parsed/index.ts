@@ -1,11 +1,15 @@
 import { Request, Response, Router } from "express";
-import ParsedData, { RentalTypes } from "../../models/ParsedData";
+import ParsedData, {
+    ParsedDataClass,
+    RentalTypes
+} from "../../models/ParsedData";
 import { logger } from "../../shared/logger";
 import { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, OK } from "http-status";
 import { validateModel } from "../../middlewares/validateModel";
 import { config } from "../../config";
 import { query } from "express-validator";
 import { validate } from "../../middlewares/expressValidator";
+import { FilterQuery } from "mongoose";
 
 const router = Router();
 
@@ -13,12 +17,23 @@ router.get(
     "/",
     query("limit").isInt().optional(),
     query("skip").isInt().optional(),
-    query("rentalType").isString().isIn(Object.values(RentalTypes)).optional(),
+    // TODO! fixa questo
+    // isIn(Object.values(RentalTypes))
+    query("rentalTypes").isArray().optional(),
     validate,
     async (req: Request, res: Response) => {
-        logger.debug("Getting all parsed data");
+        logger.debug(
+            `Getting all parsed data skipping ${
+                req.query.skip || "none"
+            } limiting to ${req.query.limit || Infinity}`
+        );
 
-        const data = ParsedData.find({}).sort({ date: -1 });
+        const query: FilterQuery<ParsedDataClass> = {};
+
+        const rentalTypes = req.query.rentalTypes as RentalTypes[] | null;
+        if (rentalTypes) query.rentalType = { $in: rentalTypes };
+
+        const data = ParsedData.find(query).sort({ date: -1 });
         if (req.query.limit) {
             data.limit(parseInt(req.query.limit as string));
         }
@@ -28,7 +43,9 @@ router.get(
 
         const result = await data.exec();
 
-        logger.debug("Parsed data retrieved successfully");
+        logger.debug(
+            `Parsed data retrieved successfully (total: ${result.length})`
+        );
 
         return res.json(result);
     }

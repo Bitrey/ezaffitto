@@ -8,7 +8,8 @@ services:
       - ./parser:/usr/src/app
     environment:
       - NODE_ENV=development
-      - PROMPT_PATH=./prompt.txt
+      - MAIN_PROMPT_PATH=./prompt1.txt
+      - DESCRIPTION_PROMPT_PATH=./prompt2.txt
       - DEBUG_START_EXPRESS_SERVER=false
     ports:
       - "3000:3000" # DEBUG!!
@@ -29,7 +30,6 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3000
-      - PROMPT_PATH=./prompt.txt
     depends_on:
       db-api:
         condition: service_healthy
@@ -57,21 +57,21 @@ services:
     networks:
       - db-api-network
 
-  # fb-scraper:
-  #   build: ./fb-scraper
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ./fb-scraper:/usr/src/app
-  #   environment:
-  #     - NO_LOGIN=true
-  #     - GROUPS_FILE=groups.json
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #     db-consumer:
-  #       condition: service_healthy
-  #   networks:
-  #     - rabbitmq-network
+  fb-scraper:
+    build: ./fb-scraper
+    restart: unless-stopped
+    volumes:
+      - ./fb-scraper:/usr/src/app
+    environment:
+      - NO_LOGIN=true
+      - GROUPS_FILE=groups.json
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      db-consumer:
+        condition: service_healthy
+    networks:
+      - rabbitmq-network
 
   rabbitmq:
     image: rabbitmq:3-management

@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 
 import "./globals.css";
-import "react-placeholder/lib/reactPlaceholder.css";
+// import "react-placeholder/lib/reactPlaceholder.css";
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
+import "react-medium-image-zoom/dist/styles.css";
 
 export const metadata: Metadata = {
   title: "ezaffitto (dev)",

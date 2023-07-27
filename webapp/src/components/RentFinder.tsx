@@ -9,11 +9,13 @@ import { rentalTypeOptions } from "@/config";
 import { labels } from "@/i18n/labels";
 import Button from "./Button";
 import Search from "@/icons/Search";
-import ReactPlaceholder from "react-placeholder";
+import RentView from "./RentView";
+import Textbox from "./Textbox";
 
 const RentFinder = () => {
   const [posts, setPosts] = useState<RentalPost[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [maxPrice, setMaxPrice] = useState<number>(1000);
 
   // TODO use infinite scroller
   const [limit, setLimit] = useState(10);
@@ -31,7 +33,8 @@ const RentFinder = () => {
         params: {
           limit,
           cursor,
-          rentalTypes: rentalTypes.length > 0 ? rentalTypes : null
+          rentalTypes: rentalTypes.length > 0 ? rentalTypes : null,
+          maxPrice
         }
       });
       // DEBUG
@@ -61,7 +64,7 @@ const RentFinder = () => {
 
   return (
     <div>
-      <div className="mt-4 mx-auto w-full md:w-[50vw]">
+      <form onSubmit={fetchData} className="mt-4 mx-auto w-full md:w-[50vw]">
         <div className="flex items-center gap-4">
           <CustomSelect
             primaryColor="red"
@@ -72,13 +75,26 @@ const RentFinder = () => {
             onChange={s => setRentalTypes(s.map(e => e.value))}
           />
           <Button
-            onClick={fetchData}
+            type="submit"
             className="p-3 rounded-full font-medium tracking-tight"
           >
             <Search />
           </Button>
         </div>
-      </div>
+
+        <div className="mt-2 flex justify-center items-center gap-2">
+          <p>Prezzo massimo:</p>
+          <Textbox
+            type="text"
+            value={`€ ${maxPrice}`}
+            onChange={v =>
+              setMaxPrice(parseInt(v.target.value.replace("€", "")) || 0)
+            }
+            className="pl-4"
+          />
+          <span className="font-medium">€{maxPrice}</span>
+        </div>
+      </form>
 
       <div className="mt-6 md:mt-16 grid grid-cols-1 md:grid-cols-2">
         <div>
@@ -103,9 +119,7 @@ const RentFinder = () => {
         <div>
           {selected && !isLoading ? (
             <div>
-              <pre>
-                <code>{JSON.stringify(selected, null, 4)}</code>
-              </pre>
+              <RentView post={selected} />
             </div>
           ) : isLoading ? (
             <p>DEBUG caricamento...</p>

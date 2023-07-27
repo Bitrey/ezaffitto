@@ -3,7 +3,8 @@ import { cleanEnv, str, num, bool } from "envalid";
 import "dotenv/config";
 
 export const envs = cleanEnv(process.env, {
-    PROMPT_PATH: str(),
+    MAIN_PROMPT_PATH: str(),
+    DESCRIPTION_PROMPT_PATH: str(),
     NODE_ENV: str({
         choices: ["development", "test", "production", "staging"]
     }),

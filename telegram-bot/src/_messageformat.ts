@@ -9,11 +9,6 @@ export function generateTelegramMessageFromJson(parsed: RentalPost): string {
         : "";
 
     let md_prezzo_letto = "";
-    if (parsed.rentalType && parsed.rentalType == "doubleRoom") {
-        md_prezzo_letto = parsed.monthlyPricePerBed
-            ? `\u{1f6cf} Prezzo letto: ${parsed.monthlyPricePerBed}\n`
-            : "";
-    }
     const md_smoking = parsed.smokingAllowed
         ? `\u{1f6ac} Fumatori: ${parsed.smokingAllowed}\n`
         : "";

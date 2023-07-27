@@ -8,7 +8,10 @@ import { encoding_for_model } from "@dqbd/tiktoken";
 import { envs } from "../config/envs";
 import { logger } from "../shared/logger";
 import { config } from "../config/config";
-import { RentalPost } from "../interfaces/RentalPost";
+import {
+    RentalPost,
+    RentalPostWithoutDescription
+} from "../interfaces/RentalPost";
 import { Errors } from "../interfaces/Error";
 import { ChatCompletionResponse } from "../interfaces/ChatCompletionResponse";
 
@@ -49,13 +52,24 @@ class Parser {
 
     private async getPrompt(humanText: string): Promise<string> {
         const basePrompt = await readFile(
-            path.join(process.cwd(), envs.PROMPT_PATH),
+            path.join(process.cwd(), envs.MAIN_PROMPT_PATH),
             "utf-8"
         );
         return basePrompt.replace("{0}", humanText);
     }
 
-    private findMostConsistent<T extends object>(arr: T[]): T | null {
+    private async getDescriptionPrompt(humanText: string): Promise<string> {
+        const basePrompt = await readFile(
+            path.join(process.cwd(), envs.DESCRIPTION_PROMPT_PATH),
+            "utf-8"
+        );
+        return basePrompt.replace("{0}", humanText);
+    }
+
+    private findMostConsistent<T extends object>(
+        arr: T[],
+        importantFields: keyof T
+    ): T | null {
         logger.debug(
             `Finding most consistent response from ${arr.length} items`
         );
@@ -69,7 +83,11 @@ class Parser {
         for (let i = 0; i < arr.length; i++) {
             for (let j = 0; j < arr.length; j++) {
                 if (i !== j) {
-                    scores[i] += this.calculateSimilarityScore(arr[i], arr[j]);
+                    scores[i] += this.calculateSimilarityScore(
+                        arr[i],
+                        arr[j],
+                        importantFields
+                    );
                 }
             }
         }
@@ -78,7 +96,11 @@ class Parser {
         return arr[maxIndex];
     }
 
-    private calculateSimilarityScore<T>(a: T, b: T): number {
+    private calculateSimilarityScore<T>(
+        a: T,
+        b: T,
+        importantFields: keyof T
+    ): number {
         let score = 0;
 
         for (const key in a) {
@@ -97,7 +119,7 @@ class Parser {
                 } else {
                     // Compare other properties
                     if (aValue === bValue) {
-                        score++;
+                        score += key === importantFields ? 5 : 1;
                     }
                 }
             }
@@ -230,11 +252,17 @@ class Parser {
         const responses = await this.fetchMultipleServerResponses(prompt, () =>
             this.fetchGpt(prompt)
         );
-        const parsed = this.extractValidJSONs<RentalPost>(responses);
-        const cleaned = this.cleanEmptyStrings<RentalPost>(parsed);
+        const parsed =
+            this.extractValidJSONs<RentalPostWithoutDescription>(responses);
+        const cleaned =
+            this.cleanEmptyStrings<RentalPostWithoutDescription>(parsed);
         const nonRental = cleaned.find(e => !e.isForRent || !e.isRental);
         const mostConsistent =
-            nonRental || this.findMostConsistent<RentalPost>(cleaned);
+            nonRental ||
+            this.findMostConsistent<RentalPostWithoutDescription>(
+                cleaned,
+                "monthlyPrice"
+            ); // enfasi sul prezzo
 
         if (!mostConsistent) {
             logger.error("No consistent response found");
@@ -245,6 +273,21 @@ class Parser {
         logger.debug(
             `Response length: ${resTokens}/${config.MAX_GPT_TOKENS} tokens`
         );
+
+        let description = humanText;
+        let descriptionTokens = 0;
+        if (config.REPROCESS_POST_TEXT) {
+            logger.info(
+                `Fetching description for: ${humanText.substring(0, 30)}...`
+            );
+            const descriptionPrompt = await this.getDescriptionPrompt(
+                humanText
+            );
+            descriptionTokens = this.getTokenNumber(descriptionPrompt);
+            description = await this.fetchGpt(descriptionPrompt);
+        }
+
+        const obj: RentalPost = { description, ...mostConsistent };
 
         const endDate = moment();
         const duration = moment.duration(endDate.diff(startDate));
@@ -257,10 +300,14 @@ class Parser {
                 config.NUM_TRIES
             } successfully parsed responses) (${reqTokens + resTokens}/${
                 config.MAX_GPT_TOKENS
-            } tokens)`
+            } tokens)${
+                config.REPROCESS_POST_TEXT
+                    ? ` (description: ${descriptionTokens}/${config.MAX_GPT_TOKENS} tokens)`
+                    : ""
+            }`
         );
 
-        return mostConsistent;
+        return obj;
     }
 }
 

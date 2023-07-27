@@ -18,7 +18,6 @@ export const scrapedParsedDataSchema = Joi.object({
     rentalType: Joi.string().valid(...rentalTypes),
     rawData: Joi.string(),
     monthlyPrice: Joi.number(),
-    monthlyPricePerBed: Joi.number(),
     securityDepositMonths: Joi.number(),
     zone: Joi.string(),
     sexRestrictions: Joi.string().valid(...sexRestrictions),

@@ -1,0 +1,4 @@
+Prompt:
+Rielabora il seguente post di Facebook riguardante l'affitto di una struttura abitativa a Bologna. Scrivi una descrizione professionale in Italiano che descriva SOLAMENTE LA STRUTTURA ABITATIVA, quindi SENZA alcun invito a contattare l'utente o altro. La lunghezza deve essere tra i 200 e i 500 caratteri e non deve includere un'introduzione o conclusione.
+
+Testo da elaborare: {0}

@@ -83,9 +83,6 @@ export class ParsedDataClass {
     monthlyPrice?: number;
 
     @prop({ required: false })
-    monthlyPricePerBed?: number;
-
-    @prop({ required: false })
     securityDepositMonths?: number;
 
     @prop({ required: false })

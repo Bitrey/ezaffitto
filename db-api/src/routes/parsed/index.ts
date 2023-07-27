@@ -17,6 +17,7 @@ router.get(
     "/",
     query("limit").isInt().optional(),
     query("skip").isInt().optional(),
+    query("maxPrice").isInt({ gt: 0 }).optional(),
     // TODO! fixa questo
     // isIn(Object.values(RentalTypes))
     query("rentalTypes").isArray().optional(),
@@ -32,6 +33,12 @@ router.get(
 
         const rentalTypes = req.query.rentalTypes as RentalTypes[] | null;
         if (rentalTypes) query.rentalType = { $in: rentalTypes };
+
+        if (req.query.maxPrice) {
+            query.monthlyPrice = {
+                $lt: parseInt(req.query.maxPrice as string)
+            };
+        }
 
         const data = ParsedData.find(query).sort({ date: -1 });
         if (req.query.limit) {

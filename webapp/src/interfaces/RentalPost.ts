@@ -18,7 +18,6 @@ export interface ParsedData {
     description?: string;
     rentalType?: string;
     monthlyPrice?: number;
-    monthlyPricePerBed?: number;
     securityDepositMonths?: number;
     zone?: string;
     sexRestrictions?: string;

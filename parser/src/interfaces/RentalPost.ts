@@ -26,7 +26,6 @@ export interface RentalPost {
     isForRent: boolean;
     rentalType: RentalType;
     monthlyPrice: number | null;
-    monthlyPricePerBed: number | null;
     securityDepositMonths: number | null;
     zone: string | null;
     description: string;
@@ -47,3 +46,5 @@ export interface RentalPost {
     priceIncludesTaxes: boolean;
     smokingAllowed: boolean | null;
 }
+
+export type RentalPostWithoutDescription = Omit<RentalPost, "description">;

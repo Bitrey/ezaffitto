@@ -84,15 +84,15 @@ const RentFinder = () => {
 
         <div className="mt-2 flex justify-center items-center gap-2">
           <p>Prezzo massimo:</p>
-          <Textbox
-            type="text"
-            value={`€ ${maxPrice}`}
-            onChange={v =>
-              setMaxPrice(parseInt(v.target.value.replace("€", "")) || 0)
-            }
-            className="pl-4"
-          />
-          <span className="font-medium">€{maxPrice}</span>
+          <div className="flex items-center rounded border border-inherit outline-none focus:border-red-600">
+            <p className="ml-2 prefix font-light text-gray-500">€</p>
+            <Textbox
+              type="number"
+              value={maxPrice}
+              onChange={v => setMaxPrice(parseInt(v.target.value) || 0)}
+              className="border-none"
+            />
+          </div>
         </div>
       </form>
 

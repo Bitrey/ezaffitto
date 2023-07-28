@@ -1,8 +1,9 @@
 import Header from "./Header";
 import { labels } from "@/i18n/labels";
 import RentFinder from "@/components/RentFinder";
+import { appWithTranslation } from "next-i18next";
 
-export default function Home() {
+function Home() {
   return (
     <main>
       <Header />
@@ -18,3 +19,5 @@ export default function Home() {
     </main>
   );
 }
+
+export default appWithTranslation(Home);

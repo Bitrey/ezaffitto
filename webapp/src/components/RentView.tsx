@@ -1,10 +1,12 @@
 import { RentalPost } from "@/interfaces/RentalPost";
-import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Zoom from "react-medium-image-zoom";
 import React, { FunctionComponent, HTMLAttributes, useEffect } from "react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import axios, { AxiosError } from "axios";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
+import Button from "./Button";
 
 interface RentViewProps extends HTMLAttributes<HTMLDivElement> {
   post: RentalPost;
@@ -27,6 +29,7 @@ const RentView: FunctionComponent<RentViewProps> = ({ post }) => {
   const jsonImages = JSON.stringify(post.images);
 
   useEffect(() => {
+    setImages(null);
     async function filterImages() {
       const existingImages: string[] = [];
       for (const img of post.images) {
@@ -72,17 +75,36 @@ const RentView: FunctionComponent<RentViewProps> = ({ post }) => {
       )}
 
       <div className="p-2">
-        <p className="font-semibold tracking-tighter">{post?.rentalType}</p>
+        <div className="mt-4 mb-8 grid grid-cols-1 md:grid-cols-2">
+          <div>
+            <p className="font-semibold tracking-tighter">{post?.rentalType}</p>
 
-        <p className="mb-2 text-lg font-light">€{post?.monthlyPrice}</p>
+            <p className="text-lg">
+              €{post?.monthlyPrice} <span className="font-light">/mese</span>
+            </p>
+          </div>
+          <div>
+            <p className="text-gray-700">
+              {post?.date &&
+                format(post.date, "'📅' E d MMM yyyy 'alle' HH:mm", {
+                  locale: it
+                })}
+            </p>
+            {post?.address && (
+              <p className="mt-2 text-gray-700">📍 {post?.address}</p>
+            )}
+          </div>
+        </div>
 
         <p>{post?.description}</p>
 
-        <div className="flex items-center gap-2">
-          <p className="mt-2 text-gray-500">{post?.date.toISOString()}</p>
-          <p>.</p> {/* TODO fallo meglio */}
-          <p className="mt-2 text-gray-500">{post?.address}</p>
-        </div>
+        {post && (
+          <div className="mt-4 flex justify-center">
+            <Button className="p-3 rounded-full font-medium tracking-tight">
+              Contatta <span className="font-bold">{post?.authorUsername}</span>
+            </Button>
+          </div>
+        )}
 
         <h1>debug</h1>
         <pre>

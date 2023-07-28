@@ -1,5 +1,8 @@
 import { RentalPost } from "@/interfaces/RentalPost";
-import React, { FunctionComponent, HTMLAttributes, Key } from "react";
+import React, { FunctionComponent, HTMLAttributes } from "react";
+import { it } from "date-fns/locale";
+import { formatDistance } from "date-fns";
+
 // import ReactPlaceholder from "react-placeholder";
 
 interface RentCardProps extends HTMLAttributes<HTMLDivElement> {
@@ -26,7 +29,14 @@ const RentCard: FunctionComponent<RentCardProps> = ({
       <p className="line-clamp-3">{post?.description}</p>
 
       <div className="flex items-center gap-2">
-        <p className="mt-2 text-gray-500">{post?.date.toISOString()}</p>
+        <p className="mt-2 text-gray-500">
+          {post?.date &&
+            formatDistance(
+              post.date,
+              new Date(),
+              { addSuffix: true, locale: it } // Pass the locale as an option
+            )}
+        </p>
         <p>.</p> {/* TODO fallo meglio */}
         <p className="mt-2 text-gray-500">{post?.address}</p>
       </div>

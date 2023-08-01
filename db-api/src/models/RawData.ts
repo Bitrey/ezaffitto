@@ -1,13 +1,14 @@
 import mongoose, { Schema } from "mongoose";
 import { config } from "../config";
 
-interface IRawDataSchema extends mongoose.Document {
+export interface IRawDataSchema extends mongoose.Document {
     [config.POST_ID_KEY]: string;
     [config.SOURCE_TYPE_KEY]: string;
     [config.RAW_MESSAGE_KEY]: string;
     [config.SCRAPER_RAW_DATA_KEY]: {
         [key: string]: unknown;
     };
+    isRental?: boolean;
 }
 
 export const rawDataSchema = new Schema<IRawDataSchema>(
@@ -27,6 +28,10 @@ export const rawDataSchema = new Schema<IRawDataSchema>(
         [config.SCRAPER_RAW_DATA_KEY]: {
             type: Schema.Types.Mixed,
             required: true
+        },
+        isRental: {
+            type: Boolean,
+            required: false
         }
     },
     { timestamps: true }

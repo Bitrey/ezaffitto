@@ -9,7 +9,7 @@ export const config = Object.freeze({
     MAX_RAW_DOCS_TO_SYNC: 100,
 
     // se rielaborare la descrizione o lasciarla raw
-    REPROCESS_POST_TEXT: true,
+    REPROCESS_POST_TEXT: false,
 
     NUM_TRIES: 1,
     DELAY_BETWEEN_TRIES_MS: 3000,
@@ -20,7 +20,6 @@ export const config = Object.freeze({
 
     RAW_TOPIC: "scraper.scraped.*",
     PARSED_TOPIC_PREFIX: "parser.parsed.",
-    ERROR_TOPIC: "parser.error",
 
     RAW_JSON_SCHEMA_PATH: path.join(
         process.cwd(),

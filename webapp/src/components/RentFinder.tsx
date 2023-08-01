@@ -1,16 +1,14 @@
-"use client";
-
-import { RentalPost, RentalPostJSONified } from "@/interfaces/RentalPost";
 import axios, { AxiosError } from "axios";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import RentCard from "./RentCard";
 import CustomSelect from "./Select";
-import { rentalTypeOptions } from "@/config";
-import { labels } from "@/i18n/labels";
 import Button from "./Button";
-import Search from "@/icons/Search";
 import RentView from "./RentView";
 import Textbox from "./Textbox";
+import { RentalPost, RentalPostJSONified } from "../interfaces/RentalPost";
+import { rentalTypeOptions } from "../config";
+import Search from "../icons/Search";
+import { useTranslation } from "react-i18next";
 
 const RentFinder = () => {
   const [posts, setPosts] = useState<RentalPost[] | null>(null);
@@ -25,6 +23,8 @@ const RentFinder = () => {
 
   // MIGLIORA TYPING!! (array di chiavi di rentalTypeOptions[i].value)
   const [rentalTypes, setRentalTypes] = useState<string[]>(["singleRoom"]);
+
+  const { t } = useTranslation();
 
   async function fetchData() {
     setIsLoading(true);
@@ -71,7 +71,7 @@ const RentFinder = () => {
             isMultiple
             defaultValues={[rentalTypeOptions[0]]}
             options={rentalTypeOptions}
-            noOptionsMessage={labels.selectNoOptionsMessage}
+            noOptionsMessage={t("rentFinder.noMoreOptions")}
             onChange={s => setRentalTypes(s.map(e => e.value))}
           />
           <Button
@@ -83,7 +83,7 @@ const RentFinder = () => {
         </div>
 
         <div className="mt-2 flex justify-center items-center gap-2">
-          <p>Prezzo massimo:</p>
+          <p>{t("rentFinder.maxPrice")}</p>
           <div className="flex items-center rounded border border-inherit outline-none focus:border-red-600">
             <p className="ml-2 prefix font-light text-gray-500">€</p>
             <Textbox

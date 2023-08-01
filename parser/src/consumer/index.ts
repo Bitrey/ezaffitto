@@ -82,6 +82,7 @@ export const runConsumer = async () => {
                 );
 
                 rawDataEvent.emit("rawData", {
+                    ampq: { channel, message: msg },
                     postId: value.postId,
                     source: scraperType,
                     rawMessage: value.rawMessage,
@@ -94,6 +95,6 @@ export const runConsumer = async () => {
                 );
             }
         },
-        { noAck: true }
+        { noAck: false }
     );
 };

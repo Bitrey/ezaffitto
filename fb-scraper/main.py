@@ -127,6 +127,7 @@ def main():
         filemode='a',
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logging.getLogger().setLevel(logging.INFO)
+    logging.getLogger().addHandler(logging.StreamHandler())
 
     logging.info("Connecting to RabbitMQ")
     connect_to_rabbitmq()

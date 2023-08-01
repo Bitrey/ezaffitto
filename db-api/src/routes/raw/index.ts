@@ -1,20 +1,49 @@
 import { Request, Response, Router } from "express";
 import { logger } from "../../shared/logger";
-import RawData from "../../models/RawData";
+import RawData, { IRawDataSchema } from "../../models/RawData";
 import { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, OK } from "http-status";
 import { config } from "../../config";
 import { validateModel } from "../../middlewares/validateModel";
+import { param, query } from "express-validator";
+import { validate } from "../../middlewares/expressValidator";
+import { FilterQuery } from "mongoose";
 
 const router = Router();
 
-router.get("/", async (req: Request, res: Response) => {
-    logger.debug("Getting all raw data");
+router.get(
+    "/",
+    query("isRentalNotFalse").isBoolean().optional(),
+    validate,
+    async (req: Request, res: Response) => {
+        logger.debug("Getting all raw data");
 
-    const data = await RawData.find({});
-    logger.debug("Raw data retrieved successfully");
+        const query: FilterQuery<IRawDataSchema> = {};
 
-    return res.json(data);
-});
+        if (req.query.isRentalNotFalse === "true") {
+            query.isRental = { $ne: false };
+        }
+
+        const data = await RawData.find(query).sort({ createdAt: -1 });
+        logger.debug("Raw data retrieved successfully");
+
+        return res.json(data);
+    }
+);
+
+router.get(
+    "/not-rental/:id",
+    param("id").isString().isLength({ min: 1 }),
+    validate,
+    async (req: Request, res: Response) => {
+        const postId: string = req.params.id;
+
+        logger.debug(`Setting postId ${postId} to not rental`);
+
+        await RawData.findOneAndUpdate({ postId }, { isRental: false });
+
+        return res.sendStatus(OK);
+    }
+);
 
 router.get("/postid/:id", async (req: Request, res: Response) => {
     logger.debug("Getting raw data by postId");
@@ -24,6 +53,20 @@ router.get("/postid/:id", async (req: Request, res: Response) => {
 
     return res.json(data);
 });
+
+router.get(
+    "/text",
+    query("text").isString().isLength({ min: 1 }),
+    validate,
+    async (req: Request, res: Response) => {
+        logger.debug("Getting raw data by text");
+
+        const data = await RawData.findOne({ rawMessage: req.query.text });
+        logger.debug("Raw data retrieved successfully by text: " + data);
+
+        return res.json(data);
+    }
+);
 
 router.post("/validate", validateModel(RawData), async (req, res) => {
     logger.debug("Validated raw data");

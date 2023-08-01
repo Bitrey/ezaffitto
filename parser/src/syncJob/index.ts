@@ -11,13 +11,21 @@ const instance = axios.create({
 });
 
 async function parseUnparsedPosts() {
+    if (!config.RUN_PARSER) {
+        logger.info("Parser is disabled, skipping sync job");
+        return;
+    }
+
     logger.info("Parsing unparsed posts...");
 
     let parsed: RawData[];
 
     try {
         const { data } = await instance.get("/raw", {
-            params: { limit: config.MAX_RAW_DOCS_TO_SYNC }
+            params: {
+                isRentalNotFalse: true,
+                limit: config.MAX_RAW_DOCS_TO_SYNC
+            }
         });
         parsed = data;
     } catch (err) {

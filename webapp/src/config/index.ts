@@ -1,10 +1,10 @@
 export const config = {};
 
 export const rentalTypeOptions = [
-    { value: "singleRoom", label: "Camera Singola" },
-    { value: "doubleRoom", label: "Camera Doppia" },
-    { value: "studio", label: "Monolocale" },
-    { value: "apartment", label: "Appartamento" },
-    { value: "house", label: "Casa" },
-    { value: "other", label: "Altro" }
+    { value: "singleRoom", label: "rentalType.singleRoom" },
+    { value: "doubleRoom", label: "rentalType.doubleRoom" },
+    { value: "studio", label: "rentalType.studio" },
+    { value: "apartment", label: "rentalType.apartment" },
+    { value: "house", label: "rentalType.house" },
+    { value: "other", label: "rentalType.other" }
 ];

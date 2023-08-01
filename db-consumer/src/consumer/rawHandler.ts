@@ -35,14 +35,22 @@ export async function rawDataHandler(scraperType: string, message: string) {
     }
 
     try {
-        const exists = await instance.get(`/raw/postid/${value.postId}`);
+        const existsById = await instance.get(`/raw/postid/${value.postId}`);
 
-        if (exists.data) {
+        const existsByText = await instance.get("/raw/text", {
+            params: { text: value.rawMessage }
+        });
+
+        if (existsById.data || existsByText.data) {
             // TODO: deve essere warning? (DEBUG)
             logger.debug(
-                `Raw data for postId ${value.postId} already exists, skipping...`
+                `Raw data for postId ${value.postId} already exists (byId: ${
+                    JSON.stringify(existsById.data).slice(0, 30) + "..."
+                }, byText: ${
+                    JSON.stringify(existsByText.data).slice(0, 30) + "..."
+                }), skipping...`
             );
-            return exists.data;
+            return existsById.data || existsByText.data;
         }
     } catch (err) {
         logger.error("Error while checking if parsed data already exists");

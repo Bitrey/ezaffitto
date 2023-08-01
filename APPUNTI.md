@@ -4,8 +4,6 @@ PER UN PARSING MIGLIORE: Fai primo round in cui chiedi struttura JSON SENZA DESC
 
 Aggiungi healthcheck al bot
 
-fixa i tuoi node_modules quando non sei in svizzera
-
 usa scroller infinito in frontend gui (guarda vhfesuperiori/social)
 
 `scraper` butta fuori un JSON con:

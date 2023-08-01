@@ -1,15 +1,13 @@
 import { logger } from "./shared/logger";
 import EventEmitter from "events";
 import {
-    ErrorEventEmitter,
+    NotRentalsEventEmitter,
     ParsedDataEventEmitter,
-    ParsedPost,
     RawDataEventEmitter
 } from "./interfaces/EventEmitters";
 import { runConsumer } from "./consumer";
 import { runProducer } from "./producer";
 import Parser from "./parser/parser";
-import { Errors } from "./interfaces/Error";
 
 import express from "express";
 import bodyParser from "body-parser";
@@ -22,7 +20,7 @@ const parser = new Parser();
 
 export const rawDataEvent: RawDataEventEmitter = new EventEmitter();
 export const parsedDataEvent: ParsedDataEventEmitter = new EventEmitter();
-export const errorsEvent: ErrorEventEmitter = new EventEmitter();
+export const notRentalsEvent: NotRentalsEventEmitter = new EventEmitter();
 
 const delay = (ms: any) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -79,13 +77,22 @@ const instance = axios.create({
     baseURL: config.DB_API_BASE_URL
 });
 
-rawDataEvent.on("rawData", async ({ postId, source, rawMessage }) => {
+rawDataEvent.on("rawData", async ({ ampq, postId, source, rawMessage }) => {
     try {
         // check if already exists (salva soldi, non fare parsing inutile)
-        const { data } = await instance.get(`/parsed/postid/${postId}`);
-        if (data) {
+        const existsById = await instance.get(`/raw/postid/${postId}`);
+
+        const existsByText = await instance.get("/raw/text", {
+            params: { text: rawMessage }
+        });
+
+        if (existsById.data || existsByText.data) {
             logger.debug(
-                `Parsed data for postId ${postId} already exists, skipping...`
+                `Parsed data for postId ${postId} already exists (byId: ${
+                    JSON.stringify(existsById.data).slice(0, 30) + "..."
+                }, byText: ${
+                    JSON.stringify(existsByText.data).slice(0, 30) + "..."
+                }), skipping...`
             );
             return;
         }
@@ -96,6 +103,10 @@ rawDataEvent.on("rawData", async ({ postId, source, rawMessage }) => {
             logger.info(
                 `Parsed data for postId ${postId} is not a rental, skipping...`
             );
+            notRentalsEvent.emit("notRental", {
+                postId,
+                source
+            });
             return;
         }
 
@@ -104,12 +115,21 @@ rawDataEvent.on("rawData", async ({ postId, source, rawMessage }) => {
             source,
             post: parsed
         });
+
+        if (ampq) {
+            ampq.channel.ack(ampq.message);
+        }
     } catch (err) {
-        errorsEvent.emit("error", {
-            err:
-                (err instanceof Error && (err.message as Errors)) ||
-                (err?.toString() as Errors) ||
-                Errors.UNKNOWN_ERROR
-        });
+        logger.error(`Error in rawDataEvent handler for postId ${postId}:`);
+        logger.error(err);
+    }
+});
+
+notRentalsEvent.on("notRental", async ({ postId }) => {
+    try {
+        await instance.post("/raw/not-rental/" + postId);
+    } catch (err) {
+        logger.error(`Error in notRentalsEvent handler for postId ${postId}:`);
+        logger.error(err);
     }
 });

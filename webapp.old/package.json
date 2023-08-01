@@ -1,0 +1,33 @@
+{
+    "name": "webapp",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev -p 6969",
+        "build": "next build",
+        "start": "next start -p 6969",
+        "lint": "next lint"
+    },
+    "dependencies": {
+        "@types/node": "20.4.2",
+        "@types/react": "18.2.15",
+        "@types/react-dom": "18.2.7",
+        "autoprefixer": "10.4.14",
+        "axios": "^1.4.0",
+        "date-fns": "^2.30.0",
+        "eslint": "8.45.0",
+        "eslint-config-next": "13.4.11",
+        "i18next": "^23.3.0",
+        "next": "13.4.11",
+        "next-i18next": "^14.0.0",
+        "postcss": "8.4.26",
+        "react": "18.2.0",
+        "react-dom": "18.2.0",
+        "react-i18next": "^13.0.2",
+        "react-medium-image-zoom": "^5.1.6",
+        "react-tailwindcss-select": "^1.8.5",
+        "swiper": "^10.0.4",
+        "tailwindcss": "3.3.3",
+        "typescript": "5.1.6"
+    }
+}

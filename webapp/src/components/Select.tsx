@@ -1,6 +1,5 @@
-"use client";
-
 import React, { FunctionComponent, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Select from "react-tailwindcss-select";
 import {
   Option,
@@ -26,6 +25,8 @@ const CustomSelect: FunctionComponent<CustomSelectProps> = ({
 
     onChange && onChange(vals);
   }
+
+  const { t } = useTranslation();
 
   return (
     // <div className="transition-colors"

@@ -1,10 +1,6 @@
-import { errorsEvent, parsedDataEvent } from "..";
+import { parsedDataEvent } from "..";
 import { config } from "../config/config";
-import { AppError } from "../interfaces/Error";
-import {
-    ParsedPost,
-    ParsedPostWithoutSource
-} from "../interfaces/EventEmitters";
+import { ParsedPostWithoutSource } from "../interfaces/EventEmitters";
 import { logger } from "../shared/logger";
 
 import * as amqp from "amqplib";
@@ -41,17 +37,6 @@ export const runProducer = async () => {
             config.RABBITMQ_EXCHANGE,
             topic,
             Buffer.from(JSON.stringify(dataToSend))
-        );
-    });
-    errorsEvent.on("error", async error => {
-        logger.info(
-            `Sending error to RabbitMQ on topic ${config.ERROR_TOPIC}...`
-        );
-
-        channel.publish(
-            config.RABBITMQ_EXCHANGE,
-            config.ERROR_TOPIC,
-            Buffer.from(JSON.stringify(error as AppError))
         );
     });
 };

@@ -1,7 +1,9 @@
-import { RentalPost } from "@/interfaces/RentalPost";
-import React, { FunctionComponent, HTMLAttributes } from "react";
-import { it } from "date-fns/locale";
+import { FunctionComponent, HTMLAttributes } from "react";
+import { enUS, it } from "date-fns/locale";
 import { formatDistance } from "date-fns";
+import { RentalPost } from "../interfaces/RentalPost";
+import Fb from "../icons/Fb";
+import { useTranslation } from "react-i18next";
 
 // import ReactPlaceholder from "react-placeholder";
 
@@ -15,6 +17,8 @@ const RentCard: FunctionComponent<RentCardProps> = ({
   onCardSelected,
   ...rest
 }) => {
+  const { i18n } = useTranslation();
+
   return (
     <div
       className="cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-300 flex flex-col p-4 min-w-[12rem] min-h-[12rem]"
@@ -34,11 +38,13 @@ const RentCard: FunctionComponent<RentCardProps> = ({
             formatDistance(
               post.date,
               new Date(),
-              { addSuffix: true, locale: it } // Pass the locale as an option
+              { addSuffix: true, locale: i18n.language === "it" ? it : enUS } // Pass the locale as an option
             )}
         </p>
         <p>.</p> {/* TODO fallo meglio */}
-        <p className="mt-2 text-gray-500">{post?.address}</p>
+        <p className="mt-2 text-gray-500">
+          {post?.source === "facebook" && <Fb className="fill-gray-500" />}
+        </p>
       </div>
       {/* </ReactPlaceholder> */}
     </div>

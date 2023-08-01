@@ -22,25 +22,25 @@ services:
       db-consumer:
         condition: service_healthy
 
-  telegram-bot:
-    build: ./telegram-bot
-    restart: unless-stopped
-    volumes:
-      - ./telegram-bot:/usr/src/app
-    environment:
-      - NODE_ENV=development
-      - PORT=3000
-    depends_on:
-      db-api:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - rabbitmq-network
-      - db-api-network
-      - redis-network
+  # telegram-bot:
+  #   build: ./telegram-bot
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./telegram-bot:/usr/src/app
+  #   environment:
+  #     - NODE_ENV=development
+  #     - PORT=3000
+  #   depends_on:
+  #     db-api:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   networks:
+  #     - rabbitmq-network
+  #     - db-api-network
+  #     - redis-network
 
   webapp:
     build: ./webapp

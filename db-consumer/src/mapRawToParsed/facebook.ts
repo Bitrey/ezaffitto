@@ -1,12 +1,12 @@
 import moment from "moment";
-import { FacebookData } from "../interfaces/FacebookData";
 import { ParsedData, PostMetadata, RentalPost } from "../interfaces/RentalPost";
 import { geolocate } from "./geolocation";
 import { logger } from "../shared/logger";
+import { FbPost } from "../interfaces/FbPost";
 
 export async function mapFBPostToFullDoc(
     postId: string,
-    fb: FacebookData,
+    fb: FbPost,
     parsed: ParsedData,
     rawDataObjectId: string
 ): Promise<RentalPost> {
@@ -27,17 +27,16 @@ export async function mapFBPostToFullDoc(
     }
 
     const metadata: PostMetadata = {
-        date: moment.unix(fb.timestamp).toDate(),
-        images: fb.images,
+        date: fb.date,
+        images: fb.images || [],
         postId, // per sicurezza non usare quello di fb (non si sa mai)
         rawData: rawDataObjectId,
         source: "facebook",
-        authorUrl: fb.user_url,
+        authorUrl: fb.authorUrl,
         latitude: coords?.latitude,
-        authorUserId: fb.user_id,
-        authorUsername: fb.username,
+        authorUsername: fb.authorName,
         longitude: coords?.longitude,
-        url: fb.post_url
+        url: fb.postUrl
     };
 
     return {

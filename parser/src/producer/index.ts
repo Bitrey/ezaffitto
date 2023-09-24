@@ -26,7 +26,9 @@ export const runProducer = async () => {
     parsedDataEvent.on("parsedData", async data => {
         const topic = config.PARSED_TOPIC_PREFIX + data.source;
 
-        logger.info("Sending data to RabbitMQ on topic " + topic + "...");
+        logger.info(
+            `Sending postId ${data.postId} to RabbitMQ on topic ${topic}...`
+        );
 
         // rimuovi il campo source
         const dataToSend: ParsedPostWithoutSource = (({ source, ...o }) => o)(

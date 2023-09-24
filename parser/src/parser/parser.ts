@@ -16,7 +16,7 @@ import { Errors } from "../interfaces/Error";
 import { ChatCompletionResponse } from "../interfaces/ChatCompletionResponse";
 
 const configuration = new Configuration({
-    organization: "org-BbXm9BbLn4ZtxoPh9K5hOGB2",
+    organization: config.OPENAI_ORGANIZATION,
     apiKey: process.env.OPENAI_API_KEY
 });
 const openai = new OpenAIApi(configuration);
@@ -29,10 +29,6 @@ class Parser {
             logger.info("Prompt:");
             logger.info(prompt);
         });
-    }
-
-    private static wait(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     private getTokenNumber(prompt: string): number {

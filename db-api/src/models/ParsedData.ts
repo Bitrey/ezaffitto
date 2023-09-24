@@ -62,13 +62,13 @@ export class ParsedDataClass {
     @prop({ required: false })
     authorUrl?: string;
 
+    // Parsed data
+
     @prop({ required: false })
     latitude?: number;
 
     @prop({ required: false })
     longitude?: number;
-
-    // Parsed data
 
     @prop({ required: true })
     isRental!: boolean;

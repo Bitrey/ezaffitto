@@ -13,6 +13,7 @@ export async function rawDataHandler(scraperType: string, message: string) {
         value = JSON.parse(message);
         if (!value.postId) {
             logger.error("Missing postId in rawDataHandler");
+            logger.error(value);
             throw new Error("Missing postId");
         }
     } catch (err) {
@@ -69,6 +70,6 @@ export async function rawDataHandler(scraperType: string, message: string) {
         throw new Error(Errors.RAW_DB_SAVE_FAILED);
     }
 
-    logger.debug(`Saved raw data to DB (postId: ${data.postId})`);
+    logger.info(`Saved raw data to DB (postId: ${data.postId})`);
     return data;
 }

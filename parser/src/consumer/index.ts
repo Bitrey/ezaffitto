@@ -2,7 +2,7 @@ import { rawDataEvent } from "..";
 import { config } from "../config/config";
 import { Errors } from "../interfaces/Error";
 import { RawData } from "../interfaces/RawData";
-import { scrapedRawDataSchema } from "../schemas/ScrapedRawDataWithoutRef";
+import { scraperRawDataSchema } from "../schemas/ScrapedRawDataWithoutRef";
 import { logger } from "../shared/logger";
 
 import * as amqp from "amqplib";
@@ -70,10 +70,11 @@ export const runConsumer = async () => {
                 }
 
                 // Controlla che abbia rawMessage
-                const { error, value } = scrapedRawDataSchema.validate(parsed);
+                const { error, value } = scraperRawDataSchema.validate(parsed);
                 if (error) {
                     logger.error("Error in Joi validation:");
                     logger.error(error);
+                    logger.error(parsed);
                     throw new Error(Errors.RABBITMQ_RECEIVED_INVALID_RAW_DATA);
                 }
 

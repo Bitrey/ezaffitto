@@ -63,9 +63,9 @@ services:
     restart: unless-stopped
     volumes:
       - ./fb-scraper:/usr/src/app
-    environment:
-      - NO_LOGIN=true
-      - GROUPS_FILE=groups.json
+    # environment:
+    #   - NO_LOGIN=true
+    #   - GROUPS_FILE=groups.json
     depends_on:
       rabbitmq:
         condition: service_healthy

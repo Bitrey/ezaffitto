@@ -25,7 +25,7 @@ export const notRentalsEvent: NotRentalsEventEmitter = new EventEmitter();
 const delay = (ms: any) => new Promise(resolve => setTimeout(resolve, ms));
 
 const run = async () => {
-    if (config.NODE_ENV === "development") await delay(config.DEBUG_WAIT_MS);
+    if (envs.NODE_ENV === "development") await delay(config.DEBUG_WAIT_MS);
 
     logger.info("Starting RabbitMQ producer and consumer...");
     config.RUN_PARSER
@@ -41,7 +41,7 @@ run().catch(err => {
     logger.error(err);
 });
 
-if (config.NODE_ENV === "development" && envs.DEBUG_START_EXPRESS_SERVER) {
+if (envs.NODE_ENV === "development" && envs.DEBUG_START_EXPRESS_SERVER) {
     logger.warn("Running in development mode, starting express server");
 
     const app = express();

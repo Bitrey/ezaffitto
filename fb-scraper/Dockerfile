@@ -1,13 +1,22 @@
-FROM python:3.8-alpine
+FROM node:18-slim
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
+
+RUN apt-get update && apt-get install gnupg wget -y && \
+    wget --quiet --output-document=- https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /etc/apt/trusted.gpg.d/google-archive.gpg && \
+    sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' && \
+    apt-get update && \
+    apt-get install google-chrome-stable -y --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
-RUN apk add -u gcc musl-dev
+COPY package*.json ./
 
-COPY requirements.txt ./
-
-RUN pip3 install --root-user-action=ignore --no-cache-dir -r requirements.txt
+# If you are building your code for production
+# RUN npm ci --omit=dev
+RUN npm install
 
 COPY . .
 
-CMD [ "python", "-u" ,"./main.py" ]
+CMD [ "npm", "run", "dev" ]

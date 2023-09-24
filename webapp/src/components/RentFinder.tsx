@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import RentCard from "./RentCard";
 import CustomSelect from "./Select";
 import Button from "./Button";
@@ -26,7 +26,9 @@ const RentFinder = () => {
 
   const { t } = useTranslation();
 
-  async function fetchData() {
+  async function fetchData(e?: FormEvent<HTMLFormElement>) {
+    e?.preventDefault();
+
     setIsLoading(true);
     try {
       const { data } = await axios.get("/api/parsed", {

@@ -10,7 +10,8 @@ export function validateModel(model: mongoose.Model<any>) {
             next();
         } catch (err) {
             if (err instanceof mongoose.Error.ValidationError) {
-                logger.error(err.message);
+                logger.warn("Validation error while running validator");
+                logger.warn(err.message);
                 res.status(BAD_REQUEST).json({ err: err.message });
             } else {
                 logger.error("Non-mongoose error while running validator");

@@ -129,9 +129,9 @@ rawDataEvent.on("rawData", async ({ ampq, postId, source, rawMessage }) => {
             post: parsed
         });
 
-        if (ampq) {
-            ampq.channel.ack(ampq.message);
-        }
+        // if (ampq) {
+        //     ampq.channel.ack(ampq.message);
+        // }
     } catch (err) {
         logger.error(`Error in rawDataEvent handler for postId ${postId}:`);
         logger.error(err);

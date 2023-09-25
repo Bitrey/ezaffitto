@@ -156,7 +156,7 @@ export class Scraper {
             );
         }
 
-        await page.goto(groupUrl);
+        await page.goto(groupUrl, { timeout: 10000 });
         await page.setViewport({ width: 1080, height: 1024 });
 
         // check config.GET_COOKIE_CACHE_DURATION_MINUTES
@@ -197,22 +197,6 @@ export class Scraper {
                     "Error while trying to close login button (already logged in?)" +
                         this.getElapsedStr()
                 );
-
-                // print html of element data-pagelet="DiscussionRootSuccess"
-                const contentSelector =
-                    '[data-pagelet="DiscussionRootSuccess"]';
-                const contentElem = await page.$(contentSelector);
-                if (!contentElem) {
-                    logger.warn("No contentElem found" + this.getElapsedStr());
-                } else {
-                    const contentHtml = await page.evaluate(
-                        contentElem => contentElem.innerHTML,
-                        contentElem
-                    );
-                    logger.warn(
-                        "contentHtml: " + contentHtml + this.getElapsedStr()
-                    );
-                }
             }
 
             await wait(Math.random() * 1000);
@@ -234,7 +218,10 @@ export class Scraper {
             await page.keyboard.press("Enter");
 
             try {
-                await page.waitForNavigation({ timeout: 10000 });
+                await page.waitForNavigation({
+                    timeout: 10000,
+                    waitUntil: "domcontentloaded"
+                });
 
                 this.cookiesCache = await page.cookies();
                 this.cookiesCacheDate = moment();
@@ -247,22 +234,6 @@ export class Scraper {
                     "Error while trying to login (already logged in?)" +
                         this.getElapsedStr()
                 );
-
-                // print html of element data-pagelet="DiscussionRootSuccess"
-                const contentSelector =
-                    '[data-pagelet="DiscussionRootSuccess"]';
-                const contentElem = await page.$(contentSelector);
-                if (!contentElem) {
-                    logger.warn("No contentElem found" + this.getElapsedStr());
-                } else {
-                    const contentHtml = await page.evaluate(
-                        contentElem => contentElem.innerHTML,
-                        contentElem
-                    );
-                    logger.warn(
-                        "contentHtml: " + contentHtml + this.getElapsedStr()
-                    );
-                }
             }
         }
 

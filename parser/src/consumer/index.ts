@@ -100,7 +100,7 @@ export const runConsumer = async () => {
                     );
                 }
             },
-            { noAck: true }
+            { noAck: false }
         );
     } catch (err) {
         logger.error("Error in RabbitMQ consumer");

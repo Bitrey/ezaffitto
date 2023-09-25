@@ -13,10 +13,10 @@ export const scrapedDataEvent: ScrapedDataEventEmitter = new EventEmitter();
 
 export class Scraper {
     public static fbGroupUrls: readonly string[] = [
-        "https://www.facebook.com/groups/4227281414051454/?locale=it_IT",
         "https://www.facebook.com/groups/172693152831725/?locale=it_IT", // privato, enorme
         "https://www.facebook.com/groups/AffittoBologna/?locale=it_IT",
         "https://www.facebook.com/groups/bolognaaffitti/?locale=it_IT",
+        "https://www.facebook.com/groups/4227281414051454/?locale=it_IT",
         "https://www.facebook.com/groups/affitti.a.bologna/?locale=it_IT",
         "https://www.facebook.com/groups/affittobolonga/?locale=it_IT",
         "https://www.facebook.com/groups/488856121488809/?locale=it_IT"

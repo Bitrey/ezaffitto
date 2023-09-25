@@ -23,22 +23,26 @@ export const runProducer = async () => {
         `RabbitMQ publisher publishing on topic ${config.PARSED_TOPIC_PREFIX}[*]...`
     );
 
-    parsedDataEvent.on("parsedData", async data => {
-        const topic = config.PARSED_TOPIC_PREFIX + data.source;
+    try {
+        parsedDataEvent.on("parsedData", async data => {
+            const topic = config.PARSED_TOPIC_PREFIX + data.source;
 
-        logger.info(
-            `Sending postId ${data.postId} to RabbitMQ on topic ${topic}...`
-        );
+            logger.info(
+                `Sending postId ${data.postId} to RabbitMQ on topic ${topic}...`
+            );
 
-        // rimuovi il campo source
-        const dataToSend: ParsedPostWithoutSource = (({ source, ...o }) => o)(
-            data
-        );
+            // rimuovi il campo source
+            const dataToSend: ParsedPostWithoutSource = (({ source, ...o }) =>
+                o)(data);
 
-        channel.publish(
-            config.RABBITMQ_EXCHANGE,
-            topic,
-            Buffer.from(JSON.stringify(dataToSend))
-        );
-    });
+            channel.publish(
+                config.RABBITMQ_EXCHANGE,
+                topic,
+                Buffer.from(JSON.stringify(dataToSend))
+            );
+        });
+    } catch (err) {
+        logger.error("Error in parsedDataEvent handler");
+        logger.error(err);
+    }
 };

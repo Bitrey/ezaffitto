@@ -13,12 +13,12 @@ export const scrapedDataEvent: ScrapedDataEventEmitter = new EventEmitter();
 
 export class Scraper {
     public static fbGroupUrls: readonly string[] = [
+        "https://www.facebook.com/groups/4227281414051454/?locale=it_IT",
         "https://www.facebook.com/groups/172693152831725/?locale=it_IT", // privato, enorme
         "https://www.facebook.com/groups/AffittoBologna/?locale=it_IT",
         "https://www.facebook.com/groups/bolognaaffitti/?locale=it_IT",
         "https://www.facebook.com/groups/affitti.a.bologna/?locale=it_IT",
         "https://www.facebook.com/groups/affittobolonga/?locale=it_IT",
-        "https://www.facebook.com/groups/4227281414051454/?locale=it_IT",
         "https://www.facebook.com/groups/488856121488809/?locale=it_IT"
         // "https://www.facebook.com/groups/114050352266007/?locale=it_IT", // privato
     ];
@@ -28,19 +28,23 @@ export class Scraper {
     private startDate: Moment | null = null;
     private endDate: Moment | null = null;
 
-    private async scrape(groupUrl: string, durationMs: number) {
+    private setStartEndDate(durationMs: number) {
         this.startDate = moment();
         this.endDate = moment(this.startDate).add(durationMs, "milliseconds");
+    }
+
+    private async scrape(groupUrl: string, durationMs: number) {
+        this.setStartEndDate(durationMs);
 
         logger.debug(
             `Starting scrape for groupUrl ${groupUrl}${this.getElapsedStr()}`
         );
         logger.debug(
-            `Start date is ${this.startDate.format(
+            `Start date is ${this.startDate!.format(
                 "HH:mm:ss"
-            )}, durationMs=${durationMs} => endDate is ${this.endDate.format(
+            )}, durationMs=${durationMs} => endDate is ${this.endDate!.format(
                 "HH:mm:ss"
-            )}, total duration: ${this.endDate.diff(
+            )}, total duration: ${this.endDate!.diff(
                 this.startDate,
                 "seconds"
             )}s`
@@ -64,7 +68,9 @@ export class Scraper {
             ]
         });
 
-        logger.debug("Browser connected for groupUrl " + groupUrl);
+        logger.debug(
+            "Browser connected for groupUrl " + groupUrl + this.getElapsedStr()
+        );
 
         const page = await browser.newPage();
 
@@ -80,6 +86,8 @@ export class Scraper {
 
             interceptedRequest.continue();
         });
+
+        let fetchedPosts = 0;
 
         page.on("response", async response => {
             if (urls.includes(response.url())) {
@@ -120,6 +128,7 @@ export class Scraper {
                                 props.id +
                                 this.getElapsedStr()
                         );
+                        fetchedPosts++;
                     } else {
                         logger.debug(
                             "Missing props: " +
@@ -131,35 +140,81 @@ export class Scraper {
             }
         });
 
-        await page.goto(groupUrl);
+        const hasLoginCookies =
+            this.cookiesCache &&
+            this.cookiesCacheDate!.diff(moment(), "minutes") <
+                config.GET_COOKIE_CACHE_DURATION_MINUTES();
 
+        if (hasLoginCookies) {
+            await page.setCookie(
+                ...(this.cookiesCache as Protocol.Network.Cookie[])
+            );
+            logger.debug(
+                "Using cached cookies for groupUrl " +
+                    groupUrl +
+                    this.getElapsedStr()
+            );
+        }
+
+        await page.goto(groupUrl);
         await page.setViewport({ width: 1080, height: 1024 });
 
         // check config.GET_COOKIE_CACHE_DURATION_MINUTES
-        // TODO! DEBUG
-        // if (
-        //     this.cookiesCache &&
-        //     this.cookiesCacheDate!.diff(moment(), "minutes") <
-        //         config.GET_COOKIE_CACHE_DURATION_MINUTES()
-        // ) {
-        if (false) {
-            page.setCookie(...(this.cookiesCache as Protocol.Network.Cookie[]));
-            logger.debug("Using cached cookies for groupUrl " + groupUrl);
-        } else {
-            logger.debug("Getting new cookies for groupUrl " + groupUrl);
+        if (!hasLoginCookies) {
+            logger.debug(
+                "Getting new cookies for groupUrl " +
+                    groupUrl +
+                    this.getElapsedStr()
+            );
 
             // click refuse cookie button by selecting aria-label
             const cookieButtonSelector =
                 '[aria-label="Rifiuta cookie facoltativi"]';
 
-            await page.waitForSelector(cookieButtonSelector);
+            try {
+                await page.waitForSelector(cookieButtonSelector, {
+                    timeout: 10000
+                });
+            } catch (err) {
+                logger.warn(
+                    "Error while trying to refuse cookie button (already refused?)" +
+                        this.getElapsedStr()
+                );
+            }
+
             await wait(Math.random() * 1000);
             await page.click(cookieButtonSelector);
 
             // click close login button by selecting aria-label
             const closeLoginButtonSelector = '[aria-label="Chiudi"]';
 
-            await page.waitForSelector(closeLoginButtonSelector);
+            try {
+                await page.waitForSelector(closeLoginButtonSelector, {
+                    timeout: 10000
+                });
+            } catch (err) {
+                logger.warn(
+                    "Error while trying to close login button (already logged in?)" +
+                        this.getElapsedStr()
+                );
+
+                // print html of element data-pagelet="DiscussionRootSuccess"
+                const contentSelector =
+                    '[data-pagelet="DiscussionRootSuccess"]';
+                const contentElem = await page.$(contentSelector);
+                if (!contentElem) {
+                    logger.warn("No contentElem found" + this.getElapsedStr());
+                } else {
+                    const contentHtml = await page.evaluate(
+                        contentElem => contentElem.innerHTML,
+                        contentElem
+                    );
+                    logger.warn(
+                        "contentHtml: " + contentHtml + this.getElapsedStr()
+                    );
+                }
+            }
+
             await wait(Math.random() * 1000);
             // await page.click(closeLoginButtonSelector);
 
@@ -178,19 +233,42 @@ export class Scraper {
             await wait(Math.random() * 1000);
             await page.keyboard.press("Enter");
 
-            await page.waitForNavigation();
+            try {
+                await page.waitForNavigation({ timeout: 10000 });
 
-            this.cookiesCache = await page.cookies();
-            this.cookiesCacheDate = moment();
+                this.cookiesCache = await page.cookies();
+                this.cookiesCacheDate = moment();
 
-            logger.debug(
-                "Logged in for groupUrl " + groupUrl + this.getElapsedStr()
-            );
+                logger.debug(
+                    "Logged in for groupUrl " + groupUrl + this.getElapsedStr()
+                );
+            } catch (err) {
+                logger.warn(
+                    "Error while trying to login (already logged in?)" +
+                        this.getElapsedStr()
+                );
+
+                // print html of element data-pagelet="DiscussionRootSuccess"
+                const contentSelector =
+                    '[data-pagelet="DiscussionRootSuccess"]';
+                const contentElem = await page.$(contentSelector);
+                if (!contentElem) {
+                    logger.warn("No contentElem found" + this.getElapsedStr());
+                } else {
+                    const contentHtml = await page.evaluate(
+                        contentElem => contentElem.innerHTML,
+                        contentElem
+                    );
+                    logger.warn(
+                        "contentHtml: " + contentHtml + this.getElapsedStr()
+                    );
+                }
+            }
         }
 
         const [span1] = await page.$x("//span[contains(., 'Più pertinenti')]");
         if (!span1) {
-            logger.error(
+            logger.warn(
                 "span1 not found for groupUrl " +
                     groupUrl +
                     this.getElapsedStr()
@@ -199,7 +277,7 @@ export class Scraper {
             await span1.click();
             const [span2] = await page.$x("//span[contains(., 'Nuovi post')]");
             if (!span2) {
-                logger.error(
+                logger.warn(
                     "span2 not found for groupUrl " +
                         groupUrl +
                         this.getElapsedStr()
@@ -213,6 +291,11 @@ export class Scraper {
                 );
             }
         }
+
+        console.log(
+            "Just logged in: resetting startDate" + this.getElapsedStr()
+        );
+        this.setStartEndDate(durationMs);
 
         while (moment().isBefore(this.endDate)) {
             await wait(Math.random() * 500 + 500);
@@ -232,6 +315,14 @@ export class Scraper {
             "Scrape finished for groupUrl " + groupUrl + this.getElapsedStr()
         );
 
+        if (fetchedPosts == 0) {
+            logger.warn(
+                "No posts fetched for groupUrl " +
+                    groupUrl +
+                    this.getElapsedStr()
+            );
+        }
+
         this.startDate = null;
         this.endDate = null;
     }
@@ -243,9 +334,11 @@ export class Scraper {
             " - endDate: " +
             this.endDate?.format("HH:mm:ss") +
             " - elapsed: " +
-            moment()?.diff(this.startDate, "seconds") +
-            "/" +
-            this.endDate?.diff(this.startDate, "seconds") +
+            (moment()?.diff(this.startDate, "milliseconds") / 1000).toFixed(3) +
+            "s/" +
+            (
+                (this.endDate?.diff(this.startDate, "milliseconds") || 0) / 1000
+            ).toFixed(3) +
             "s"
         );
     }
@@ -273,8 +366,7 @@ export class Scraper {
                 } catch (err) {
                     logger.error(err);
                 }
-                // wait for duration + random time between 0 and 5 seconds
-                await wait(duration + Math.floor(Math.random() * 5000));
+                await wait(Math.floor(Math.random() * 5000));
             }
         }
     }
@@ -282,7 +374,15 @@ export class Scraper {
 
 async function run() {
     const scraper = new Scraper();
-    await scraper.runScraper();
+    while (true) {
+        try {
+            await scraper.runScraper();
+            break;
+        } catch (err) {
+            logger.error("CRITICAL! Scraper crashed:");
+            logger.error(err);
+        }
+    }
 }
 
 run();

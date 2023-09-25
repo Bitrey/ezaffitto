@@ -14,6 +14,7 @@ import {
 } from "../interfaces/RentalPost";
 import { Errors } from "../interfaces/Error";
 import { ChatCompletionResponse } from "../interfaces/ChatCompletionResponse";
+import Queue from "promise-queue";
 
 const configuration = new Configuration({
     organization: config.OPENAI_ORGANIZATION,
@@ -22,6 +23,8 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 class Parser {
+    private queue: Queue;
+
     constructor() {
         logger.info("Parser initialized");
         logger.info(`Using GPT model: ${config.GPT_MODEL}`);
@@ -29,6 +32,8 @@ class Parser {
             logger.info("Prompt:");
             logger.info(prompt);
         });
+
+        this.queue = new Queue(config.MAX_CONCURRENT_PARSES, Infinity);
     }
 
     private getTokenNumber(prompt: string): number {
@@ -228,83 +233,90 @@ class Parser {
     }
 
     public async parse(humanText: string): Promise<RentalPost> {
-        logger.info(`Parsing: ${humanText.substring(0, 30)}...`);
+        logger.info(`Pushed to queue: ${humanText.substring(0, 30)}...`);
 
-        const startDate = moment();
+        return this.queue.add(async () => {
+            logger.info(`Parsing: ${humanText.substring(0, 30)}...`);
 
-        const prompt = await this.getPrompt(humanText);
+            const startDate = moment();
 
-        const reqTokens = this.getTokenNumber(prompt);
-        if (reqTokens > config.MAX_GPT_TOKENS) {
-            logger.error(
-                `Input text is too long (${reqTokens} tokens, max ${config.MAX_GPT_TOKENS})`
+            const prompt = await this.getPrompt(humanText);
+
+            const reqTokens = this.getTokenNumber(prompt);
+            if (reqTokens > config.MAX_GPT_TOKENS) {
+                logger.error(
+                    `Input text is too long (${reqTokens} tokens, max ${config.MAX_GPT_TOKENS})`
+                );
+                throw new Error(Errors.GPT_TOKENS_EXCEEDED);
+            }
+
+            logger.debug(
+                `Prompt length: ${reqTokens}/${config.MAX_GPT_TOKENS} tokens`
             );
-            throw new Error(Errors.GPT_TOKENS_EXCEEDED);
-        }
 
-        logger.debug(
-            `Prompt length: ${reqTokens}/${config.MAX_GPT_TOKENS} tokens`
-        );
+            const responses = await this.fetchMultipleServerResponses(
+                prompt,
+                () => this.fetchGpt(prompt)
+            );
+            const parsed =
+                this.extractValidJSONs<RentalPostWithoutDescription>(responses);
+            const cleaned =
+                this.cleanEmptyStrings<RentalPostWithoutDescription>(parsed);
+            const nonRental = cleaned.find(e => !e.isForRent || !e.isRental);
+            const mostConsistent =
+                nonRental ||
+                this.findMostConsistent<RentalPostWithoutDescription>(
+                    cleaned,
+                    "monthlyPrice"
+                ); // enfasi sul prezzo
 
-        const responses = await this.fetchMultipleServerResponses(prompt, () =>
-            this.fetchGpt(prompt)
-        );
-        const parsed =
-            this.extractValidJSONs<RentalPostWithoutDescription>(responses);
-        const cleaned =
-            this.cleanEmptyStrings<RentalPostWithoutDescription>(parsed);
-        const nonRental = cleaned.find(e => !e.isForRent || !e.isRental);
-        const mostConsistent =
-            nonRental ||
-            this.findMostConsistent<RentalPostWithoutDescription>(
-                cleaned,
-                "monthlyPrice"
-            ); // enfasi sul prezzo
+            if (!mostConsistent) {
+                logger.error("No consistent response found");
+                throw new Error(Errors.PARSER_NO_SUCCESSFUL_GPT_FETCH);
+            }
 
-        if (!mostConsistent) {
-            logger.error("No consistent response found");
-            throw new Error(Errors.PARSER_NO_SUCCESSFUL_GPT_FETCH);
-        }
+            const resTokens = this.getTokenNumber(
+                JSON.stringify(mostConsistent)
+            );
+            logger.debug(
+                `Response length: ${resTokens}/${config.MAX_GPT_TOKENS} tokens`
+            );
 
-        const resTokens = this.getTokenNumber(JSON.stringify(mostConsistent));
-        logger.debug(
-            `Response length: ${resTokens}/${config.MAX_GPT_TOKENS} tokens`
-        );
+            let description = humanText;
+            let descriptionTokens = 0;
+            if (config.REPROCESS_POST_TEXT) {
+                logger.info(
+                    `Fetching description for: ${humanText.substring(0, 30)}...`
+                );
+                const descriptionPrompt = await this.getDescriptionPrompt(
+                    humanText
+                );
+                descriptionTokens = this.getTokenNumber(descriptionPrompt);
+                description = await this.fetchGpt(descriptionPrompt);
+            }
 
-        let description = humanText;
-        let descriptionTokens = 0;
-        if (config.REPROCESS_POST_TEXT) {
+            const obj: RentalPost = { description, ...mostConsistent };
+
+            const endDate = moment();
+            const duration = moment.duration(endDate.diff(startDate));
+
             logger.info(
-                `Fetching description for: ${humanText.substring(0, 30)}...`
+                `Parsing ${humanText.substring(
+                    0,
+                    30
+                )}... successful in ${duration.asSeconds()}s (${
+                    cleaned.length
+                }/${config.NUM_TRIES} successfully parsed responses) (${
+                    reqTokens + resTokens
+                }/${config.MAX_GPT_TOKENS} tokens)${
+                    config.REPROCESS_POST_TEXT
+                        ? ` (description: ${descriptionTokens}/${config.MAX_GPT_TOKENS} tokens)`
+                        : ""
+                }`
             );
-            const descriptionPrompt = await this.getDescriptionPrompt(
-                humanText
-            );
-            descriptionTokens = this.getTokenNumber(descriptionPrompt);
-            description = await this.fetchGpt(descriptionPrompt);
-        }
 
-        const obj: RentalPost = { description, ...mostConsistent };
-
-        const endDate = moment();
-        const duration = moment.duration(endDate.diff(startDate));
-
-        logger.info(
-            `Parsing ${humanText.substring(
-                0,
-                30
-            )}... successful in ${duration.asSeconds()}s (${cleaned.length}/${
-                config.NUM_TRIES
-            } successfully parsed responses) (${reqTokens + resTokens}/${
-                config.MAX_GPT_TOKENS
-            } tokens)${
-                config.REPROCESS_POST_TEXT
-                    ? ` (description: ${descriptionTokens}/${config.MAX_GPT_TOKENS} tokens)`
-                    : ""
-            }`
-        );
-
-        return obj;
+            return obj;
+        });
     }
 }
 

@@ -35,43 +35,56 @@ export const runConsumer = async () => {
             "..."
     );
 
-    channel.consume(queue.queue, msg => {
-        if (msg === null) {
-            logger.error("Received null message from RabbitMQ");
-            throw new Error(Errors.RABBITMQ_RECEIVED_NULL_MESSAGE);
-        }
-
-        const topic = msg.fields.routingKey;
-
-        logger.debug(
-            `Received message from RabbitMQ at topic "${topic}": ${
-                msg.content.toString().substring(0, 30) + "..."
-            }`
-        );
-
-        if (topic.startsWith(config.RAW_TOPIC_PREFIX)) {
-            try {
-                rawDataHandler(
-                    topic.replace(config.RAW_TOPIC_PREFIX, ""),
-                    msg.content.toString()
-                );
-                channel.ack(msg);
-            } catch (err) {
-                logger.error(err);
+    try {
+        channel.consume(queue.queue, async msg => {
+            if (msg === null) {
+                logger.error("Received null message from RabbitMQ");
+                throw new Error(Errors.RABBITMQ_RECEIVED_NULL_MESSAGE);
             }
-        } else if (topic.startsWith(config.PARSED_TOPIC_PREFIX)) {
-            try {
-                parsedDataHandler(
-                    topic.replace(config.PARSED_TOPIC_PREFIX, ""),
-                    msg.content.toString()
+
+            const topic = msg.fields.routingKey;
+
+            logger.debug(
+                `Received message from RabbitMQ at topic "${topic}": ${
+                    msg.content.toString().substring(0, 30) + "..."
+                }`
+            );
+
+            if (topic.startsWith(config.RAW_TOPIC_PREFIX)) {
+                try {
+                    await rawDataHandler(
+                        topic.replace(config.RAW_TOPIC_PREFIX, ""),
+                        msg.content.toString()
+                    );
+                    channel.ack(msg);
+                } catch (err) {
+                    logger.error(
+                        "Error in rawDataEvent handler for topic " + topic
+                    );
+                    logger.error(err);
+                }
+            } else if (topic.startsWith(config.PARSED_TOPIC_PREFIX)) {
+                try {
+                    await parsedDataHandler(
+                        topic.replace(config.PARSED_TOPIC_PREFIX, ""),
+                        msg.content.toString()
+                    );
+                    channel.ack(msg);
+                } catch (err) {
+                    logger.error(
+                        "Error in parsedDataEvent handler for topic " + topic
+                    );
+                    logger.error(err);
+                }
+            } else {
+                logger.error(
+                    `Topic ${topic} does not match the expected patterns`
                 );
-                channel.ack(msg);
-            } catch (err) {
-                logger.error(err);
+                throw new Error(Errors.RABBITMQ_RECEIVED_INVALID_TOPIC);
             }
-        } else {
-            logger.error(`Topic ${topic} does not match the expected patterns`);
-            throw new Error(Errors.RABBITMQ_RECEIVED_INVALID_TOPIC);
-        }
-    });
+        });
+    } catch (err) {
+        logger.error("Error in RabbitMQ consumer");
+        logger.error(err);
+    }
 };

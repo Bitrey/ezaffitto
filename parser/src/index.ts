@@ -97,6 +97,19 @@ rawDataEvent.on("rawData", async ({ ampq, postId, source, rawMessage }) => {
             return;
         }
 
+        if (
+            config.IGNORE_POSTS_WITH_KEYWORDS.some(keyword =>
+                rawMessage.toLowerCase().includes(keyword)
+            )
+        ) {
+            logger.debug(
+                `Post ${rawMessage.slice(
+                    30
+                )}... with id ${postId} contains one of the keywords to ignore, skipping...`
+            );
+            return;
+        }
+
         const parsed = await parser.parse(rawMessage);
 
         if (!parsed.isRental || !parsed.isForRent) {

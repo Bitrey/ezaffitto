@@ -62,7 +62,14 @@ router.get(
         logger.debug("Getting raw data by text");
 
         const data = await RawData.findOne({ rawMessage: req.query.text });
-        logger.debug("Raw data retrieved successfully by text: " + data);
+        logger.debug(
+            `Raw data retrieved successfully by text: postId ${
+                data?.postId
+            }, text: ${data?.rawMessage?.slice(0, 30)}...`
+        );
+        if (!data?.postId) {
+            logger.debug("No postId, full obj: " + JSON.stringify(data));
+        }
 
         return res.json(data);
     }

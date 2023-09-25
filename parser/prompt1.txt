@@ -1,8 +1,8 @@
 Prompt:
 Il testo successivo a "Testo da elaborare: " si tratta di un post scritto da un utente su internet.
-Il tuo compito è quello di capire se si tratta di un post riguardante un affitto a Bologna, restituendo SOLO ed ESCLUSIVAMENTE in formato JSON come da struttura richiesta, SENZA ALCUN testo aggiuntivo. Includi SOLO le proprietà che sono esplicitamente menzionate o che puoi dedurre con certezza dal testo. NON includere una proprietà se non è menzionata o deducibile. I campi "isRental" e "isForRent" devono essere sempre presenti. Il campo "isRental" deve essere true SOLAMENTE se il post riguarda un affitto e se il testo è da parte di un LOCATORE che OFFRE (e non CERCA) una struttura abitativa, altrimenti DEVE ESSERE false. Se il prezzo è indicato su base giornaliera o settimanale, convertilo in un prezzo mensile (moltiplicalo per il numero appropriato di giorni o settimane). Se l'annuncio contiene informazioni su più stanze, includi solo le informazioni sulla stanza più opportuna.
+Il tuo compito è quello di capire se si tratta di un post riguardante un affitto a Bologna, restituendo SOLO ed ESCLUSIVAMENTE in formato JSON come da struttura richiesta, SENZA ALCUN testo aggiuntivo. Includi SOLO le proprietà che sono esplicitamente menzionate o che puoi dedurre con certezza dal testo. NON includere una proprietà se non è menzionata o deducibile. I campi "isRental" e "isForRent" devono essere sempre presenti. Il campo "isRental" deve essere true SOLAMENTE se il post riguarda un affitto e se il testo è da parte di un LOCATORE che OFFRE (e non CERCA) una struttura abitativa, altrimenti DEVE ESSERE false. Se il prezzo è indicato su base giornaliera o settimanale, convertilo in un prezzo mensile (moltiplicalo per il numero appropriato di giorni o settimane). Se l'annuncio contiene informazioni su più stanze, includi solo le informazioni sulla stanza più opportuna. Data attuale in formato ISO 8601: {0}.
 
-Testo da elaborare: {0}
+Testo da elaborare: {1}
 
 Struttura JSON richiesta: {
     "isRental": <boolean: if the post is about a RENTAL of a property>,
@@ -15,8 +15,8 @@ Struttura JSON richiesta: {
     "occupationalRestrictions": <enum: "everyone", "students", "workers", "other", set to "everyone" unless EXPLICITLY written>,
     "lgbtFriendly": <boolean: true if specified, null elsewise>,
     "furnished": <boolean>,
-    "availabilityStartDate": <date: start date, only if explicitly written>,
-    "availabilityEndDate": <date: end date, only if explicitly written>,
+    "availabilityStartDate": <date: start date in ISO 8601 format, only if explicitly written>,
+    "availabilityEndDate": <date: end date in ISO 8601 format, only if explicitly written>,
     "contractDurationMonths": <number, only if explicitly written>,
     "hasBalcony": <boolean>,
     "hasParking": <boolean>,

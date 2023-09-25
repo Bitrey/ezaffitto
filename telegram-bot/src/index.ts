@@ -41,47 +41,52 @@ export const runConsumer = async () => {
         `RabbitMQ consumer listening on topic ${config.PARSED_TOPIC}...`
     );
 
-    channel.consume(queue.queue, async msg => {
-        if (msg === null) {
-            logger.error("Received null message from RabbitMQ");
-            throw new Error(Errors.RABBITMQ_RECEIVED_NULL_MESSAGE);
-        }
-
-        const topic = msg.fields.routingKey;
-
-        logger.debug(
-            `Received message from RabbitMQ at topic "${topic}": ${
-                msg.content.toString().substring(0, 30) + "..."
-            }`
-        );
-
-        let parsed: RentalPost;
-        try {
-            console.log(msg.content.toString("utf-8"));
-            parsed = JSON.parse(msg.content.toString("utf-8"))["post"];
-            //console.log(parsed)
-            // GUARDS GO HERE
-            // TODO: extrapolate in another function maybe
-            try {
-                await bot.telegram.sendMessage(
-                    envs.CHANNEL_ID,
-                    generateTelegramMessageFromJson(parsed),
-                    { parse_mode: "MarkdownV2" }
-                );
-            } catch (err) {
-                logger.error(`Telegram error`);
+    try {
+        channel.consume(queue.queue, async msg => {
+            if (msg === null) {
+                logger.error("Received null message from RabbitMQ");
+                throw new Error(Errors.RABBITMQ_RECEIVED_NULL_MESSAGE);
             }
-            logger.debug("Sleeping before sending next message...");
-            await delay(5000);
-        } catch (err) {
-            logger.error(
-                `Malformed JSON data received from RabbitMQ: ${msg.content.toString(
-                    "utf-8"
-                )}.`
+
+            const topic = msg.fields.routingKey;
+
+            logger.debug(
+                `Received message from RabbitMQ at topic "${topic}": ${
+                    msg.content.toString().substring(0, 30) + "..."
+                }`
             );
-            throw new Error(Errors.RABBITMQ_RECEIVED_MALFORMED_JSON);
-        }
-    });
+
+            let parsed: RentalPost;
+            try {
+                console.log(msg.content.toString("utf-8"));
+                parsed = JSON.parse(msg.content.toString("utf-8"))["post"];
+                //console.log(parsed)
+                // GUARDS GO HERE
+                // TODO: extrapolate in another function maybe
+                try {
+                    await bot.telegram.sendMessage(
+                        envs.CHANNEL_ID,
+                        generateTelegramMessageFromJson(parsed),
+                        { parse_mode: "MarkdownV2" }
+                    );
+                } catch (err) {
+                    logger.error(`Telegram error`);
+                }
+                logger.debug("Sleeping before sending next message...");
+                await delay(5000);
+            } catch (err) {
+                logger.error(
+                    `Malformed JSON data received from RabbitMQ: ${msg.content.toString(
+                        "utf-8"
+                    )}.`
+                );
+                throw new Error(Errors.RABBITMQ_RECEIVED_MALFORMED_JSON);
+            }
+        });
+    } catch (err) {
+        logger.error("Error in RabbitMQ consumer:");
+        logger.error(err);
+    }
 };
 
 const run = async () => {

@@ -10,7 +10,7 @@ export const instance = axios.create({
 });
 
 const run = async () => {
-    logger.info("Starting RabbitMQ producer and consumer...");
+    logger.info("Starting RabbitMQ consumer...");
     runConsumer();
 };
 

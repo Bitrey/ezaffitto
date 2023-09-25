@@ -1,13 +1,18 @@
 export const config = Object.freeze({
     DEBUG_WAIT_MS: 0,
+    DEBUG_RUN_SCRAPER: true,
 
     CHROME_SERVICE_NAME: "chrome",
+
+    // between 30 minutes and 1 hour
+    GET_COOKIE_CACHE_DURATION_MINUTES: () =>
+        Math.floor(Math.random() * 30 + 30),
 
     REQUIRED_PROPS: ["id", "postUrl", "date", "text"],
 
     WARN_CLOSED_TIMES: 10,
 
-    // 10 seconds to 30 seconds
+    // random number between 20 and 40 seconds (in milliseconds)
     GET_DELAY_BETWEEN_SCRAPES_MS: () =>
         Math.floor(Math.random() * 20 * 1000) + 20 * 1000,
 

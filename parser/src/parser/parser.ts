@@ -46,12 +46,13 @@ class Parser {
         return JSON.parse(match[0]);
     };
 
-    private async getPrompt(humanText: string): Promise<string> {
+    private async getPrompt(humanText?: string): Promise<string> {
         const basePrompt = await readFile(
             path.join(process.cwd(), envs.MAIN_PROMPT_PATH),
             "utf-8"
         );
-        return basePrompt.replace("{0}", humanText);
+        const replaced = basePrompt.replace("{0}", new Date().toISOString());
+        return humanText ? replaced.replace("{1}", humanText) : replaced;
     }
 
     private async getDescriptionPrompt(humanText: string): Promise<string> {

@@ -21,6 +21,8 @@ export const runProducer = async () => {
 
     logger.info(`RabbitMQ publisher publishing on topic ${config.TOPIC}...`);
 
+    const queue: SentData[] = [];
+
     scrapedDataEvent.on("scrapedData", async data => {
         logger.info(
             "Sending data to RabbitMQ on topic " + config.TOPIC + "..."
@@ -32,10 +34,33 @@ export const runProducer = async () => {
             scraperRawData: data
         };
 
-        channel.publish(
-            config.RABBITMQ_EXCHANGE,
-            config.TOPIC,
-            Buffer.from(JSON.stringify(dataToSend))
-        );
+        try {
+            channel.publish(
+                config.RABBITMQ_EXCHANGE,
+                config.TOPIC,
+                Buffer.from(JSON.stringify(dataToSend))
+            );
+            logger.info(
+                `Sent postId ${data.id} to RabbitMQ on topic ${config.TOPIC}`
+            );
+
+            // try to send queue
+            while (queue.length > 0) {
+                const dataToSend = queue.shift();
+                channel.publish(
+                    config.RABBITMQ_EXCHANGE,
+                    config.TOPIC,
+                    Buffer.from(JSON.stringify(dataToSend))
+                );
+                logger.info(
+                    `Sent postId ${data.id} to RabbitMQ on topic ${config.TOPIC} from QUEUE`
+                );
+            }
+        } catch (err) {
+            logger.error("Error sending data to RabbitMQ");
+            logger.error(err);
+
+            queue.push(dataToSend);
+        }
     });
 };

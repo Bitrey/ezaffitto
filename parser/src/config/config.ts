@@ -1,11 +1,12 @@
 import path from "path";
-import { envs } from "./envs";
 
 export const config = Object.freeze({
     DEBUG_WAIT_MS: 0,
 
     // post raw che verranno fetchati ed eventualmente parsati (cron job)
     MAX_RAW_DOCS_TO_SYNC: 100,
+
+    IGNORE_POSTS_WITH_KEYWORDS: ["cerco", "cerca"],
 
     // se rielaborare la descrizione o lasciarla raw
     REPROCESS_POST_TEXT: false,

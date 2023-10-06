@@ -9,6 +9,7 @@ export const config = Object.freeze({
     MAX_RAW_DOCS_TO_SYNC: 100,
 
     IGNORE_POSTS_WITH_KEYWORDS: ["cerco", "cerca"],
+    DONT_PARSE_SERVICES: ["subito", "bakeca"],
 
     // se rielaborare la descrizione o lasciarla raw
     REPROCESS_POST_TEXT: false,

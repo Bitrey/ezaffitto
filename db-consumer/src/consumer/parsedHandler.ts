@@ -55,10 +55,9 @@ export async function parsedDataHandler(scraperType: string, message: string) {
     }
 
     if (!raw) {
-        logger.error(
+        logger.debug(
             `Raw data for postId ${rabbitMqJson.postId} does not exist`
         );
-        throw new Error(Errors.RAW_DATA_NOT_FOUND);
     }
 
     let mapped: RentalPost;

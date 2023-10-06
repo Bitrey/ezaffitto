@@ -1,4 +1,3 @@
-import moment from "moment";
 import { ParsedData, PostMetadata, RentalPost } from "../interfaces/RentalPost";
 import { geolocate } from "./geolocation";
 import { logger } from "../shared/logger";

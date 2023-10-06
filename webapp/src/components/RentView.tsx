@@ -22,7 +22,7 @@ const RentView: FunctionComponent<RentViewProps> = ({ post }) => {
       console.log({ data });
       return true;
     } catch (err) {
-      console.log("sasso", (err as AxiosError)?.response?.data || err);
+      console.log((err as AxiosError)?.response?.data || err);
       return false;
     }
   }

@@ -6,10 +6,85 @@ import { wait } from "./shared/wait";
 import { config } from "./config/config";
 import { FbPost } from "./interfaces/FbPost";
 import { extractor } from "./extractor";
-import { runProducer } from "./producer";
+// import { runProducer } from "./producer";
 import moment, { Moment } from "moment";
+import axios, { AxiosError } from "axios";
+import { RentalPost } from "./interfaces/shared";
 
 export const scrapedDataEvent: ScrapedDataEventEmitter = new EventEmitter();
+
+scrapedDataEvent.on("scrapedData", async fbData => {
+    // check if exists
+    try {
+        const res1 = await axios.get(
+            config.DB_API_BASE_URL + "/rentalpost/text",
+            { params: { text: fbData.text } }
+        );
+        const res2 = await axios.get(
+            config.DB_API_BASE_URL + "/rentalpost/postid/" + fbData.id
+        );
+        if (res1.data || res2.data) {
+            logger.warn(`Post ${fbData.id} already exists, skipping...`);
+            return;
+        }
+    } catch (err) {
+        logger.error("Error while checking if post already exists:");
+        logger.error((err as AxiosError)?.response?.data || err);
+        return;
+    }
+
+    logger.warn("Running debug callback for scrapedDataEvent");
+    let post: RentalPost;
+    try {
+        const { data } = await axios.post(config.PARSER_API_BASE_URL, fbData);
+        post = data;
+    } catch (err) {
+        logger.error("Error while parsing post:");
+        logger.error(err);
+        return;
+    }
+
+    // let coords: Awaited<ReturnType<typeof geolocate>> = null;
+
+    // if (parsed.address) {
+    //     try {
+    //         coords = await geolocate(parsed.address);
+    //         logger.info(
+    //             `Fetched lat and lon for postId ${postId}: ${JSON.stringify(
+    //                 coords
+    //             )}`
+    //         );
+    //     } catch (err) {
+    //         logger.error("Error while geolocating address");
+    //         logger.error(err);
+    //     }
+    // }
+
+    try {
+        const { data } = await axios.post(
+            config.DB_API_BASE_URL + "/rentalpost",
+            {
+                ...post,
+                postId: fbData.id,
+                source: "facebook",
+                date: fbData.date,
+                images: fbData.images || [],
+                authorUrl: fbData.authorUrl,
+                // latitude: coords?.latitude,
+                authorUsername: fbData.authorName,
+                // longitude: coords?.longitude,
+                url: fbData.postUrl,
+                rawData: fbData
+            }
+        );
+        logger.info(
+            "Saved post with postId " + data.postId + " _id " + data._id
+        );
+    } catch (err) {
+        logger.error("Error while saving post:");
+        logger.error((err as AxiosError)?.response?.data || err);
+    }
+});
 
 export class Scraper {
     public static fbGroupUrls: readonly string[] = [
@@ -321,7 +396,7 @@ export class Scraper {
         }
 
         logger.info("Starting scraper...");
-        await runProducer();
+        // await runProducer();
 
         logger.info("Starting scraping loop...");
         while (true) {

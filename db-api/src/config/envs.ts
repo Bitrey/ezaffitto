@@ -7,5 +7,6 @@ export const envs = cleanEnv(process.env, {
         choices: ["development", "test", "production", "staging"]
     }),
     PORT: num(),
-    MONGODB_URI: str()
+    MONGODB_URI: str(),
+    TURNSTILE_SECRET: str()
 });

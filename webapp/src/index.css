@@ -1,3 +1,61 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* .item must be first */
+.item {
+    align-items: center;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    font-size: 14px;
+    height: 40px;
+    justify-content: center;
+    width: 40px;
+    user-select: none;
+  }
+  
+  .disabled-page {
+    @apply text-gray-300;
+  }
+  
+  .active {
+    @apply border rounded-full border-gray-200;
+  }
+  
+  .break-me {
+  }
+  
+  .next {
+    font-size: 4px;
+    height: 60px;
+    position: absolute;
+    right: 0;
+    width: 150px;
+  }
+  
+  .pagination {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    height: 60px;
+    justify-content: center;
+    list-style-type: none;
+    position: relative;
+    width: 1000px;
+
+    @apply bg-red-500;
+  }
+  
+  .pagination-page {
+    font-weight: 700;
+  }
+  
+  .previous {
+    font-size: 4px;
+    height: 60px;
+    left: 0;
+    position: absolute;
+    width: 150px;
+  }

@@ -10,7 +10,7 @@ const app = express();
 
 app.use(morgan("dev", { stream: new LoggerStream() }));
 
-app.use("/api", apiRoutes);
+app.use("/api/v1", apiRoutes);
 
 app.all("*", (req, res) => res.status(NOT_FOUND).json({ err: "Not found" }));
 

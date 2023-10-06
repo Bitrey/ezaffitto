@@ -1,0 +1,24 @@
+{
+  "name": "subito-scraper",
+  "module": "src/index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/amqplib": "^0.10.2",
+    "@types/async-exit-hook": "^2.0.0",
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.3",
+    "async-exit-hook": "^2.0.1",
+    "axios": "^1.5.1",
+    "cron": "^2.4.4",
+    "winston": "^3.10.0"
+  },
+  "scripts": {
+    "start": "bun run --hot src/index.ts",
+    "start:prod": "bun run src/index.ts"
+  }
+}

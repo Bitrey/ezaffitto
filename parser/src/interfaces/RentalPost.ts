@@ -1,50 +1,67 @@
-enum RentalType {
-    SingleRoom = "singleRoom",
-    DoubleRoom = "doubleRoom",
-    Studio = "studio",
-    Apartment = "apartment",
-    House = "house",
-    Other = "other"
+// shared
+
+export enum RentalTypes {
+    SINGLE_ROOM = "singleRoom",
+    DOUBLE_ROOM = "doubleRoom",
+    STUDIO = "studio",
+    APARTMENT = "apartment",
+    HOUSE = "house",
+    OTHER = "other"
 }
 
-enum SexRestrictions {
-    Everyone = "everyone",
-    Males = "males",
-    Females = "females",
-    Other = "other"
+export enum SexRestrictions {
+    EVERYONE = "everyone",
+    MALES = "males",
+    FEMALES = "females",
+    OTHER = "other"
 }
 
-enum OccupationalRestrictions {
-    Everyone = "everyone",
-    Students = "students",
-    Workers = "workers",
-    Other = "other"
+export enum OccupationalRestrictions {
+    EVERYONE = "everyone",
+    STUDENTS = "students",
+    WORKERS = "workers",
+    OTHER = "other"
 }
 
 export interface RentalPost {
+    postId: string;
+    rawData: any;
+    source: string;
+    date: Date;
+    images: string[];
+    url?: string;
+    authorUserId?: string;
+    authorUsername?: string;
+    authorUrl?: string;
+    latitude?: number;
+    longitude?: number;
     isRental: boolean;
     isForRent: boolean;
-    rentalType: RentalType;
-    monthlyPrice: number | null;
-    securityDepositMonths: number | null;
-    zone: string | null;
-    description: string;
-    sexRestrictions: SexRestrictions;
-    occupationalRestrictions: OccupationalRestrictions;
-    lgbtFriendly: boolean | null;
-    furnished: boolean;
+    rentalType?: RentalTypes;
+    monthlyPrice?: number;
+    securityDepositMonths?: number;
+    zone?: string;
+    rawDescription?: string;
+    description?: string;
+    sexRestrictions?: SexRestrictions;
+    occupationalRestrictions?: OccupationalRestrictions;
+    lgbtFriendly?: boolean;
+    furnished?: boolean;
     availabilityStartDate?: Date;
     availabilityEndDate?: Date;
     contractDurationMonths?: number;
-    hasBalcony: boolean;
-    hasParking: boolean;
-    address: string;
-    floorNumber: number;
-    rooms: number;
-    bathrooms: number;
-    areaSqMeters: number;
-    priceIncludesTaxes: boolean;
-    smokingAllowed: boolean | null;
+    hasBalcony?: boolean;
+    hasParking?: boolean;
+    address?: string;
+    floorNumber?: number;
+    rooms?: number;
+    bathrooms?: number;
+    areaSqMeters?: number;
+    priceIncludesTaxes?: boolean;
+    smokingAllowed?: boolean;
+    hasAirConditioning?: boolean;
+    hasHeating?: boolean;
+    hasElevator?: boolean;
 }
 
 export type RentalPostWithoutDescription = Omit<RentalPost, "description">;

@@ -51,7 +51,11 @@ const RentCard: FunctionComponent<RentCardProps> = ({
           </p>
           <p>.</p> {/* TODO fallo meglio */}
           <p className="mt-2 text-gray-500">
-            {post?.source === "facebook" && <Fb className="fill-gray-500" />}
+            {post?.source === "facebook" ? (
+              <Fb className="fill-gray-500" />
+            ) : post?.source ? (
+              post?.source
+            ) : null}
           </p>
         </div>
         {/* </ReactPlaceholder> */}

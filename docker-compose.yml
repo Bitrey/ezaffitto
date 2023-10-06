@@ -10,7 +10,7 @@ services:
       - NODE_ENV=development
       - MAIN_PROMPT_PATH=./prompt1.txt
       - DESCRIPTION_PROMPT_PATH=./prompt2.txt
-      - DEBUG_START_EXPRESS_SERVER=false
+      - DEBUG_START_EXPRESS_SERVER=true
     ports:
       - "3000:3000" # DEBUG!!
     networks:
@@ -63,6 +63,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./fb-scraper:/usr/src/app
+      - /usr/bin/google-chrome:/usr/bin/google-chrome
     # environment:
     #   - NO_LOGIN=true
     #   - GROUPS_FILE=groups.json
@@ -73,6 +74,50 @@ services:
         condition: service_healthy
     networks:
       - rabbitmq-network
+      - db-api-network
+
+  subito-scraper:
+    build: ./subito-scraper
+    restart: unless-stopped
+    volumes:
+      - ./subito-scraper:/usr/src/app
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      db-consumer:
+        condition: service_healthy
+    networks:
+      - rabbitmq-network
+      - db-api-network
+
+  zappyrent-scraper:
+    build: ./zappyrent-scraper
+    restart: unless-stopped
+    volumes:
+      - ./zappyrent-scraper:/usr/src/app
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      db-consumer:
+        condition: service_healthy
+    networks:
+      - rabbitmq-network
+      - db-api-network
+
+  bakeca-scraper:
+    build: ./bakeca-scraper
+    restart: unless-stopped
+    volumes:
+      - ./bakeca-scraper:/usr/src/app
+      - /usr/bin/google-chrome:/usr/bin/google-chrome
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      db-consumer:
+        condition: service_healthy
+    networks:
+      - rabbitmq-network
+      - db-api-network
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -151,7 +196,7 @@ services:
       - db-api-network
     healthcheck:
       test:
-        ["CMD-SHELL", "wget -q -O- http://localhost:5500/api/ping || exit 1"]
+        ["CMD-SHELL", "wget -q -O- http://localhost:5500/api/v1/ping || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 5

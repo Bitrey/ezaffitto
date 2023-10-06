@@ -1,38 +1,13 @@
-import { Channel, Message } from "amqplib";
-import { RawData } from "./RawData";
 import { RentalPost } from "./RentalPost";
 
-export interface ParsedPost {
-    postId: string;
-    source: string;
-    post: RentalPost;
+export interface RawText {
+    text: string;
 }
 
-export type ParsedPostWithoutSource = Omit<ParsedPost, "source">;
+export interface ParserEventEmitter {
+    on(event: "rawText", listener: (data: RawText) => void): this;
+    emit(event: "rawText", data: RawText): boolean;
 
-interface RawDataWithChannel extends RawData {
-    ampq?: {
-        channel: Channel;
-        message: Message;
-    };
-}
-
-export interface NotRentalParsedPost {
-    postId: string;
-    source: string;
-}
-
-export interface RawDataEventEmitter {
-    on(event: "rawData", listener: (data: RawDataWithChannel) => void): this;
-    emit(event: "rawData", data: RawDataWithChannel): boolean;
-}
-
-export interface ParsedDataEventEmitter {
-    on(event: "parsedData", listener: (data: ParsedPost) => void): this;
-    emit(event: "parsedData", data: ParsedPost): boolean;
-}
-
-export interface NotRentalsEventEmitter {
-    on(event: "notRental", listener: (data: NotRentalParsedPost) => void): this;
-    emit(event: "notRental", data: NotRentalParsedPost): boolean;
+    on(event: "rentalPost", listener: (data: RentalPost) => void): this;
+    emit(event: "rentalPost", data: RentalPost): boolean;
 }

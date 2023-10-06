@@ -3,6 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "dependencies": {
+        "@marsidev/react-turnstile": "^0.3.1",
         "@testing-library/jest-dom": "^5.14.1",
         "@testing-library/react": "^13.0.0",
         "@testing-library/user-event": "^13.2.1",
@@ -20,6 +21,7 @@
         "react-i18next": "^13.0.2",
         "react-lazy-load-image-component": "^1.6.0",
         "react-medium-image-zoom": "^5.1.6",
+        "react-paginate": "^8.2.0",
         "react-scripts": "5.0.1",
         "react-tailwindcss-select": "^1.8.5",
         "swiper": "9.4.1",
@@ -52,7 +54,8 @@
         ]
     },
     "devDependencies": {
-        "@types/react-lazy-load-image-component": "^1.5.3"
+        "@types/react-lazy-load-image-component": "^1.5.3",
+        "@babel/plugin-proposal-private-property-in-object": "7.21.11"
     },
     "proxy": "http://db-api:5500"
 }

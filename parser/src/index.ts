@@ -1,26 +1,18 @@
 import { logger } from "./shared/logger";
 import EventEmitter from "events";
-import {
-    NotRentalsEventEmitter,
-    ParsedDataEventEmitter,
-    RawDataEventEmitter
-} from "./interfaces/EventEmitters";
-import { runConsumer } from "./consumer";
-import { runProducer } from "./producer";
+import { ParserEventEmitter } from "./interfaces/EventEmitters";
+// import { runConsumer } from "./consumer";
+// import { runProducer } from "./producer";
 import Parser from "./parser/parser";
 
 import express from "express";
 import bodyParser from "body-parser";
 import { envs } from "./config/envs";
 import { config } from "./config/config";
-import axios from "axios";
-import { syncJob } from "./syncJob";
 
 const parser = new Parser();
 
-export const rawDataEvent: RawDataEventEmitter = new EventEmitter();
-export const parsedDataEvent: ParsedDataEventEmitter = new EventEmitter();
-export const notRentalsEvent: NotRentalsEventEmitter = new EventEmitter();
+export const appEventEmitter: ParserEventEmitter = new EventEmitter();
 
 const delay = (ms: any) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -28,12 +20,12 @@ const run = async () => {
     if (envs.NODE_ENV === "development") await delay(config.DEBUG_WAIT_MS);
 
     logger.info("Starting RabbitMQ producer and consumer...");
-    config.RUN_PARSER
-        ? runConsumer()
-        : logger.warn("RUN_PARSER is false, not running consumer");
-    runProducer();
-
-    syncJob.start();
+    // config.RUN_PARSER
+    //     ? runConsumer()
+    //     : logger.warn("RUN_PARSER is false, not running consumer");
+    // TODO runProducer
+    logger.warn("DEBUG not running consumer");
+    // runProducer();
 };
 
 run().catch(err => {
@@ -73,76 +65,87 @@ if (envs.NODE_ENV === "development" && envs.DEBUG_START_EXPRESS_SERVER) {
     );
 }
 
-const instance = axios.create({
-    baseURL: config.DB_API_BASE_URL
-});
+// const instance = axios.create({
+//     baseURL: config.DB_API_BASE_URL
+// });
 
-rawDataEvent.on("rawData", async ({ ampq, postId, source, rawMessage }) => {
+appEventEmitter.on("rawText", async ({ text }) => {
     try {
         // check if already exists (salva soldi, non fare parsing inutile)
-        const existsById = await instance.get(`/raw/postid/${postId}`);
+        // TODO fai questo check altrove, non qui
+        // const existsById = await instance.get(`/raw/postid/${postId}`);
 
-        const existsByText = await instance.get("/raw/text", {
-            params: { text: rawMessage }
-        });
+        // const existsByText = await instance.get("/raw/text", {
+        //     params: { text: rawMessage }
+        // });
 
-        if (existsById.data || existsByText.data) {
-            logger.debug(
-                `Parsed data for postId ${postId} already exists (byId: ${
-                    JSON.stringify(existsById.data).slice(0, 30) + "..."
-                }, byText: ${
-                    JSON.stringify(existsByText.data).slice(0, 30) + "..."
-                }), skipping...`
-            );
-            return;
-        }
+        // if (existsById.data || existsByText.data) {
+        //     logger.debug(
+        //         `Parsed data for postId ${postId} already exists (byId: ${
+        //             JSON.stringify(existsById.data).slice(0, 30) + "..."
+        //         }, byText: ${
+        //             JSON.stringify(existsByText.data).slice(0, 30) + "..."
+        //         }), skipping...`
+        //     );
+        //     return;
+        // }
 
-        if (
-            config.IGNORE_POSTS_WITH_KEYWORDS.some(keyword =>
-                rawMessage.toLowerCase().includes(keyword)
-            )
-        ) {
-            logger.debug(
-                `Post ${rawMessage.slice(
-                    30
-                )}... with id ${postId} contains one of the keywords to ignore, skipping...`
-            );
-            return;
-        }
+        // if (
+        //     config.IGNORE_POSTS_WITH_KEYWORDS.some(keyword =>
+        //         text.toLowerCase().includes(keyword)
+        //     )
+        // ) {
+        //     logger.debug(
+        //         `Post ${text.slice(
+        //             30
+        //         )}... with id ${text} contains one of the keywords to ignore, skipping...`
+        //     );
+        //     return;
+        // }
 
-        const parsed = await parser.parse(rawMessage);
+        // if (config.DONT_PARSE_SERVICES.includes(source)) {
+        //     logger.debug(
+        //         `Post ${rawMessage.slice(
+        //             30
+        //         )}... with id ${postId} is a service to NOT parse (${source}), skipping...`
+        //     );
+        //     return;
+        // }
 
-        if (!parsed.isRental || !parsed.isForRent) {
-            logger.info(
-                `Parsed data for postId ${postId} is not a rental, skipping...`
-            );
-            notRentalsEvent.emit("notRental", {
-                postId,
-                source
-            });
-            return;
-        }
+        const parsed = await parser.parse(text);
 
-        parsedDataEvent.emit("parsedData", {
-            postId,
-            source,
-            post: parsed
-        });
+        // if (!parsed.isRental || !parsed.isForRent) {
+        //     logger.info(
+        //         `Parsed data for postId ${postId} is not a rental, skipping...`
+        //     );
+        //     notRentalsEvent.emit("notRental", {
+        //         postId,
+        //         source
+        //     });
+        //     return;
+        // }
+
+        appEventEmitter.emit("rentalPost", parsed);
 
         // if (ampq) {
         //     ampq.channel.ack(ampq.message);
         // }
     } catch (err) {
-        logger.error(`Error in rawDataEvent handler for postId ${postId}:`);
+        logger.error("Error in rawDataEvent handler");
         logger.error(err);
     }
 });
 
-notRentalsEvent.on("notRental", async ({ postId }) => {
-    try {
-        await instance.post("/raw/not-rental/" + postId);
-    } catch (err) {
-        logger.error(`Error in notRentalsEvent handler for postId ${postId}:`);
-        logger.error(err);
-    }
+appEventEmitter.on("rentalPost", async data => {
+    logger.warn("Received rentalPost event");
+    logger.warn(data);
 });
+
+// notRentalsEvent.on("notRental", async ({ postId }) => {
+//     try {
+//         await instance.post("/raw/not-rental/" + postId);
+//     } catch (err) {
+//         logger.error(`Error in notRentalsEvent handler for postId ${postId}:`);
+//         logger.error(err);
+//     }
+// });

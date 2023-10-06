@@ -1,48 +1,48 @@
-import { parsedDataEvent } from "..";
-import { config } from "../config/config";
-import { ParsedPostWithoutSource } from "../interfaces/EventEmitters";
-import { logger } from "../shared/logger";
+// import { parsedDataEvent } from "..";
+// import { config } from "../config/config";
+// import { ParsedPostWithoutSource } from "../interfaces/EventEmitters";
+// import { logger } from "../shared/logger";
 
-import * as amqp from "amqplib";
-import exitHook from "async-exit-hook";
+// import * as amqp from "amqplib";
+// import exitHook from "async-exit-hook";
 
-export const runProducer = async () => {
-    const connection = await amqp.connect(config.RABBITMQ_URL);
-    const channel = await connection.createChannel();
+// export const runProducer = async () => {
+//     const connection = await amqp.connect(config.RABBITMQ_URL);
+//     const channel = await connection.createChannel();
 
-    exitHook(() => {
-        logger.info(`Closing RabbitMQ producer connection...`);
-        connection.close();
-    });
+//     exitHook(() => {
+//         logger.info(`Closing RabbitMQ producer connection...`);
+//         connection.close();
+//     });
 
-    await channel.assertExchange(config.RABBITMQ_EXCHANGE, "topic", {
-        durable: true
-    });
+//     await channel.assertExchange(config.RABBITMQ_EXCHANGE, "topic", {
+//         durable: true
+//     });
 
-    logger.info(
-        `RabbitMQ publisher publishing on topic ${config.PARSED_TOPIC_PREFIX}[*]...`
-    );
+//     logger.info(
+//         `RabbitMQ publisher publishing on topic ${config.PARSED_TOPIC_PREFIX}[*]...`
+//     );
 
-    try {
-        parsedDataEvent.on("parsedData", async data => {
-            const topic = config.PARSED_TOPIC_PREFIX + data.source;
+//     try {
+//         parsedDataEvent.on("parsedData", async data => {
+//             const topic = config.PARSED_TOPIC_PREFIX + data.source;
 
-            logger.info(
-                `Sending postId ${data.postId} to RabbitMQ on topic ${topic}...`
-            );
+//             logger.info(
+//                 `Sending postId ${data.postId} to RabbitMQ on topic ${topic}...`
+//             );
 
-            // rimuovi il campo source
-            const dataToSend: ParsedPostWithoutSource = (({ source, ...o }) =>
-                o)(data);
+//             // rimuovi il campo source
+//             const dataToSend: ParsedPostWithoutSource = (({ source, ...o }) =>
+//                 o)(data);
 
-            channel.publish(
-                config.RABBITMQ_EXCHANGE,
-                topic,
-                Buffer.from(JSON.stringify(dataToSend))
-            );
-        });
-    } catch (err) {
-        logger.error("Error in parsedDataEvent handler");
-        logger.error(err);
-    }
-};
+//             channel.publish(
+//                 config.RABBITMQ_EXCHANGE,
+//                 topic,
+//                 Buffer.from(JSON.stringify(dataToSend))
+//             );
+//         });
+//     } catch (err) {
+//         logger.error("Error in parsedDataEvent handler");
+//         logger.error(err);
+//     }
+// };

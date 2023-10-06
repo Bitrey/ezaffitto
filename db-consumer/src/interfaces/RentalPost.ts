@@ -36,6 +36,9 @@ export interface ParsedData {
     areaSqMeters?: number;
     priceIncludesTaxes?: boolean;
     smokingAllowed?: boolean;
+    hasAirConditioning?: boolean;
+    hasHeating?: boolean;
+    hasElevator?: boolean;
 }
 
 export interface RentalPost extends PostMetadata, ParsedData {}

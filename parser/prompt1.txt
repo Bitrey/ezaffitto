@@ -26,5 +26,8 @@ Struttura JSON richiesta: {
     "bathrooms": <number: number of bathrooms>,
     "areaSqMeters": <number: square meters>,
     "priceIncludesTaxes": <boolean: if the price includes taxes and condo fees>,
-    "smokingAllowed": <boolean | null: if specified in the post, whether or not smoking is allowed>
+    "smokingAllowed": <boolean | null: if specified in the post, whether or not smoking is allowed>,
+    "hasAirConditioning": <boolean>,
+    "hasHeating": <boolean>,
+    "hasElevator": <boolean>
 }

@@ -32,7 +32,7 @@ export enum OccupationalRestrictions {
 
 @modelOptions({
     schemaOptions: { timestamps: true },
-    options: { customName: "posts" }
+    options: { customName: "rentalposts" }
 })
 export class RentalPostClass {
     @prop({ required: true })

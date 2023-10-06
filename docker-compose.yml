@@ -64,9 +64,10 @@ services:
     volumes:
       - ./fb-scraper:/usr/src/app
       - /usr/bin/google-chrome:/usr/bin/google-chrome
-    # environment:
-    #   - NO_LOGIN=true
-    #   - GROUPS_FILE=groups.json
+    environment:
+      - NODE_ENV=development
+      - FB_ACCOUNT_EMAIL=prova.provone@proton.me
+      - FB_ACCOUNT_PASSWORD=CiaoProvaProvone!
     depends_on:
       rabbitmq:
         condition: service_healthy

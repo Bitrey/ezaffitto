@@ -123,12 +123,7 @@ export interface RentalPost {
 //     post: ParsedData;
 // }
 
-export interface RawAndParsed {
-    raw: BakecaRoot;
-    parsed: RentalPost;
-}
-
 export interface RentalPostEventEmitter {
-    on(event: "bakecaPost", listener: (data: RawAndParsed) => void): this;
-    emit(event: "bakecaPost", data: RawAndParsed): boolean;
+    on(event: "bakecaPost", listener: (data: RentalPost) => void): this;
+    emit(event: "bakecaPost", data: RentalPost): boolean;
 }

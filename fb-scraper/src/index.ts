@@ -10,6 +10,7 @@ import { extractor } from "./extractor";
 import moment, { Moment } from "moment";
 import axios, { AxiosError } from "axios";
 import { RentalPost } from "./interfaces/shared";
+import { envs } from "./config/envs";
 
 export const scrapedDataEvent: ScrapedDataEventEmitter = new EventEmitter();
 
@@ -44,21 +45,12 @@ scrapedDataEvent.on("scrapedData", async fbData => {
         return;
     }
 
-    // let coords: Awaited<ReturnType<typeof geolocate>> = null;
-
-    // if (parsed.address) {
-    //     try {
-    //         coords = await geolocate(parsed.address);
-    //         logger.info(
-    //             `Fetched lat and lon for postId ${postId}: ${JSON.stringify(
-    //                 coords
-    //             )}`
-    //         );
-    //     } catch (err) {
-    //         logger.error("Error while geolocating address");
-    //         logger.error(err);
-    //     }
-    // }
+    // remove all undefined and null fields
+    Object.keys(post).forEach(
+        key =>
+            [null, undefined].includes(post[key as keyof typeof post] as any) &&
+            delete post[key as keyof typeof post]
+    );
 
     try {
         const { data } = await axios.post(
@@ -282,11 +274,11 @@ export class Scraper {
 
             await page.waitForSelector(emailSelector);
             await wait(Math.random() * 1000);
-            await page.type(emailSelector, "prova.provone@proton.me", {
+            await page.type(emailSelector, envs.FB_ACCOUNT_EMAIL, {
                 delay: Math.floor(Math.random() * 100) + 50
             });
             await wait(Math.random() * 1000);
-            await page.type(passSelector, "CiaoProvaProvone!", {
+            await page.type(passSelector, envs.FB_ACCOUNT_PASSWORD, {
                 delay: Math.floor(Math.random() * 100) + 50
             });
             await wait(Math.random() * 1000);

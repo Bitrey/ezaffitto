@@ -19,6 +19,10 @@ export class Scraper {
                 return RentalTypes.APARTMENT;
             case "Studio":
                 return RentalTypes.STUDIO;
+            case "Private Room":
+                return RentalTypes.SINGLE_ROOM;
+            case "Shared Room":
+                return RentalTypes.DOUBLE_ROOM;
             default:
                 logger.warn(`Unknown rental type: ${rawType}`);
                 return RentalTypes.OTHER;
@@ -28,12 +32,15 @@ export class Scraper {
     public async scrape(url: string): Promise<RentalPost[]> {
         const res = await axios.post(url, {
             city: "bologna",
-            f_params: {
-                orderBy: {
-                    field: "new_listing",
-                    type: "DESC"
-                }
-            }
+            types: [
+                "studio",
+                "entire-property-2-rooms",
+                "entire-property-3-rooms",
+                "entire-property-4-rooms",
+                "private-room",
+                "shared-room"
+            ],
+            f_params: { orderBy: { field: "new_listing", type: "DESC" } }
         });
         const data = res.data as ZappyRentRoot;
 
@@ -76,7 +83,19 @@ export class Scraper {
                 hasAirConditioning: e.furniture.includes("air"),
                 hasElevator: e.services.includes("elevator"),
                 date: moment(e.created_at).toDate(),
-                smokingAllowed: e.smoking == null ? undefined : !!e.smoking
+                smokingAllowed: e.smoking == null ? undefined : !!e.smoking,
+                availabilityStartDate: e.firstAvailablePeriods.start_date
+                    ? moment(
+                          e.firstAvailablePeriods.start_date,
+                          "YYYY-MM-DD"
+                      ).toDate()
+                    : undefined,
+                availabilityEndDate: e.firstAvailablePeriods.start_date
+                    ? moment(
+                          e.firstAvailablePeriods.end_date,
+                          "YYYY-MM-DD"
+                      ).toDate()
+                    : undefined
             };
 
             // remove undefined entries

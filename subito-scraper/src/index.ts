@@ -11,6 +11,7 @@ import {
 } from "./interfaces";
 import { logger } from "./shared/logger";
 import { config } from "./config";
+import moment from "moment-timezone";
 
 export class Scraper {
     private static readonly apartmentsUrl =
@@ -116,7 +117,7 @@ export class Scraper {
                 );
 
                 const post: RentalPost = {
-                    postId: e.urn,
+                    postId: e.urn.split("ad:")[1]?.split(":")[0] || e.urn,
                     source: "subito",
                     rawData: e,
                     isRental: true,
@@ -124,7 +125,13 @@ export class Scraper {
                     images: e.images
                         .map(e => e.scale.find(f => f.size === "big")?.uri)
                         .filter(e => e) as string[],
-                    date: new Date(e.dates.display),
+                    date: moment
+                        .tz(
+                            e.dates.display,
+                            "YYYY-MM-DD HH:mm:ss",
+                            "Europe/Rome"
+                        )
+                        .toDate(),
                     url: e.urls.default,
                     authorUserId: e.advertiser.user_id,
                     authorUsername: e.advertiser.name,

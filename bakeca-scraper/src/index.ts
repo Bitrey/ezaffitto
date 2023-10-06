@@ -23,17 +23,17 @@ puppeteer.use(pluginStealth());
 
 export const rentalPostEvent: RentalPostEventEmitter = new EventEmitter();
 
-rentalPostEvent.on("bakecaPost", async ({ parsed, raw }) => {
+rentalPostEvent.on("bakecaPost", async post => {
     // debug posting with axios
     try {
         // TODO debug replace with RabbitMQ
         logger.warn("Posting to DB API");
         const { data } = await axios.post(
             config.DB_API_BASE_URL + "/rentalpost",
-            { ...parsed, rawData: raw }
+            post
         );
         logger.info(
-            "Posted to DB API with _id " + data._id + " postId " + parsed.postId
+            "Posted to DB API with _id " + data._id + " postId " + post.postId
         );
     } catch (err) {
         logger.error("Error while posting to DB API:");
@@ -129,6 +129,7 @@ export class Scraper {
                     "a > div:nth-child(3) > span.text-sm",
                     e => e.textContent
                 );
+                // timezone is not important since it's just a date
                 date = moment(dateStr, "DD-MM-YYYY").toDate();
             } catch (err) {
                 logger.error(err);
@@ -138,7 +139,14 @@ export class Scraper {
                     await e.$eval("a > script", e => e.textContent)
                 );
 
-                const url = await e.$eval("a", e => e.getAttribute("href"));
+                const rawPrice = await e.$eval(
+                    "strong.text--section.text-base.block",
+                    e => e.textContent
+                );
+                const price: number | undefined =
+                    typeof rawPrice === "string" && rawPrice.match(/\d+/)
+                        ? parseFloat((<any>rawPrice).match(/\d+/)[0])
+                        : undefined;
 
                 const lwDesc = content.description.toLowerCase();
 
@@ -148,6 +156,7 @@ export class Scraper {
                     rawData: content,
                     isRental: true,
                     isForRent: true,
+                    monthlyPrice: price,
                     images: content.image ? [content.image] : [],
                     description: content.description,
                     latitude: content.geo?.latitude,
@@ -158,7 +167,7 @@ export class Scraper {
                         ? "doubleRoom"
                         : undefined) as RentalTypes,
                     date: date || new Date(),
-                    url
+                    url: content.url
                 };
 
                 logger.debug(
@@ -168,15 +177,16 @@ export class Scraper {
                         post.description?.slice(0, 30) +
                         "..."
                 );
-                rentalPostEvent.emit("bakecaPost", {
-                    parsed: post,
-                    raw: content
-                });
+                rentalPostEvent.emit("bakecaPost", post);
             } catch (err) {
                 logger.error("Error while parsing post:");
                 logger.error(err);
             }
         });
+
+        // wait just to make sure
+        await wait(1000);
+        await browser.close();
     }
 
     public async runScraper() {

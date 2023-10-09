@@ -1,12 +1,14 @@
 import { cleanEnv, str, num } from "envalid";
 
-import "dotenv/config";
+import { readFileSync } from "fs";
 
-export const envs = cleanEnv(process.env, {
-    NODE_ENV: str({
-        choices: ["development", "test", "production", "staging"]
+export const envs = {
+    ...cleanEnv(process.env, {
+        NODE_ENV: str({
+            choices: ["development", "test", "production", "staging"]
+        }),
+        PORT: num(),
+        MONGODB_URI: str()
     }),
-    PORT: num(),
-    MONGODB_URI: str(),
-    TURNSTILE_SECRET: str()
-});
+    TURNSTILE_SECRET: readFileSync("/run/secrets/turnstile_secret", "utf8")
+};

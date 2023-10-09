@@ -7,7 +7,7 @@ import { logger } from "../../shared/logger";
 import { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, OK } from "http-status";
 import { validateModel } from "../../middlewares/validateModel";
 import { config } from "../../config";
-import { query } from "express-validator";
+import { param, query } from "express-validator";
 import { validate } from "../../middlewares/expressValidator";
 import { FilterQuery } from "mongoose";
 import { captchaQueryParam } from "../../middlewares/captcha";
@@ -101,14 +101,20 @@ router.get("/count", async (req: Request, res: Response) => {
     return res.json({ count });
 });
 
-router.get("/postid/:id", async (req: Request, res: Response) => {
-    logger.debug("Getting data by postId");
+router.get(
+    "/postid/:id",
+    param("id").isMongoId(),
+    validate,
+    // captchaQueryParam,
+    async (req: Request, res: Response) => {
+        logger.debug("Getting data by postId");
 
-    const data = await RentalPost.findOne({ postId: req.params.id });
-    logger.debug("Data retrieved successfully by postId");
+        const data = await RentalPost.findOne({ postId: req.params.id });
+        logger.debug("Data retrieved successfully by postId");
 
-    return res.json(data);
-});
+        return res.json(data);
+    }
+);
 
 router.post("/validate", validateModel(RentalPost), async (req, res) => {
     logger.debug("Validated data");
@@ -116,14 +122,19 @@ router.post("/validate", validateModel(RentalPost), async (req, res) => {
     return res.sendStatus(OK);
 });
 
-router.get("/:id", async (req: Request, res: Response) => {
-    logger.debug("Getting data by id");
+router.get(
+    "/:id",
+    param("id").isMongoId(),
+    validate,
+    async (req: Request, res: Response) => {
+        logger.debug("Getting data by id");
 
-    const data = await RentalPost.findOne({ _id: req.params.id });
-    logger.debug("Data retrieved successfully");
+        const data = await RentalPost.findOne({ _id: req.params.id });
+        logger.debug("Data retrieved successfully");
 
-    return res.json(data);
-});
+        return res.json(data);
+    }
+);
 
 router.post(
     "/",
@@ -171,6 +182,8 @@ router.post(
 
 router.put(
     "/:id",
+    param("id").isMongoId(),
+    validate,
     validateModel(RentalPost),
     async (req: Request, res: Response) => {
         logger.debug("Updating data");
@@ -197,27 +210,32 @@ router.put(
     }
 );
 
-router.delete("/:id", async (req: Request, res: Response) => {
-    logger.debug("Deleting data");
+router.delete(
+    "/:id",
+    param("id").isMongoId(),
+    validate,
+    async (req: Request, res: Response) => {
+        logger.debug("Deleting data");
 
-    const data = await RentalPost.findById(req.params.id);
+        const data = await RentalPost.findById(req.params.id);
 
-    if (!data) {
-        logger.debug("Data not found");
+        if (!data) {
+            logger.debug("Data not found");
 
-        return res.status(BAD_REQUEST).json({ err: "Data not found" });
+            return res.status(BAD_REQUEST).json({ err: "Data not found" });
+        }
+
+        try {
+            await data.deleteOne();
+            logger.debug("Data deleted successfully");
+
+            return res.sendStatus(OK);
+        } catch (err) {
+            logger.error("Error deleting data");
+            logger.error(err);
+            return res.status(INTERNAL_SERVER_ERROR).json({ err });
+        }
     }
-
-    try {
-        await data.deleteOne();
-        logger.debug("Data deleted successfully");
-
-        return res.sendStatus(OK);
-    } catch (err) {
-        logger.error("Error deleting data");
-        logger.error(err);
-        return res.status(INTERNAL_SERVER_ERROR).json({ err });
-    }
-});
+);
 
 export default router;

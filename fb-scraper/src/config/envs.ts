@@ -1,11 +1,20 @@
-import { cleanEnv, str } from "envalid";
+import { cleanEnv, num, str } from "envalid";
+import { readFileSync } from "fs";
 
-import "dotenv/config";
-
-export const envs = cleanEnv(process.env, {
-    NODE_ENV: str({
-        choices: ["development", "test", "production", "staging"]
+export const envs = {
+    ...cleanEnv(process.env, {
+        NODE_ENV: str({
+            choices: ["development", "test", "production", "staging"]
+        }),
+        PING_SERVER_PORT: num()
     }),
-    FB_ACCOUNT_EMAIL: str(),
-    FB_ACCOUNT_PASSWORD: str()
-});
+    FB_ACCOUNT_EMAIL: readFileSync("/run/secrets/fb_account_email", "utf8"),
+    FB_ACCOUNT_PASSWORD: readFileSync(
+        "/run/secrets/fb_account_password",
+        "utf8"
+    ),
+    GEOLOCATION_API_KEY: readFileSync(
+        "/run/secrets/geolocation_api_key",
+        "utf8"
+    )
+};

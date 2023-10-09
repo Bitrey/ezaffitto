@@ -1,4 +1,4 @@
-FROM oven/bun:latest
+FROM oven/bun:1.0.4-slim
 
 COPY package.json ./
 COPY bun.lockb ./

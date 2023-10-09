@@ -1,7 +1,6 @@
 import axios, { isAxiosError } from "axios";
 import { CronJob } from "cron";
 import {
-    Ad,
     Feature,
     RentalPost,
     RentalTypes,
@@ -12,6 +11,8 @@ import {
 import { logger } from "./shared/logger";
 import { config } from "./config";
 import moment from "moment-timezone";
+
+import "./healthcheckPing";
 
 export class Scraper {
     private static readonly apartmentsUrl =
@@ -93,7 +94,7 @@ export class Scraper {
                 };
 
             default:
-                logger.debug(`Unknown feature ${feature.uri}`);
+                // logger.debug(`Unknown feature ${feature.uri}`);
                 return {};
         }
     }
@@ -191,16 +192,19 @@ const job = new CronJob(
 
         logger.info(`Scraped ${scraped.length} posts`);
 
+        logger.warn("Sending data to db-api");
         for (const post of scraped) {
             try {
                 // TODO replace with RabbitMQ
-                logger.warn("Sending data to db-api");
                 const { data } = await axios.post(
                     config.DB_API_BASE_URL + "/rentalpost",
                     post
                 );
                 logger.info(
-                    `Sent postId ${data.postId} to db-api: _id is ${data._id}`
+                    `Sent postId ${data.postId} (${post.description?.slice(
+                        0,
+                        30
+                    )}...) to db-api - _id ${data._id}`
                 );
             } catch (err) {
                 logger.error("Error in sending data to db-api");

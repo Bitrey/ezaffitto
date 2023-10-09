@@ -1,8 +1,6 @@
 import path from "path";
 
 export const config = Object.freeze({
-    DEBUG_WAIT_MS: 0,
-
     MAX_CONCURRENT_PARSES: 5,
 
     // post raw che verranno fetchati ed eventualmente parsati (cron job)

@@ -12,6 +12,8 @@ import axios, { AxiosError } from "axios";
 import { RentalPost } from "./interfaces/shared";
 import { envs } from "./config/envs";
 
+import "./healthcheckPing";
+
 export const scrapedDataEvent: ScrapedDataEventEmitter = new EventEmitter();
 
 scrapedDataEvent.on("scrapedData", async fbData => {
@@ -34,7 +36,7 @@ scrapedDataEvent.on("scrapedData", async fbData => {
         return;
     }
 
-    logger.warn("Running debug callback for scrapedDataEvent");
+    logger.warn("Running debug API call for scrapedDataEvent");
     let post: RentalPost;
     try {
         const { data } = await axios.post(config.PARSER_API_BASE_URL, fbData);
@@ -51,6 +53,19 @@ scrapedDataEvent.on("scrapedData", async fbData => {
             [null, undefined].includes(post[key as keyof typeof post] as any) &&
             delete post[key as keyof typeof post]
     );
+
+    try {
+        if (post.address) {
+            const coords = await Scraper.geolocate(post.address);
+            if (coords) {
+                post.latitude = coords.latitude;
+                post.longitude = coords.longitude;
+            }
+        }
+    } catch (err) {
+        logger.error("Error while geolocating address:");
+        logger.error(err);
+    }
 
     try {
         const { data } = await axios.post(
@@ -100,6 +115,41 @@ export class Scraper {
         this.endDate = moment(this.startDate).add(durationMs, "milliseconds");
     }
 
+    public static async geolocate(
+        address: string,
+        country = "IT",
+        region = "Bologna"
+    ): Promise<{ latitude: number; longitude: number } | null> {
+        const params = {
+            access_key: envs.GEOLOCATION_API_KEY,
+            query: address,
+            country: country,
+            region,
+            limit: 1,
+            output: "json"
+        };
+
+        try {
+            const { data } = await axios.get(
+                "http://api.positionstack.com/v1/forward",
+                { params }
+            );
+
+            if (data.data.length === 0) {
+                logger.warn(`No results found for address ${address}`);
+                return null;
+            }
+
+            const { latitude, longitude } = data.data[0];
+
+            return { latitude, longitude };
+        } catch (err) {
+            logger.error("Error while geolocating address");
+            logger.error((err as AxiosError).response?.data || err);
+            throw new Error("GEOLOCATION_API_FAILED"); // TODO change with custom error
+        }
+    }
+
     private async scrape(groupUrl: string, durationMs: number) {
         this.setStartEndDate(durationMs);
 
@@ -116,10 +166,6 @@ export class Scraper {
                 "seconds"
             )}s`
         );
-
-        if (config.DEBUG_WAIT_MS) {
-            await wait(config.DEBUG_WAIT_MS);
-        }
 
         // const browser = await puppeteer.launch({ headless: "new" });
         // const browser = await puppeteer.launch({ headless: false });

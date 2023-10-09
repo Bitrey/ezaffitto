@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import App from "./App";
 import "./i18n";
 import reportWebVitals from "./reportWebVitals";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -12,13 +12,33 @@ import "swiper/css/pagination";
 import "react-medium-image-zoom/dist/styles.css";
 
 import "react-lazy-load-image-component/src/effects/blur.css";
+import Homepage from "./Homepage";
+import ByRentId from "./ByRentId";
+import RentFinder from "./components/RentFinder";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Homepage />,
+    children: [
+      {
+        path: "/",
+        element: <RentFinder />
+      },
+      {
+        path: "/:id",
+        element: <ByRentId />
+      }
+    ]
+  }
+]);
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <App />
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
 

@@ -55,32 +55,36 @@ export const logger = createLogger({
                 ),
                 errorStackFormat(),
                 splat(),
-                prettyJson
+                prettyJson,
+                json(),
+                errors(),
+                errorStackFormat(),
+                timestamp()
             )
-        }),
-        new transports.File({
-            filename: combinedLogsFile,
-            format: combine(
-                json(),
-                errors(),
-                errorStackFormat(),
-                json(),
-                timestamp()
-            ),
-            maxsize: 10000000
-        }),
-        new transports.File({
-            filename: errorsLogsFile,
-            level: "error",
-            format: combine(
-                json(),
-                errors(),
-                errorStackFormat(),
-                json(),
-                timestamp()
-            ),
-            maxsize: 20000000
         })
+        // new transports.File({
+        //     filename: combinedLogsFile,
+        //     format: combine(
+        //         json(),
+        //         errors(),
+        //         errorStackFormat(),
+        //         json(),
+        //         timestamp()
+        //     ),
+        //     maxsize: 10000000
+        // }),
+        // new transports.File({
+        //     filename: errorsLogsFile,
+        //     level: "error",
+        //     format: combine(
+        //         json(),
+        //         errors(),
+        //         errorStackFormat(),
+        //         json(),
+        //         timestamp()
+        //     ),
+        //     maxsize: 20000000
+        // })
     ]
 });
 

@@ -3,6 +3,7 @@ import React, {
   ButtonHTMLAttributes,
   FunctionComponent
 } from "react";
+import { Link } from "react-router-dom";
 
 type ButtonAndHrefProps = AnchorHTMLAttributes<HTMLAnchorElement> &
   ButtonHTMLAttributes<HTMLButtonElement>;
@@ -22,7 +23,11 @@ const Button: FunctionComponent<ButtonProps> = ({
     className || ""
   }`;
 
-  return href ? (
+  return href?.startsWith("/") ? (
+    <Link to={href} className={_className} {...rest}>
+      {children}
+    </Link>
+  ) : href ? (
     <a
       href={href}
       target="_blank"

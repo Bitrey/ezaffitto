@@ -8,6 +8,8 @@ import { ZappyRentRoot } from "./interfaces/zappyrent";
 import { logger } from "./shared/logger";
 import { config } from "./config";
 
+import "./healthcheckPing";
+
 export class Scraper {
     public static roomsUrl =
         "https://www.zappyrent.com/api/propertylisting/get/20/filter";
@@ -133,16 +135,16 @@ const job = new CronJob(
 
         logger.info(`Scraped ${scraped.length} posts`);
 
+        logger.warn("Sending data to db-api");
         for (const post of scraped) {
             try {
                 // TODO replace with RabbitMQ
-                logger.warn("Sending data to db-api");
                 const { data } = await axios.post(
                     config.DB_API_BASE_URL + "/rentalpost",
                     post
                 );
                 logger.info(
-                    `Sent postId ${data.postId} (${post.address}) to db-api: _id is ${data._id}`
+                    `Sent postId ${data.postId} (${post.address}) to db-api - _id ${data._id}`
                 );
             } catch (err) {
                 logger.error("Error in sending data to db-api");

@@ -10,7 +10,7 @@ import { RentalPost } from "../interfaces/RentalPost";
 import { useTranslation } from "react-i18next";
 
 interface RentViewProps extends HTMLAttributes<HTMLDivElement> {
-  post: RentalPost;
+  post?: RentalPost;
 }
 
 const RentView: FunctionComponent<RentViewProps> = ({ post }) => {
@@ -29,11 +29,13 @@ const RentView: FunctionComponent<RentViewProps> = ({ post }) => {
 
   const [images, setImages] = React.useState<string[] | null>(null);
 
-  const jsonImages = JSON.stringify(post.images);
+  const jsonImages = post && JSON.stringify(post.images);
 
   useEffect(() => {
     setImages(null);
     async function filterImages() {
+      if (!post) return;
+
       const existingImages: string[] = [];
       for (const img of post.images) {
         const exists = await imageExists(img);
@@ -46,7 +48,7 @@ const RentView: FunctionComponent<RentViewProps> = ({ post }) => {
   }, [jsonImages]);
 
   return (
-    <div>
+    <div className="sticky top-0">
       {images ? (
         <Swiper
           navigation
@@ -76,51 +78,48 @@ const RentView: FunctionComponent<RentViewProps> = ({ post }) => {
         <p>DEBUG caricamento...</p>
       )}
 
-      <div className="h-screen">
-        <div className="p-2 sticky top-0">
-          <div className="mt-4 mb-8 grid grid-cols-1 md:grid-cols-2">
-            <div>
+      <div className="p-2">
+        <div className="mt-4 mb-8 grid grid-cols-1 md:grid-cols-2">
+          <div>
+            {post?.rentalType && (
               <p className="font-semibold tracking-tighter">
-                {post?.rentalType}
+                {t(`rentalType.${post.rentalType}`)}
               </p>
+            )}
 
-              <p className="text-lg">
-                €{post?.monthlyPrice}{" "}
-                <span className="font-light">{t("rentViewer.perMonth")}</span>
-              </p>
-            </div>
-            <div>
-              <p className="text-gray-700">
-                {post?.date &&
-                  format(post.date, "'📅' E d MMM yyyy HH:mm", {
-                    locale: i18n.language === "it" ? it : enUS
-                  })}
-              </p>
-              {post?.address && (
-                <p className="mt-2 text-gray-700">📍 {post?.address}</p>
-              )}
-            </div>
+            <p className="text-lg">
+              €{post?.monthlyPrice}{" "}
+              <span className="font-light">{t("rentViewer.perMonth")}</span>
+            </p>
           </div>
-
-          <p>{post?.description}</p>
-
-          {post && (
-            <div className="mt-4 flex justify-center">
-              <Button
-                href={post.url || "#"}
-                className="p-3 rounded-full font-medium tracking-tight"
-              >
-                {t("common.contact")}{" "}
-                <span className="font-bold">{post?.authorUsername}</span>
-              </Button>
-            </div>
-          )}
-
-          <h1>debug</h1>
+          <div>
+            <p className="text-gray-700">
+              {post?.date &&
+                format(new Date(post.date), "'📅' E d MMM yyyy HH:mm", {
+                  locale: i18n.language === "it" ? it : enUS
+                })}
+            </p>
+            {post?.address && (
+              <p className="mt-2 text-gray-700">📍 {post?.address}</p>
+            )}
+          </div>
+        </div>
+        <p>{post?.description}</p>
+        {post && (
+          <div className="mt-4 flex justify-center">
+            <Button
+              href={post.url || "#"}
+              className="p-3 rounded-full font-medium tracking-tight"
+            >
+              {t("common.contact")}{" "}
+              <span className="font-bold">{post?.authorUsername}</span>
+            </Button>
+          </div>
+        )}
+        {/* <h1>debug</h1>
           <pre>
             <code>{JSON.stringify(post, null, 4)}</code>
-          </pre>
-        </div>
+          </pre> */}
       </div>
     </div>
   );

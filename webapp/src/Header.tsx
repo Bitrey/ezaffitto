@@ -1,8 +1,9 @@
-import { useTranslation } from "react-i18next";
+// import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 // import { LazyLoadImage } from "react-lazy-load-image-component";
 
 const Header = () => {
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
 
   return (
     <header className="w-full min-h-[6rem] flex justify-around items-center bg-gray-50 text-gray-900">
@@ -16,7 +17,7 @@ const Header = () => {
         /> */}
 
         <h1 className="text-red-600 font-semibold text-3xl tracking-tighter">
-          ezaffitto
+          <Link to="/">ezaffitto</Link>
         </h1>
       </div>
       <div className="hidden md:block" />
@@ -26,7 +27,7 @@ const Header = () => {
                 type="text"
                 placeholder="Cerca..."
             /> */}
-        <p>{t("homepage.account")}</p>
+        {/* <p>{t("homepage.account")}</p> */}
       </div>
     </header>
   );

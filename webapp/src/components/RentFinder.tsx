@@ -5,24 +5,29 @@ import CustomSelect from "./Select";
 import Button from "./Button";
 import RentView from "./RentView";
 import Textbox from "./Textbox";
-import { RentalPost, RentalPostJSONified } from "../interfaces/RentalPost";
+import { RentalPostJSONified } from "../interfaces/RentalPost";
 import { rentalTypeOptions } from "../config";
 import Search from "../icons/Search";
 import { useTranslation } from "react-i18next";
-import { Turnstile } from "@marsidev/react-turnstile";
 import ReactPaginate from "react-paginate";
 import Forward from "../icons/Forward";
 import Backwards from "../icons/Backwards";
+import { useNavigate } from "react-router-dom";
 
 const RentFinder = () => {
-  const [posts, setPosts] = useState<RentalPost[] | null>(null);
+  const [posts, setPosts] = useState<RentalPostJSONified[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [maxPrice, setMaxPrice] = useState<number>(1000);
 
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  // const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  // TOOD debug
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [turnstileToken, setTurnstileToken] = useState<string | null>("valid");
+
+  const navigate = useNavigate();
 
   // TODO use infinite scroller
-  const [limit, setLimit] = useState(30);
+  const limit = 30;
   const [cursor, setCursor] = useState(0);
 
   const itemsPerPage = 10;
@@ -40,10 +45,17 @@ const RentFinder = () => {
     setCursor(newCursor);
   };
 
-  const [selected, setSelected] = useState<RentalPost | null>(null);
+  const [selected, setSelected] = useState<RentalPostJSONified | null>(null);
 
   // MIGLIORA TYPING!! (array di chiavi di rentalTypeOptions[i].value)
-  const [rentalTypes, setRentalTypes] = useState<string[]>(["singleRoom"]);
+  const [rentalTypes, setRentalTypes] = useState<string[]>([
+    "singleRoom",
+    "doubleRoom",
+    "studio",
+    "apartment",
+    "house",
+    "other"
+  ]);
 
   const { t } = useTranslation();
 
@@ -99,6 +111,10 @@ const RentFinder = () => {
 
   return (
     <div>
+      <h3 className="mt-8 mb-2 text-center font-semibold text-2xl">
+        {t("homepage.banner")}
+      </h3>
+
       <form onSubmit={fetchData} className="mt-4 mx-auto w-full md:w-[50vw]">
         <div className="flex items-center gap-4">
           <CustomSelect
@@ -142,7 +158,7 @@ const RentFinder = () => {
 
       <div className="mt-6 md:mt-16 grid grid-cols-1 md:grid-cols-2">
         <div>
-          <div className="mt-2 flex items-center mx-auto">
+          <div className="flex items-center mx-auto">
             <ReactPaginate
               activeClassName={"item active "}
               breakClassName={"item break-me "}
@@ -164,11 +180,22 @@ const RentFinder = () => {
           {posts && shownPosts && !isLoading ? (
             <div>
               {shownPosts.map(e => (
-                <RentCard
-                  key={e.postId}
-                  post={e}
-                  onCardSelected={setSelected}
-                />
+                <>
+                  <div className="hidden md:block">
+                    <RentCard
+                      key={e.postId}
+                      post={e}
+                      onClick={() => e && setSelected(e)}
+                    />
+                  </div>
+                  <div className="md:hidden">
+                    <RentCard
+                      key={e.postId}
+                      post={e}
+                      onClick={() => navigate(`/${e._id}`)}
+                    />
+                  </div>
+                </>
               ))}
             </div>
           ) : isLoading ? (
@@ -181,9 +208,10 @@ const RentFinder = () => {
         </div>
         <div>
           {selected && !isLoading ? (
-            <div>
-              <RentView post={selected} />
-            </div>
+            <RentView
+              post={selected}
+              onClick={() => navigate(`/${selected._id}`)}
+            />
           ) : isLoading ? (
             <p>DEBUG caricamento...</p>
           ) : (

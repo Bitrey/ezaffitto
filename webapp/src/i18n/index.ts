@@ -14,7 +14,9 @@ const resources = {
                 maxPrice: "Up to"
             },
             rentViewer: {
-                perMonth: "/month"
+                perMonth: "/month",
+                backToSearch: "Back to search",
+                postNotFound: "Post not found"
             },
             homepage: {
                 banner: "Find your rent in Bologna!",
@@ -41,7 +43,9 @@ const resources = {
                 maxPrice: "Fino a"
             },
             rentViewer: {
-                perMonth: "/mese"
+                perMonth: "/mese",
+                backToSearch: "Torna alla ricerca",
+                postNotFound: "Post non trovato"
             },
             homepage: {
                 banner: "Trova il tuo affitto a Bologna!",

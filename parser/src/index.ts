@@ -8,17 +8,14 @@ import Parser from "./parser/parser";
 import express from "express";
 import bodyParser from "body-parser";
 import { envs } from "./config/envs";
-import { config } from "./config/config";
+
+import "./healthcheckPing";
 
 const parser = new Parser();
 
 export const appEventEmitter: ParserEventEmitter = new EventEmitter();
 
-const delay = (ms: any) => new Promise(resolve => setTimeout(resolve, ms));
-
 const run = async () => {
-    if (envs.NODE_ENV === "development") await delay(config.DEBUG_WAIT_MS);
-
     logger.info("Starting RabbitMQ producer and consumer...");
     // config.RUN_PARSER
     //     ? runConsumer()

@@ -1,6 +1,31 @@
-export interface PostMetadata {
+// shared
+
+export enum RentalTypes {
+    SINGLE_ROOM = "singleRoom",
+    DOUBLE_ROOM = "doubleRoom",
+    STUDIO = "studio",
+    APARTMENT = "apartment",
+    HOUSE = "house",
+    OTHER = "other"
+}
+
+export enum SexRestrictions {
+    EVERYONE = "everyone",
+    MALES = "males",
+    FEMALES = "females",
+    OTHER = "other"
+}
+
+export enum OccupationalRestrictions {
+    EVERYONE = "everyone",
+    STUDENTS = "students",
+    WORKERS = "workers",
+    OTHER = "other"
+}
+
+export interface RentalPost {
     postId: string;
-    rawData: string;
+    rawData: any;
     source: string;
     date: Date;
     images: string[];
@@ -10,18 +35,16 @@ export interface PostMetadata {
     authorUrl?: string;
     latitude?: number;
     longitude?: number;
-}
-
-export interface ParsedData {
     isRental: boolean;
     isForRent: boolean;
-    description?: string;
-    rentalType?: string;
+    rentalType?: RentalTypes;
     monthlyPrice?: number;
     securityDepositMonths?: number;
     zone?: string;
-    sexRestrictions?: string;
-    occupationalRestrictions?: string;
+    rawDescription?: string;
+    description?: string;
+    sexRestrictions?: SexRestrictions;
+    occupationalRestrictions?: OccupationalRestrictions;
     lgbtFriendly?: boolean;
     furnished?: boolean;
     availabilityStartDate?: Date;
@@ -41,16 +64,10 @@ export interface ParsedData {
     hasElevator?: boolean;
 }
 
-export interface Timestamps {
+export interface MongoDBFields {
+    _id: string;
     createdAt: Date;
     updatedAt: Date;
 }
 
-export interface RentalPost extends PostMetadata, ParsedData, Timestamps {}
-
-export interface RentalPostJSONified
-    extends Omit<RentalPost, "date" | "createdAt" | "updatedAt"> {
-    date: Date;
-    createdAt: Date;
-    updatedAt: Date;
-}
+export interface RentalPostJSONified extends RentalPost, MongoDBFields {}

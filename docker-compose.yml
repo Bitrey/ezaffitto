@@ -1,8 +1,22 @@
 version: "3.8"
 
+secrets:
+  turnstile_secret:
+    file: "./secrets/turnstile_secret.secret"
+  geolocation_api_key:
+    file: "./secrets/geolocation_api_key.secret"
+  openai_api_key:
+    file: "./secrets/openai_api_key.secret"
+  fb_account_email:
+    file: "./secrets/fb_account_email.secret"
+  fb_account_password:
+    file: "./secrets/fb_account_password.secret"
+
 services:
   parser:
     build: ./parser
+    secrets:
+      - openai_api_key
     restart: unless-stopped
     volumes:
       - ./parser:/usr/src/app
@@ -11,6 +25,7 @@ services:
       - MAIN_PROMPT_PATH=./prompt1.txt
       - DESCRIPTION_PROMPT_PATH=./prompt2.txt
       - DEBUG_START_EXPRESS_SERVER=true
+      - PING_SERVER_PORT=3434
     ports:
       - "3000:3000" # DEBUG!!
     networks:
@@ -19,28 +34,12 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      db-consumer:
-        condition: service_healthy
-
-  # telegram-bot:
-  #   build: ./telegram-bot
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ./telegram-bot:/usr/src/app
-  #   environment:
-  #     - NODE_ENV=development
-  #     - PORT=3000
-  #   depends_on:
-  #     db-api:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   networks:
-  #     - rabbitmq-network
-  #     - db-api-network
-  #     - redis-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:3434/ping || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   webapp:
     build: ./webapp
@@ -60,22 +59,31 @@ services:
 
   fb-scraper:
     build: ./fb-scraper
+    secrets:
+      - fb_account_email
+      - fb_account_password
+      - geolocation_api_key
     restart: unless-stopped
     volumes:
       - ./fb-scraper:/usr/src/app
       - /usr/bin/google-chrome:/usr/bin/google-chrome
     environment:
       - NODE_ENV=development
-      - FB_ACCOUNT_EMAIL=prova.provone@proton.me
-      - FB_ACCOUNT_PASSWORD=CiaoProvaProvone!
+      - PING_SERVER_PORT=3434
     depends_on:
       rabbitmq:
         condition: service_healthy
-      db-consumer:
+      parser:
         condition: service_healthy
     networks:
       - rabbitmq-network
       - db-api-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:3434/ping || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   subito-scraper:
     build: ./subito-scraper
@@ -85,25 +93,37 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      db-consumer:
-        condition: service_healthy
+    environment:
+      - PING_SERVER_PORT=3434
     networks:
       - rabbitmq-network
       - db-api-network
+    healthcheck:
+      test: ["CMD-SHELL", "bun run /usr/src/app/healthcheck.js || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   zappyrent-scraper:
     build: ./zappyrent-scraper
     restart: unless-stopped
     volumes:
       - ./zappyrent-scraper:/usr/src/app
+    environment:
+      - PING_SERVER_PORT=3434
     depends_on:
       rabbitmq:
-        condition: service_healthy
-      db-consumer:
         condition: service_healthy
     networks:
       - rabbitmq-network
       - db-api-network
+    healthcheck:
+      test: ["CMD-SHELL", "bun run /usr/src/app/healthcheck.js || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   bakeca-scraper:
     build: ./bakeca-scraper
@@ -111,14 +131,20 @@ services:
     volumes:
       - ./bakeca-scraper:/usr/src/app
       - /usr/bin/google-chrome:/usr/bin/google-chrome
+    environment:
+      - PING_SERVER_PORT=3434
     depends_on:
       rabbitmq:
-        condition: service_healthy
-      db-consumer:
         condition: service_healthy
     networks:
       - rabbitmq-network
       - db-api-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:3434/ping || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -136,6 +162,10 @@ services:
       - rabbitmq-data:/var/lib/rabbitmq
     networks:
       - rabbitmq-network
+    depends_on:
+      # TODO only for debug, use RabbitMQ in production
+      db-api:
+        condition: service_healthy
 
   mongodb:
     image: mongo:6.0.7-jammy
@@ -153,33 +183,12 @@ services:
       retries: 5
       start_period: 5s
 
-  db-consumer:
-    build: ./db-consumer
-    restart: unless-stopped
-    volumes:
-      - ./db-consumer:/usr/src/app
-    ports:
-      - "3434:3434" # DEBUG - ha solo una route /ping per verificare che worka
-    environment:
-      - NODE_ENV=development
-      - PING_SERVER_PORT=3434
-    depends_on:
-      db-api:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - rabbitmq-network
-      - db-api-network
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://localhost:3434/ping || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
+  # db-consumer da rifare con Bun
 
   db-api:
     build: ./db-api
+    secrets:
+      - turnstile_secret
     restart: unless-stopped
     volumes:
       - ./db-api:/usr/src/app
@@ -215,6 +224,15 @@ services:
     command: redis-server --loglevel warning
     volumes:
       - redis-data:/data
+
+  # logging
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 9999:8080
 
 volumes:
   db-data:

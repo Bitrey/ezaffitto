@@ -8,21 +8,15 @@ import { useTranslation } from "react-i18next";
 // import ReactPlaceholder from "react-placeholder";
 
 interface RentCardProps extends HTMLAttributes<HTMLDivElement> {
-  onCardSelected?: (selected: RentalPost) => any;
   post?: RentalPost; // if null, it will simulate loading
 }
 
-const RentCard: FunctionComponent<RentCardProps> = ({
-  post,
-  onCardSelected,
-  ...rest
-}) => {
-  const { i18n } = useTranslation();
+const RentCard: FunctionComponent<RentCardProps> = ({ post, ...rest }) => {
+  const { i18n, t } = useTranslation();
 
   return (
     <div
       className="cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-300 flex p-4 min-w-[12rem] min-h-[12rem]"
-      onClick={() => onCardSelected && post && onCardSelected(post)}
       {...rest}
     >
       {post?.images && post.images.length > 0 && (
@@ -34,7 +28,11 @@ const RentCard: FunctionComponent<RentCardProps> = ({
       )}
       <div className="flex flex-col">
         {/* <ReactPlaceholder showLoadingAnimation type="text" ready={!!post}> */}
-        <p className="font-semibold tracking-tighter">{post?.rentalType}</p>
+        {post?.rentalType && (
+          <p className="font-semibold tracking-tighter">
+            {t(`rentalType.${post.rentalType}`)}
+          </p>
+        )}
 
         <p className="mb-2 text-lg font-light">€{post?.monthlyPrice}</p>
 

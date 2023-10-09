@@ -18,6 +18,8 @@ import { config } from "./config";
 import { wait } from "./shared/wait";
 import EventEmitter from "events";
 
+import "./healthcheckPing";
+
 // Use stealth
 puppeteer.use(pluginStealth());
 

@@ -1,5 +1,4 @@
 export const config = Object.freeze({
-    DEBUG_WAIT_MS: 0,
     DEBUG_RUN_SCRAPER: true,
 
     DB_API_BASE_URL: "http://db-api:5500/api/v1",

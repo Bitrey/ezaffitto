@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
 # Array contenente le directory in cui eseguire npm install
 node_dirs=(
   "./bakeca-scraper/"

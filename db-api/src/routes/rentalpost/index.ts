@@ -7,7 +7,7 @@ import { logger } from "../../shared/logger";
 import { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, OK } from "http-status";
 import { validateModel } from "../../middlewares/validateModel";
 import { config } from "../../config";
-import { param, query } from "express-validator";
+import { body, param, query } from "express-validator";
 import { validate } from "../../middlewares/expressValidator";
 import { FilterQuery } from "mongoose";
 import { captchaQueryParam } from "../../middlewares/captcha";
@@ -63,25 +63,31 @@ router.get(
 );
 
 // TODO: make these private!!
-router.get(
+router.post(
     "/text",
-    query("text").isString().isLength({ min: 1 }),
+    body("text").isString().isLength({ min: 1 }),
+    body("source").isString().optional(),
     validate,
     async (req: Request, res: Response) => {
         logger.debug("Getting data by text");
 
-        const data = await RentalPost.findOne({
-            rawDescription: req.query.text
-        });
+        const query: FilterQuery<RentalPostClass> = {
+            description: req.body.text
+        };
+        if (req.body.source) {
+            query.source = req.body.source;
+        }
+
+        const data = await RentalPost.findOne(query);
         if (data) {
             logger.debug(
                 `Data retrieved successfully by text: postId ${
                     data?.postId
-                }, text: ${data?.rawDescription?.slice(0, 30)}...`
+                }, text: ${data?.description?.slice(0, 30)}...`
             );
         } else {
             logger.debug(
-                `Data not found by text "${(req.query.text as string).slice(
+                `Data not found by text "${(req.body.text as string).slice(
                     0,
                     30
                 )}..."`
@@ -103,7 +109,7 @@ router.get("/count", async (req: Request, res: Response) => {
 
 router.get(
     "/postid/:id",
-    param("id").isMongoId(),
+    param("id").isString(),
     validate,
     // captchaQueryParam,
     async (req: Request, res: Response) => {

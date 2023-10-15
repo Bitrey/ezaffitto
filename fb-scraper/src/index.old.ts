@@ -25,38 +25,20 @@ export const scrapedDataEvent: ScrapedDataEventEmitter = new EventEmitter();
 
 scrapedDataEvent.on("scrapedData", async fbData => {
     // check if exists
-    logger.debug(
-        "Checking if post already exists with text " +
-            fbData.text.slice(0, 30) +
-            "... and id " +
-            fbData.id
-    );
-
     try {
-        const res1 = await axios.post(
+        const res1 = await axios.get(
             config.DB_API_BASE_URL + "/rentalpost/text",
-            { text: fbData.text, source: "facebook" }
+            { params: { text: fbData.text } }
         );
-        // const res2 = await axios.get(
-        //     config.DB_API_BASE_URL + "/rentalpost/postid/" + fbData.id
-        // );
-        const p = res1.data; /* || res2.data */
-        if (p) {
-            logger.debug(
-                `Post ${fbData.id} (${fbData.text.slice(
-                    0,
-                    30
-                )}...) already exists with _id ${p._id} - postId ${
-                    p.postId
-                }, skipping...`
-            );
-            logger.debug(p);
+        const res2 = await axios.get(
+            config.DB_API_BASE_URL + "/rentalpost/postid/" + fbData.id
+        );
+        if (res1.data || res2.data) {
+            logger.warn(`Post ${fbData.id} already exists, skipping...`);
             return;
         }
     } catch (err) {
-        logger.error(
-            `Error while checking if post ${fbData.id} already exists:`
-        );
+        logger.error("Error while checking if post already exists:");
         logger.error((err as AxiosError)?.response?.data || err);
         return;
     }
@@ -67,7 +49,7 @@ scrapedDataEvent.on("scrapedData", async fbData => {
         const { data } = await axios.post(config.PARSER_API_BASE_URL, fbData);
         post = data;
     } catch (err) {
-        logger.error("Error while parsing post with id " + fbData.id + ":");
+        logger.error("Error while parsing post:");
         logger.error(err);
         return;
     }
@@ -88,13 +70,7 @@ scrapedDataEvent.on("scrapedData", async fbData => {
             }
         }
     } catch (err) {
-        logger.error(
-            "Error while geolocating address " +
-                post.address +
-                " for post " +
-                fbData.id +
-                ":"
-        );
+        logger.error("Error while geolocating address:");
         logger.error(err);
     }
 
@@ -119,14 +95,14 @@ scrapedDataEvent.on("scrapedData", async fbData => {
             "Saved post with postId " + data.postId + " _id " + data._id
         );
     } catch (err) {
-        logger.error("Error while saving post with id " + fbData.id + ":");
+        logger.error("Error while saving post:");
         logger.error((err as AxiosError)?.response?.data || err);
     }
 });
 
 export class Scraper {
     public static fbGroupUrls: readonly string[] = [
-        // "https://www.facebook.com/groups/172693152831725/?locale=it_IT", // privato, enorme
+        "https://www.facebook.com/groups/172693152831725/?locale=it_IT", // privato, enorme
         "https://www.facebook.com/groups/AffittoBologna/?locale=it_IT",
         "https://www.facebook.com/groups/bolognaaffitti/?locale=it_IT",
         "https://www.facebook.com/groups/4227281414051454/?locale=it_IT",
@@ -136,6 +112,9 @@ export class Scraper {
         // "https://www.facebook.com/groups/114050352266007/?locale=it_IT", // privato
     ];
 
+    private cookiesCache: Protocol.Network.Cookie[] | null = null;
+    private cookiesCacheDate: Moment | null = null;
+    private loginBanDate: Moment | null = null;
     private startDate: Moment | null = null;
     private endDate: Moment | null = null;
 
@@ -288,73 +267,176 @@ export class Scraper {
             }
         });
 
+        const hasLoginCookies =
+            this.cookiesCache &&
+            this.cookiesCacheDate!.diff(moment(), "minutes") <
+                config.GET_COOKIE_CACHE_DURATION_MINUTES();
+
+        if (hasLoginCookies) {
+            await page.setCookie(
+                ...(this.cookiesCache as Protocol.Network.Cookie[])
+            );
+            logger.debug(
+                "Using cached cookies for groupUrl " +
+                    groupUrl +
+                    this.getElapsedStr()
+            );
+        }
+
         await page.goto(groupUrl, { timeout: 10000 });
         await page.setViewport({ width: 1080, height: 1024 });
 
         // DEBUG SCREENSHOT
         // await page.screenshot({
-        //     path: "screenshots/" + scrapeId + "/start_page.png"
+        //     path: "screenshots/" + scrapeId + "/main_page.png"
         // });
 
-        // click refuse cookie button by selecting aria-label
-        const cookieButtonSelector =
-            '[aria-label="Rifiuta cookie facoltativi"]';
-
-        // if (page.$(cookieButtonSelector) == null)
-        try {
-            await page.waitForSelector(cookieButtonSelector, {
-                timeout: 10_000
-            });
-            await wait(Math.random() * 1000);
-            await page.click(cookieButtonSelector);
-        } catch (err) {
-            logger.warn(
-                "Cookie button not found for groupUrl " +
-                    groupUrl +
-                    this.getElapsedStr()
-            );
-        }
-
-        // click close login button by selecting aria-label
-        const closeLoginButtonSelector = '[aria-label="Chiudi"]';
-
-        // if (page.$(closeLoginButtonSelector) == null)
-        try {
-            await page.waitForSelector(closeLoginButtonSelector, {
-                timeout: 10_000
-            });
-            await wait(Math.random() * 1000);
-            await page.click(closeLoginButtonSelector);
-        } catch (err) {
-            logger.warn(
-                "Close login button not found for groupUrl " +
-                    groupUrl +
-                    this.getElapsedStr()
-            );
-        }
-
-        const [orderBySpan] = await page.$x(
-            "//span[contains(., 'Più pertinenti')]"
-        );
-        if (!orderBySpan) {
+        // check config.GET_COOKIE_CACHE_DURATION_MINUTES
+        if (!hasLoginCookies) {
             logger.debug(
-                "orderBySpan not found for groupUrl " +
+                "Getting new cookies for groupUrl " +
+                    groupUrl +
+                    this.getElapsedStr()
+            );
+
+            // DEBUG SCREENSHOT
+            // await page.screenshot({
+            //     path: "screenshots/" + scrapeId + "/new_cookies.png"
+            // });
+
+            // click refuse cookie button by selecting aria-label
+            const cookieButtonSelector =
+                '[aria-label="Rifiuta cookie facoltativi"]';
+
+            // if (page.$(cookieButtonSelector) == null)
+            try {
+                await page.waitForSelector(cookieButtonSelector, {
+                    timeout: 10_000
+                });
+                await wait(Math.random() * 1000);
+                await page.click(cookieButtonSelector);
+            } catch (err) {
+                logger.warn(
+                    "Cookie button not found for groupUrl " +
+                        groupUrl +
+                        this.getElapsedStr()
+                );
+            }
+
+            // click close login button by selecting aria-label
+            const closeLoginButtonSelector = '[aria-label="Chiudi"]';
+
+            // if (page.$(closeLoginButtonSelector) == null)
+            try {
+                await page.waitForSelector(closeLoginButtonSelector, {
+                    timeout: 10_000
+                });
+                await wait(Math.random() * 1000);
+                await page.click(closeLoginButtonSelector);
+            } catch (err) {
+                logger.warn(
+                    "Close login button not found for groupUrl " +
+                        groupUrl +
+                        this.getElapsedStr()
+                );
+            }
+
+            logger.debug(
+                "Typing login credentials for groupUrl " +
+                    groupUrl +
+                    this.getElapsedStr()
+            );
+
+            // DEBUG SCREENSHOT
+            // await page.screenshot({
+            //     path: "screenshots/" + scrapeId + "/login_page.png"
+            // });
+
+            const emailSelector = 'input[name="email"]';
+            const passSelector = 'input[name="pass"]';
+
+            await page.waitForSelector(emailSelector);
+            await wait(Math.random() * 1000);
+            await page.type(emailSelector, envs.FB_ACCOUNT_EMAIL, {
+                delay: Math.floor(Math.random() * 100) + 50
+            });
+            await wait(Math.random() * 1000);
+            await page.type(passSelector, envs.FB_ACCOUNT_PASSWORD, {
+                delay: Math.floor(Math.random() * 100) + 50
+            });
+            await wait(Math.random() * 1000);
+
+            // DEBUG SCREENSHOT
+            // await page.screenshot({
+            //     path: "screenshots/" + scrapeId + "/login_typed.png"
+            // });
+
+            await page.keyboard.press("Enter");
+
+            try {
+                await page.waitForNavigation({
+                    timeout: 10000,
+                    waitUntil: "domcontentloaded"
+                });
+
+                this.cookiesCache = await page.cookies();
+                this.cookiesCacheDate = moment();
+
+                if ((await page.$('[aria-label="Password"]')) != null) {
+                    this.loginBanDate = moment();
+                    logger.warn(
+                        "Login failed (ban?) for groupUrl " +
+                            groupUrl +
+                            this.getElapsedStr()
+                    );
+
+                    // DEBUG SCREENSHOT
+                    // await page.screenshot({
+                    //     path: "screenshots/" + scrapeId + "/login_ban.png"
+                    // });
+                } else {
+                    logger.debug(
+                        "Logged in for groupUrl " +
+                            groupUrl +
+                            this.getElapsedStr()
+                    );
+
+                    // DEBUG SCREENSHOT
+                    // await page.screenshot({
+                    //     path: "screenshots/" + scrapeId + "/logged_in.png"
+                    // });
+                }
+            } catch (err) {
+                logger.warn(
+                    "Error while trying to login (already logged in?)" +
+                        this.getElapsedStr()
+                );
+
+                // DEBUG SCREENSHOT
+                // await page.screenshot({
+                //     path: "screenshots/" + scrapeId + "/login_failed.png"
+                // });
+            }
+        }
+
+        const [span1] = await page.$x("//span[contains(., 'Più pertinenti')]");
+        if (!span1) {
+            logger.warn(
+                "span1 not found for groupUrl " +
                     groupUrl +
                     this.getElapsedStr()
             );
         } else {
-            await orderBySpan.click();
-            const [newPostsSpan] = await page.$x(
-                "//span[contains(., 'Nuovi post')]"
-            );
-            if (!newPostsSpan) {
-                logger.debug(
-                    "newPostsSpan not found for groupUrl " +
+            await span1.click();
+            const [span2] = await page.$x("//span[contains(., 'Nuovi post')]");
+            if (!span2) {
+                logger.warn(
+                    "span2 not found for groupUrl " +
                         groupUrl +
                         this.getElapsedStr()
                 );
             } else {
-                await newPostsSpan.click();
+                await span2.click();
                 logger.debug(
                     "Sorting by new posts for groupUrl " +
                         groupUrl +
@@ -363,6 +445,9 @@ export class Scraper {
             }
         }
 
+        logger.info(
+            "Just logged in: resetting startDate" + this.getElapsedStr()
+        );
         this.setStartEndDate(durationMs);
 
         // DEBUG SCREENSHOT
@@ -383,23 +468,18 @@ export class Scraper {
             "Closing browser for groupUrl " + groupUrl + this.getElapsedStr()
         );
 
+        await browser.close();
+        logger.info(
+            "Scrape finished for groupUrl " + groupUrl + this.getElapsedStr()
+        );
+
         if (fetchedPosts == 0) {
             logger.warn(
                 "No posts fetched for groupUrl " +
                     groupUrl +
                     this.getElapsedStr()
             );
-
-            // DEBUG SCREENSHOT
-            // await page.screenshot({
-            //     path: "screenshots/" + scrapeId + "/no_posts_fetched.png"
-            // });
         }
-
-        await browser.close();
-        logger.info(
-            "Scrape finished for groupUrl " + groupUrl + this.getElapsedStr()
-        );
 
         this.startDate = null;
         this.endDate = null;

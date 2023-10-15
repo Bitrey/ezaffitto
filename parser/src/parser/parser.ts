@@ -32,6 +32,12 @@ class Parser {
             logger.info("Prompt:");
             logger.info(prompt);
         });
+        logger.debug(
+            `Secret is ${envs.OPENAI_API_KEY.slice(
+                0,
+                3
+            )}...${envs.OPENAI_API_KEY.slice(-5)}`
+        );
 
         this.queue = new Queue(config.MAX_CONCURRENT_PARSES, Infinity);
     }

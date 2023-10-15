@@ -8,7 +8,7 @@ import morgan from "morgan";
 
 const app = express();
 
-app.use(morgan("dev", { stream: new LoggerStream() }));
+app.use(morgan("common", { stream: new LoggerStream() }));
 
 app.use("/api/v1", apiRoutes);
 

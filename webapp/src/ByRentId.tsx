@@ -2,7 +2,7 @@ import { FunctionComponent, useEffect, useState } from "react";
 import { RentalPost } from "./interfaces/RentalPost";
 import RentView from "./components/RentView";
 import axios, { AxiosError } from "axios";
-import { Turnstile } from "@marsidev/react-turnstile";
+// import { Turnstile } from "@marsidev/react-turnstile";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Button from "./components/Button";
@@ -11,7 +11,8 @@ const ByRentId: FunctionComponent<any> = () => {
   const [isLoading, setIsLoading] = useState(true);
   //   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   // TODO debug
-  const [turnstileToken, setTurnstileToken] = useState<string | null>("valid");
+  // const [turnstileToken, setTurnstileToken] = useState<string | null>("valid");
+  const [turnstileToken] = useState<string | null>("valid");
 
   const { t } = useTranslation();
 
@@ -58,13 +59,15 @@ const ByRentId: FunctionComponent<any> = () => {
         // />
       )}
       {post || isLoading ? (
-        <RentView post={post ?? undefined} />
-      ) : (
-        <div>
-          <p className="mb-4">{t("rentViewer.postNotFound")}</p>
+        <div className="p-2 md:p-4">
           <Button className="rounded-lg" href="/">
             {t("rentViewer.backToSearch")}
           </Button>
+          <RentView className="mt-4" post={post ?? undefined} />
+        </div>
+      ) : (
+        <div>
+          <p className="mb-4">{t("rentViewer.postNotFound")}</p>
         </div>
       )}
     </div>

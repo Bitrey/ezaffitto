@@ -1,5 +1,6 @@
 // import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import Home from "./icons/Home";
 // import { LazyLoadImage } from "react-lazy-load-image-component";
 
 const Header = () => {
@@ -17,7 +18,10 @@ const Header = () => {
         /> */}
 
         <h1 className="text-red-600 font-semibold text-3xl tracking-tighter">
-          <Link to="/">ezaffitto</Link>
+          <Link to="/" className="flex items-center gap-2">
+            <Home fill="rgb(220 38 38 / var(--tw-text-opacity))" />
+            ezaffitto
+          </Link>
         </h1>
       </div>
       <div className="hidden md:block" />

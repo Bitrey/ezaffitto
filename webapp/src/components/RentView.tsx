@@ -13,7 +13,11 @@ interface RentViewProps extends HTMLAttributes<HTMLDivElement> {
   post?: RentalPost;
 }
 
-const RentView: FunctionComponent<RentViewProps> = ({ post }) => {
+const RentView: FunctionComponent<RentViewProps> = ({
+  post,
+  className,
+  ...rest
+}) => {
   const { t, i18n } = useTranslation();
 
   async function imageExists(imageUrl: string) {
@@ -48,7 +52,7 @@ const RentView: FunctionComponent<RentViewProps> = ({ post }) => {
   }, [jsonImages]);
 
   return (
-    <div className="sticky top-0">
+    <div className={`sticky top-0 ${className || ""}`} {...rest}>
       {images ? (
         <Swiper
           navigation
@@ -66,7 +70,7 @@ const RentView: FunctionComponent<RentViewProps> = ({ post }) => {
               <Zoom>
                 <img
                   loading="lazy"
-                  className="object-cover object-center h-96 w-full"
+                  className="object-contain object-center h-96 w-full"
                   src={e}
                   alt={"Post image " + (i + 1)}
                 />
@@ -75,7 +79,9 @@ const RentView: FunctionComponent<RentViewProps> = ({ post }) => {
           ))}
         </Swiper>
       ) : (
-        <p>DEBUG caricamento...</p>
+        <p className="bg-gray-100 w-full min-w-[16rem] h-16 mx-auto animate-pulse"></p>
+
+        // <p>bg-gray-100 w-full min-w-[16rem] h-16 mx-auto animate-pulsericamento...</p>
       )}
 
       <div className="p-2">

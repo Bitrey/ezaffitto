@@ -94,8 +94,6 @@ export class RentalPostClass {
     zone?: string;
 
     @prop({ required: false })
-    rawDescription?: string;
-
     @prop({ required: false })
     description?: string;
 

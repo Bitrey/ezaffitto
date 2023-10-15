@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 const RentFinder = () => {
   const [posts, setPosts] = useState<RentalPostJSONified[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [maxPrice, setMaxPrice] = useState<number>(1000);
+  const [maxPrice, setMaxPrice] = useState<number>(10_000);
 
   // const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   // TOOD debug
@@ -48,14 +48,9 @@ const RentFinder = () => {
   const [selected, setSelected] = useState<RentalPostJSONified | null>(null);
 
   // MIGLIORA TYPING!! (array di chiavi di rentalTypeOptions[i].value)
-  const [rentalTypes, setRentalTypes] = useState<string[]>([
-    "singleRoom",
-    "doubleRoom",
-    "studio",
-    "apartment",
-    "house",
-    "other"
-  ]);
+  const [rentalTypes, setRentalTypes] = useState<string[]>(
+    rentalTypeOptions.map(e => e.value)
+  );
 
   const { t } = useTranslation();
 
@@ -110,7 +105,7 @@ const RentFinder = () => {
   }, [cursor, limit]);
 
   return (
-    <div>
+    <div className="p-2 pb-8">
       <h3 className="mt-8 mb-2 text-center font-semibold text-2xl">
         {t("homepage.banner")}
       </h3>
@@ -120,8 +115,14 @@ const RentFinder = () => {
           <CustomSelect
             primaryColor="red"
             isMultiple
-            defaultValues={[rentalTypeOptions[0]]}
-            options={rentalTypeOptions}
+            defaultValues={rentalTypeOptions.map(e => ({
+              ...e,
+              label: t(e.label)
+            }))}
+            options={rentalTypeOptions.map(e => ({
+              ...e,
+              label: t(e.label)
+            }))}
             noOptionsMessage={t("rentFinder.noMoreOptions")}
             onChange={s => setRentalTypes(s.map(e => e.value))}
           />
@@ -153,6 +154,7 @@ const RentFinder = () => {
               className="border-none"
             />
           </div>
+          <p className="text-gray-600 text-sm">{t("rentViewer.perMonth")}</p>
         </div>
       </form>
 
@@ -197,6 +199,25 @@ const RentFinder = () => {
                   </div>
                 </>
               ))}
+
+              <div className="flex items-center mx-auto">
+                <ReactPaginate
+                  activeClassName={"item active "}
+                  breakClassName={"item break-me "}
+                  breakLabel={"..."}
+                  containerClassName={"pagination"}
+                  disabledClassName={"disabled-page"}
+                  marginPagesDisplayed={2}
+                  nextClassName={"item next "}
+                  nextLabel={<Forward />}
+                  onPageChange={handlePageClick}
+                  pageCount={pageCount}
+                  pageClassName={"item pagination-page "}
+                  pageRangeDisplayed={2}
+                  previousClassName={"item previous"}
+                  previousLabel={<Backwards />}
+                />
+              </div>
             </div>
           ) : isLoading ? (
             Array.from({ length: 10 }, (_, i) => i + 1).map(e => (
@@ -210,10 +231,11 @@ const RentFinder = () => {
           {selected && !isLoading ? (
             <RentView
               post={selected}
+              className="cursor-pointer"
               onClick={() => navigate(`/${selected._id}`)}
             />
           ) : isLoading ? (
-            <p>DEBUG caricamento...</p>
+            <p className="bg-gray-100 w-full min-w-[16rem] h-16 mx-auto animate-pulse"></p>
           ) : (
             <p>DEBUG ciao</p>
           )}

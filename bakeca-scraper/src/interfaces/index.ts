@@ -93,7 +93,6 @@ export interface RentalPost {
     monthlyPrice?: number;
     securityDepositMonths?: number;
     zone?: string;
-    rawDescription?: string;
     description?: string;
     sexRestrictions?: SexRestrictions;
     occupationalRestrictions?: OccupationalRestrictions;

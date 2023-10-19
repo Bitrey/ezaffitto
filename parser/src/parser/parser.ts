@@ -18,7 +18,7 @@ import Queue from "promise-queue";
 
 const configuration = new Configuration({
     organization: config.OPENAI_ORGANIZATION,
-    apiKey: process.env.OPENAI_API_KEY
+    apiKey: envs.OPENAI_API_KEY.replace(/\r?\n|\r/g, "")
 });
 const openai = new OpenAIApi(configuration);
 
@@ -36,7 +36,7 @@ class Parser {
             `Secret is ${envs.OPENAI_API_KEY.slice(
                 0,
                 3
-            )}...${envs.OPENAI_API_KEY.slice(-5)}`
+            )}...${envs.OPENAI_API_KEY.replace(/\r?\n|\r/g, "").slice(-5)}`
         );
 
         this.queue = new Queue(config.MAX_CONCURRENT_PARSES, Infinity);

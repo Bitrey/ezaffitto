@@ -48,6 +48,7 @@ if (envs.NODE_ENV === "development" && envs.DEBUG_START_EXPRESS_SERVER) {
             // console.log(resp);
             res.json(resp);
         } catch (err) {
+            logger.error("Error in POST /parse");
             logger.error(err);
             res.status(500).json({ error: err });
         }
@@ -71,11 +72,9 @@ appEventEmitter.on("rawText", async ({ text }) => {
         // check if already exists (salva soldi, non fare parsing inutile)
         // TODO fai questo check altrove, non qui
         // const existsById = await instance.get(`/raw/postid/${postId}`);
-
         // const existsByText = await instance.get("/raw/text", {
         //     params: { text: rawMessage }
         // });
-
         // if (existsById.data || existsByText.data) {
         //     logger.debug(
         //         `Parsed data for postId ${postId} already exists (byId: ${
@@ -86,7 +85,6 @@ appEventEmitter.on("rawText", async ({ text }) => {
         //     );
         //     return;
         // }
-
         // if (
         //     config.IGNORE_POSTS_WITH_KEYWORDS.some(keyword =>
         //         text.toLowerCase().includes(keyword)
@@ -99,7 +97,6 @@ appEventEmitter.on("rawText", async ({ text }) => {
         //     );
         //     return;
         // }
-
         // if (config.DONT_PARSE_SERVICES.includes(source)) {
         //     logger.debug(
         //         `Post ${rawMessage.slice(
@@ -108,9 +105,7 @@ appEventEmitter.on("rawText", async ({ text }) => {
         //     );
         //     return;
         // }
-
-        const parsed = await parser.parse(text);
-
+        // const parsed = await parser.parse(text);
         // if (!parsed.isRental || !parsed.isForRent) {
         //     logger.info(
         //         `Parsed data for postId ${postId} is not a rental, skipping...`
@@ -121,9 +116,7 @@ appEventEmitter.on("rawText", async ({ text }) => {
         //     });
         //     return;
         // }
-
-        appEventEmitter.emit("rentalPost", parsed);
-
+        // appEventEmitter.emit("rentalPost", parsed);
         // if (ampq) {
         //     ampq.channel.ack(ampq.message);
         // }

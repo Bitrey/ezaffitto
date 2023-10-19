@@ -10,14 +10,13 @@ import { FbPost } from "./interfaces/FbPost";
 import { extractor } from "./extractor";
 // import { runProducer } from "./producer";
 import moment, { Moment } from "moment";
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, isAxiosError } from "axios";
 import { RentalPost } from "./interfaces/shared";
 import { envs } from "./config/envs";
 
 import "./healthcheckPing";
 import { mkdir } from "fs/promises";
-import { join } from "path";
-import { cwd } from "process";
+import path from "path";
 
 puppeteer.use(pluginStealth());
 
@@ -64,11 +63,13 @@ scrapedDataEvent.on("scrapedData", async fbData => {
     logger.warn("Running debug API call for scrapedDataEvent");
     let post: RentalPost;
     try {
-        const { data } = await axios.post(config.PARSER_API_BASE_URL, fbData);
+        const { data } = await axios.post(config.PARSER_API_BASE_URL, {
+            text: fbData.text
+        });
         post = data;
     } catch (err) {
         logger.error("Error while parsing post with id " + fbData.id + ":");
-        logger.error(err);
+        logger.error((isAxiosError(err) && err.response?.data) || err);
         return;
     }
 
@@ -150,7 +151,7 @@ export class Scraper {
         region = "Bologna"
     ): Promise<{ latitude: number; longitude: number } | null> {
         const params = {
-            access_key: envs.GEOLOCATION_API_KEY,
+            access_key: envs.GEOLOCATION_API_KEY.replace(/\r?\n|\r/g, ""),
             query: address,
             country: country,
             region,
@@ -182,9 +183,10 @@ export class Scraper {
     private async scrape(groupUrl: string, durationMs: number) {
         // new date
         const scrapeId = moment().format("YYYY-MM-DD_HH-mm-ss");
-        // await mkdir(join(cwd(), "/screenshots/" + scrapeId), {
-        //     recursive: true
-        // });
+
+        await mkdir(path.join(process.cwd(), "/screenshots"), {
+            recursive: true
+        });
 
         this.setStartEndDate(durationMs);
 
@@ -299,6 +301,7 @@ export class Scraper {
         // click refuse cookie button by selecting aria-label
         const cookieButtonSelector =
             '[aria-label="Rifiuta cookie facoltativi"]';
+        ('[aria-cookiebanner="accept_only_essential_button"]');
 
         // if (page.$(cookieButtonSelector) == null)
         try {
@@ -391,9 +394,12 @@ export class Scraper {
             );
 
             // DEBUG SCREENSHOT
-            // await page.screenshot({
-            //     path: "screenshots/" + scrapeId + "/no_posts_fetched.png"
-            // });
+            await mkdir(path.join(process.cwd(), "/screenshots", scrapeId), {
+                recursive: true
+            });
+            await page.screenshot({
+                path: "screenshots/" + scrapeId + "/no_posts_fetched.png"
+            });
         }
 
         await browser.close();

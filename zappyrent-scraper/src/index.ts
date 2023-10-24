@@ -84,7 +84,10 @@ export class Scraper {
                 rentalType: this.mapRentalType(e.type),
                 hasAirConditioning: e.furniture.includes("air"),
                 hasElevator: e.services.includes("elevator"),
-                date: moment(e.created_at).toDate(),
+                date: moment(
+                    e.firstAvailablePeriods.start_date,
+                    "YYYY-MM-DD"
+                ).toDate(),
                 smokingAllowed: e.smoking == null ? undefined : !!e.smoking,
                 availabilityStartDate: e.firstAvailablePeriods.start_date
                     ? moment(
@@ -144,7 +147,7 @@ const job = new CronJob(
                     post
                 );
                 logger.info(
-                    `Sent postId ${data.postId} (${post.address}) to db-api - _id ${data._id}`
+                    `Sent postId ${post.postId}->${data.postId} (${post.address}) to db-api - got _id ${data._id}`
                 );
             } catch (err) {
                 logger.error("Error in sending data to db-api");
@@ -159,7 +162,9 @@ const job = new CronJob(
 
 async function run() {
     job.start();
-    logger.info("Subito scraper started with cron " + config.RUN_SCRAPER_CRON);
+    logger.info(
+        "ZappyRent scraper started with cron " + config.RUN_SCRAPER_CRON
+    );
 }
 
 run();

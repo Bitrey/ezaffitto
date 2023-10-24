@@ -6,12 +6,19 @@ const resources = {
     en: {
         translation: {
             common: {
-                contact: "Contact"
+                contact: "Contact",
+                loading: "Loading..."
+            },
+            textbox: {
+                searchPlaceholder: "Search..."
             },
             rentFinder: {
                 noMoreOptions: "No more options found",
                 searchPlaceholder: "Single room Corticella",
-                maxPrice: "Up to"
+                maxPrice: "Up to",
+                noMorePosts: "No more posts found",
+                pullToRefresh: "Pull to refresh",
+                releaseToRefresh: "Release to refresh"
             },
             rentViewer: {
                 perMonth: "/month",
@@ -35,12 +42,19 @@ const resources = {
     it: {
         translation: {
             common: {
-                contact: "Contatta"
+                contact: "Contatta",
+                loading: "Caricamento..."
+            },
+            textbox: {
+                searchPlaceholder: "Cerca..."
             },
             rentFinder: {
                 noMoreOptions: "Nessun'altra opzione trovata",
                 searchPlaceholder: "Stanza singola Corticella",
-                maxPrice: "Fino a"
+                maxPrice: "Fino a",
+                noMorePosts: "Nessun altro post trovato",
+                pullToRefresh: "Tira per aggiornare",
+                releaseToRefresh: "Rilascia per aggiornare"
             },
             rentViewer: {
                 perMonth: "/mese",

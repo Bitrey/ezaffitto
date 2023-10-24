@@ -15,6 +15,19 @@ import { captchaQueryParam } from "../../middlewares/captcha";
 const router = Router();
 
 router.get(
+    "/count",
+    // captchaQueryParam,
+    async (req: Request, res: Response) => {
+        logger.debug("Getting data count");
+
+        const count = await RentalPost.countDocuments();
+        logger.debug("Data count retrieved successfully");
+
+        return res.json({ count });
+    }
+);
+
+router.get(
     "/",
     // TODO add in prod DEBUG
     // captchaQueryParam,
@@ -24,6 +37,7 @@ router.get(
     // TODO! fixa questo
     // isIn(Object.values(RentalTypes))
     query("rentalTypes").isArray().optional(),
+    query("q").isString().optional(),
     validate,
     async (req: Request, res: Response) => {
         logger.debug(
@@ -43,6 +57,14 @@ router.get(
         if (req.query.maxPrice) {
             query.monthlyPrice = {
                 $lt: parseInt(req.query.maxPrice as string)
+            };
+        }
+
+        if (req.query.q) {
+            query.$text = {
+                $search: req.query.q as string,
+                $caseSensitive: false,
+                $diacriticSensitive: false
             };
         }
 
@@ -156,12 +178,17 @@ router.post(
 
         const data = new RentalPost(req.body);
 
-        const existing = await RentalPost.findOne({
-            $or: [
-                { postId: req.body[config.POST_ID_KEY] },
-                { description: req.body.description }
-            ]
-        });
+        const query: FilterQuery<RentalPostClass> = {
+            $or: [{ postId: req.body[config.POST_ID_KEY] }]
+        };
+
+        if (req.body.description) {
+            (query.$or as FilterQuery<RentalPostClass>[]).push({
+                description: req.body.description
+            });
+        }
+
+        const existing = await RentalPost.findOne(query);
         if (existing) {
             // abbiamo speso soldi inutilmente
             // 05/10/2023 NON È VERO

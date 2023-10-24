@@ -30,7 +30,7 @@ const ByRentId: FunctionComponent<any> = () => {
             captcha: turnstileToken
           }
         });
-        console.log("Fetched parsed data", data);
+        console.log("Fetched post data", data);
         setPost(data);
       } catch (err) {
         // DEBUG

@@ -31,9 +31,10 @@ export enum OccupationalRestrictions {
 }
 
 @modelOptions({
-    schemaOptions: { timestamps: true },
+    schemaOptions: { timestamps: true, autoIndex: true },
     options: { customName: "rentalposts" }
 })
+// we can add text index to description by adding this:
 export class RentalPostClass {
     @prop({ required: true })
     postId!: string;
@@ -61,12 +62,11 @@ export class RentalPostClass {
     @prop({ required: false })
     authorUserId?: string;
 
-    @prop({ required: false })
+    @prop({ required: false, index: "text" })
     authorUsername?: string;
 
     @prop({ required: false })
     authorUrl?: string;
-
     // Parsed data
 
     @prop({ required: false })
@@ -93,8 +93,7 @@ export class RentalPostClass {
     @prop({ required: false })
     zone?: string;
 
-    @prop({ required: false })
-    @prop({ required: false })
+    @prop({ required: false, index: "text" })
     description?: string;
 
     @prop({ required: false, enum: SexRestrictions })
@@ -124,7 +123,7 @@ export class RentalPostClass {
     @prop({ required: false })
     hasParking?: boolean;
 
-    @prop({ required: false })
+    @prop({ required: false, index: "text" })
     address?: string;
 
     @prop({ required: false })

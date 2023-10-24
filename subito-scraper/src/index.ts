@@ -136,7 +136,7 @@ export class Scraper {
                     url: e.urls.default,
                     authorUserId: e.advertiser.user_id,
                     authorUsername: e.advertiser.name,
-                    description: e.body,
+                    description: e.subject + "\n" + e.body,
                     latitude: Number(e.geo?.map?.latitude) || undefined,
                     longitude: Number(e.geo?.map?.longitude) || undefined,
                     rentalType: features.find(e => e.rentalType)?.rentalType,

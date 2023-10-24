@@ -13,12 +13,14 @@ import axios from "axios";
 // Add stealth plugin and use defaults
 import pluginStealth from "puppeteer-extra-plugin-stealth";
 import { logger } from "./shared/logger";
-import { Page } from "puppeteer-core";
+import { Browser, Page } from "puppeteer-core";
 import { config } from "./config";
 import { wait } from "./shared/wait";
 import EventEmitter from "events";
 
 import "./healthcheckPing";
+import { mkdir } from "fs/promises";
+import path from "path";
 
 // Use stealth
 puppeteer.use(pluginStealth());
@@ -51,7 +53,7 @@ export class Scraper {
         // const browser = await puppeteer.launch({ headless: "new" });
         // const browser = await puppeteer.launch({ headless: false });
 
-        const browser = await puppeteer.launch({
+        const browser = (await puppeteer.launch({
             headless: true,
             executablePath: "/usr/bin/google-chrome",
             args: [
@@ -60,11 +62,11 @@ export class Scraper {
                 "--disable-notifications",
                 "--disable-dev-shm-usage"
             ]
-        });
+        })) as Browser;
 
         logger.debug("Browser connected for url " + url);
 
-        const page: Page = await browser.newPage();
+        const page = await browser.newPage();
 
         // Wait for a random time before navigating to a new web page
         await wait(Math.floor(Math.random() * 12 * 100) + 50);
@@ -92,26 +94,46 @@ export class Scraper {
         await page.goto(url);
         await page.setViewport({ width: 1080, height: 1024 });
 
+        let listEl, elements;
         try {
-            await page.waitForSelector(".annuncio-elenco", { timeout: 10_000 });
+            listEl = await page.waitForSelector(".annuncio-elenco", {
+                timeout: 10_000
+            });
         } catch (err) {
             logger.error("Timeout");
             logger.error(err);
-            await browser.close();
-            return;
         }
 
-        const elements = await page.$$(".annuncio-elenco > section");
+        if (listEl) {
+            elements = await listEl.$$(".annuncio-elenco > section");
+        }
 
-        if (elements.length === 0) {
-            logger.error("No elements found!");
+        if (!elements || elements.length === 0) {
+            logger.error(
+                elements
+                    ? "No elements found"
+                    : "No listEl '.annuncio-elenco' found"
+            );
+            await browser.close();
             return;
         } else {
             logger.debug(`Found ${elements.length} elements`);
         }
 
-        // print all elements
-        elements.forEach(async (e, i) => {
+        // DEBUG SCREENSHOT
+        await mkdir(path.join(process.cwd(), "/screenshots"), {
+            recursive: true
+        });
+        await page.screenshot({
+            path:
+                "screenshots/" +
+                (elements.length === 0
+                    ? "/no_posts_fetched.png"
+                    : "/end_page.png")
+        });
+
+        // this is a for of with index of 'elements'
+        for (const [i, e] of elements.entries()) {
             try {
                 const text: string = await e.$eval(
                     "div.flex > div.flex > a",
@@ -119,7 +141,7 @@ export class Scraper {
                 );
                 if (text.toLowerCase().includes(config.AGENCY_TEXT)) {
                     logger.debug("Skipping agency post:", text);
-                    return;
+                    continue;
                 }
             } catch (err) {
                 logger.debug("Err while checking for agency post:");
@@ -184,10 +206,9 @@ export class Scraper {
                 logger.error("Error while parsing post:");
                 logger.error(err);
             }
-        });
+        }
 
-        // wait just to make sure
-        await wait(1000);
+        await wait(Math.floor(Math.random() * 12 * 100) + 50);
         await browser.close();
     }
 

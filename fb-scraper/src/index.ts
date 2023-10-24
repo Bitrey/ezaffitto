@@ -1,5 +1,5 @@
 import puppeteer from "puppeteer-extra";
-import { Page, Protocol } from "puppeteer-core";
+import { Browser, Page, Protocol } from "puppeteer-core";
 import pluginStealth from "puppeteer-extra-plugin-stealth";
 import { ScrapedDataEventEmitter } from "./interfaces/events";
 import EventEmitter from "events";
@@ -15,8 +15,11 @@ import { RentalPost } from "./interfaces/shared";
 import { envs } from "./config/envs";
 
 import "./healthcheckPing";
-import { mkdir } from "fs/promises";
-import path from "path";
+import { mkdir, writeFile } from "fs/promises";
+import { Cookie } from "./interfaces/Cookie";
+import { mapCookiesToPuppeteer } from "./shared/mapCookiesToPuppeteer";
+
+const cookies: Cookie[] = require(config.COOKIES_JSON_PATH);
 
 puppeteer.use(pluginStealth());
 
@@ -152,7 +155,7 @@ export class Scraper {
     ): Promise<{ latitude: number; longitude: number } | null> {
         const params = {
             access_key: envs.GEOLOCATION_API_KEY.replace(/\r?\n|\r/g, ""),
-            query: address,
+            query: "Bologna " + address,
             country: country,
             region,
             limit: 1,
@@ -166,11 +169,16 @@ export class Scraper {
             );
 
             if (data.data.length === 0) {
-                logger.warn(`No results found for address ${address}`);
+                logger.debug(
+                    `Geolocation no results found for address ${address}`
+                );
                 return null;
             }
 
             const { latitude, longitude } = data.data[0];
+            logger.debug(
+                `Geolocated address ${address} to lat ${latitude} long ${longitude}`
+            );
 
             return { latitude, longitude };
         } catch (err) {
@@ -182,9 +190,9 @@ export class Scraper {
 
     private async scrape(groupUrl: string, durationMs: number) {
         // new date
-        const scrapeId = moment().format("YYYY-MM-DD_HH-mm-ss");
+        // const scrapeId = moment().format("YYYY-MM-DD_HH-mm-ss");
 
-        await mkdir(path.join(process.cwd(), "/screenshots"), {
+        await mkdir(config.SCREENSHOTS_PATH, {
             recursive: true
         });
 
@@ -207,7 +215,7 @@ export class Scraper {
         // const browser = await puppeteer.launch({ headless: "new" });
         // const browser = await puppeteer.launch({ headless: false });
 
-        const browser = await puppeteer.launch({
+        const browser = (await puppeteer.launch({
             headless: true,
             executablePath: "/usr/bin/google-chrome",
             args: [
@@ -216,25 +224,37 @@ export class Scraper {
                 "--disable-notifications",
                 "--disable-dev-shm-usage"
             ]
-        });
+        })) as Browser;
 
         logger.debug(
             "Browser connected for groupUrl " + groupUrl + this.getElapsedStr()
         );
 
-        const page: Page = await browser.newPage();
+        const page = await browser.newPage();
+
+        try {
+            await page.setCookie(...mapCookiesToPuppeteer(cookies));
+        } catch (err) {
+            logger.error("CRITICAL: Error while setting cookies:");
+            logger.error(err);
+        }
 
         await page.setRequestInterception(true);
 
         const urls: string[] = [];
 
         page.on("request", interceptedRequest => {
-            if (interceptedRequest.isInterceptResolutionHandled()) return;
-            if (interceptedRequest.url().includes("graphql")) {
-                urls.push(interceptedRequest.url());
-            }
+            try {
+                if (interceptedRequest.isInterceptResolutionHandled()) return;
+                if (interceptedRequest.url().includes("graphql")) {
+                    urls.push(interceptedRequest.url());
+                }
 
-            interceptedRequest.continue();
+                interceptedRequest.continue();
+            } catch (err) {
+                logger.error("Error while intercepting request:");
+                logger.error(err);
+            }
         });
 
         let fetchedPosts = 0;
@@ -290,8 +310,13 @@ export class Scraper {
             }
         });
 
-        await page.goto(groupUrl, { timeout: 10000 });
-        await page.setViewport({ width: 1080, height: 1024 });
+        try {
+            await page.goto(groupUrl, { timeout: 10000 });
+            await page.setViewport({ width: 1080, height: 1024 });
+        } catch (err) {
+            logger.error("Error while going to groupUrl " + groupUrl + ":");
+            logger.error(err);
+        }
 
         // DEBUG SCREENSHOT
         // await page.screenshot({
@@ -311,7 +336,7 @@ export class Scraper {
             await wait(Math.random() * 1000);
             await page.click(cookieButtonSelector);
         } catch (err) {
-            logger.warn(
+            logger.debug(
                 "Cookie button not found for groupUrl " +
                     groupUrl +
                     this.getElapsedStr()
@@ -329,41 +354,46 @@ export class Scraper {
             await wait(Math.random() * 1000);
             await page.click(closeLoginButtonSelector);
         } catch (err) {
-            logger.warn(
+            logger.debug(
                 "Close login button not found for groupUrl " +
                     groupUrl +
                     this.getElapsedStr()
             );
         }
 
-        const [orderBySpan] = await page.$x(
-            "//span[contains(., 'Più pertinenti')]"
-        );
-        if (!orderBySpan) {
-            logger.debug(
-                "orderBySpan not found for groupUrl " +
-                    groupUrl +
-                    this.getElapsedStr()
+        try {
+            const [orderBySpan] = await page.$x(
+                "//span[contains(., 'Più pertinenti')]"
             );
-        } else {
-            await orderBySpan.click();
-            const [newPostsSpan] = await page.$x(
-                "//span[contains(., 'Nuovi post')]"
-            );
-            if (!newPostsSpan) {
+            if (!orderBySpan) {
                 logger.debug(
-                    "newPostsSpan not found for groupUrl " +
+                    "orderBySpan not found for groupUrl " +
                         groupUrl +
                         this.getElapsedStr()
                 );
             } else {
-                await newPostsSpan.click();
-                logger.debug(
-                    "Sorting by new posts for groupUrl " +
-                        groupUrl +
-                        this.getElapsedStr()
+                await orderBySpan.click();
+                const [newPostsSpan] = await page.$x(
+                    "//span[contains(., 'Nuovi post')]"
                 );
+                if (!newPostsSpan) {
+                    logger.debug(
+                        "newPostsSpan not found for groupUrl " +
+                            groupUrl +
+                            this.getElapsedStr()
+                    );
+                } else {
+                    await newPostsSpan.click();
+                    logger.debug(
+                        "Sorting by new posts for groupUrl " +
+                            groupUrl +
+                            this.getElapsedStr()
+                    );
+                }
             }
+        } catch (err) {
+            logger.error("Error while sorting by new posts:");
+            logger.error(err);
         }
 
         this.setStartEndDate(durationMs);
@@ -374,12 +404,17 @@ export class Scraper {
         // });
 
         while (moment().isBefore(this.endDate)) {
-            await wait(Math.random() * 500 + 500);
-            // await page.keyboard.press("PageDown");
-            await page.mouse.wheel({
-                deltaY: Math.floor(Math.random() * 500) + 500
-            });
-            await wait(Math.random() * 500 + 500);
+            try {
+                await wait(Math.random() * 500 + 500);
+                // await page.keyboard.press("PageDown");
+                await page.mouse.wheel({
+                    deltaY: Math.floor(Math.random() * 500) + 500
+                });
+                await wait(Math.random() * 500 + 500);
+            } catch (err) {
+                logger.error("Error while scrolling:");
+                logger.error(err);
+            }
         }
 
         logger.debug(
@@ -392,14 +427,34 @@ export class Scraper {
                     groupUrl +
                     this.getElapsedStr()
             );
+        } else {
+            // update cookies file
+            await writeFile(
+                config.COOKIES_JSON_PATH,
+                JSON.stringify(await page.cookies(), null, 4)
+            );
+            logger.debug(
+                "Updated cookies file for groupUrl " +
+                    groupUrl +
+                    this.getElapsedStr()
+            );
+        }
 
+        try {
             // DEBUG SCREENSHOT
-            await mkdir(path.join(process.cwd(), "/screenshots", scrapeId), {
+            await mkdir(config.SCREENSHOTS_PATH, {
                 recursive: true
             });
             await page.screenshot({
-                path: "screenshots/" + scrapeId + "/no_posts_fetched.png"
+                path:
+                    "screenshots/" +
+                    (fetchedPosts === 0
+                        ? "/no_posts_fetched.png"
+                        : "/end_page.png")
             });
+        } catch (err) {
+            logger.error("Error while taking screenshot:");
+            logger.error(err);
         }
 
         await browser.close();

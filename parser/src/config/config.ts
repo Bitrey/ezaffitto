@@ -3,12 +3,6 @@ import path from "path";
 export const config = Object.freeze({
     MAX_CONCURRENT_PARSES: 5,
 
-    // post raw che verranno fetchati ed eventualmente parsati (cron job)
-    MAX_RAW_DOCS_TO_SYNC: 100,
-
-    IGNORE_POSTS_WITH_KEYWORDS: ["cerco", "cerca"],
-    DONT_PARSE_SERVICES: ["subito", "bakeca"],
-
     // se rielaborare la descrizione o lasciarla raw
     REPROCESS_POST_TEXT: false,
 
@@ -21,15 +15,6 @@ export const config = Object.freeze({
 
     RAW_TOPIC: "scraper.scraped.*",
     PARSED_TOPIC_PREFIX: "parser.parsed.",
-
-    RAW_JSON_SCHEMA_PATH: path.join(
-        process.cwd(),
-        "/schemas/ScrapedRawDataWithoutRef.json"
-    ),
-    PARSED_JSON_SCHEMA_PATH: path.join(
-        process.cwd(),
-        "/schemas/ScrapedParsedDataWithoutMetadata.json"
-    ),
 
     POST_ID_KEY: "postId",
     RAW_MESSAGE_KEY: "rawMessage",

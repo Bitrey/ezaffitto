@@ -22,8 +22,9 @@ const RentView: FunctionComponent<RentViewProps> = ({
 
   async function imageExists(imageUrl: string) {
     try {
-      const { data } = await axios.head(imageUrl);
-      console.log({ data });
+      // const { data } = await axios.head(imageUrl);
+      // console.log({ data });
+      await axios.head(imageUrl);
       return true;
     } catch (err) {
       console.log((err as AxiosError)?.response?.data || err);

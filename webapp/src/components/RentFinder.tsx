@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { FormEvent, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import RentCard from "./RentCard";
 import CustomSelect from "./Select";
 import Button from "./Button";
@@ -9,15 +9,18 @@ import { RentalPostJSONified } from "../interfaces/RentalPost";
 import { rentalTypeOptions } from "../config";
 import Search from "../icons/Search";
 import { useTranslation } from "react-i18next";
-import ReactPaginate from "react-paginate";
-import Forward from "../icons/Forward";
-import Backwards from "../icons/Backwards";
+// import ReactPaginate from "react-paginate";
+// import Forward from "../icons/Forward";
+// import Backwards from "../icons/Backwards";
 import { useNavigate } from "react-router-dom";
+import InfiniteScroll from "react-infinite-scroll-component";
+import { SearchQueryContext } from "../Homepage";
 
 const RentFinder = () => {
-  const [posts, setPosts] = useState<RentalPostJSONified[] | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [maxPrice, setMaxPrice] = useState<number>(10_000);
+
+  const { isLoading, setIsLoading, searchQuery } =
+    useContext(SearchQueryContext);
 
   // const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   // TOOD debug
@@ -26,27 +29,6 @@ const RentFinder = () => {
 
   const navigate = useNavigate();
 
-  // TODO use infinite scroller
-  const limit = 30;
-  const [cursor, setCursor] = useState(0);
-
-  const itemsPerPage = 10;
-
-  const endCursor = cursor + itemsPerPage;
-  const shownPosts = posts?.slice(cursor, endCursor);
-  const pageCount = posts ? Math.ceil(posts.length / itemsPerPage) : 0;
-
-  const handlePageClick = (event: { selected: number }) => {
-    if (!posts) return;
-    const newCursor = (event.selected * itemsPerPage) % posts.length;
-    console.log(
-      `User requested page number ${event.selected}, which is offset ${newCursor}`
-    );
-    setCursor(newCursor);
-  };
-
-  const [selected, setSelected] = useState<RentalPostJSONified | null>(null);
-
   // MIGLIORA TYPING!! (array di chiavi di rentalTypeOptions[i].value)
   const [rentalTypes, setRentalTypes] = useState<string[]>(
     rentalTypeOptions.map(e => e.value)
@@ -54,55 +36,118 @@ const RentFinder = () => {
 
   const { t } = useTranslation();
 
-  async function fetchData(e?: FormEvent<HTMLFormElement>) {
-    e?.preventDefault();
+  const [count, setCount] = useState(Infinity);
 
-    // TODO DEBUG
-    // if (!turnstileToken) {
-    //   console.error("No turnstile token");
-    //   window.alert("Please solve the captcha");
-    //   return;
-    // }
-
-    setIsLoading(true);
+  async function fetchCount() {
     try {
-      const { data } = await axios.get("/api/v1/rentalpost", {
-        params: {
-          captcha: turnstileToken,
-          limit,
-          cursor,
-          rentalTypes: rentalTypes.length > 0 ? rentalTypes : null,
-          maxPrice
-        }
-      });
-      // DEBUG
-      console.log("Fetched parsed data", data);
-      // parse dates
-      const mapped = (data as RentalPostJSONified[]).map(e => ({
-        ...e,
-        date: new Date(e.date),
-        createdAt: new Date(e.date),
-        updatedAt: new Date(e.date)
-      }));
-      setPosts(mapped);
-      if (mapped.length > 0) {
-        setSelected(mapped[0]);
-      }
+      const { data } = await axios.get("/api/v1/rentalpost/count");
+      console.log("Fetched count", data.count);
+      setCount(data.count);
     } catch (err) {
-      // DEBUG
-      console.error((err as AxiosError)?.response?.data || err);
-    } finally {
-      setIsLoading(false);
+      console.error(err);
     }
   }
+
+  // let cursor: number = 0;
+  const [cursor, setCursor] = useState(0);
+  const limit: number = 10;
+
+  // const posts: RentalPostJSONified[] = [];
+  const [posts, setPosts] = useState<RentalPostJSONified[]>([]);
+
+  const [selected, setSelected] = useState<RentalPostJSONified | null>(null);
+
+  const fetchData = useCallback(
+    async (
+      e?: React.FormEvent<HTMLFormElement>,
+      concat: boolean = false
+    ): Promise<RentalPostJSONified[] | null> => {
+      e?.preventDefault();
+
+      // TODO DEBUG
+      // if (!turnstileToken) {
+      //   console.error("No turnstile token");
+      //   window.alert("Please solve the captcha");
+      //   return;
+      // }
+
+      fetchCount();
+
+      console.log("Fetching posts", {
+        limit,
+        skip: cursor,
+        rentalTypes,
+        maxPrice,
+        q: searchQuery
+      });
+
+      setIsLoading(true);
+      try {
+        const { data } = await axios.get("/api/v1/rentalpost", {
+          params: {
+            captcha: turnstileToken,
+            limit,
+            skip: cursor,
+            rentalTypes: rentalTypes.length > 0 ? rentalTypes : null,
+            maxPrice,
+            q: searchQuery.length > 0 ? searchQuery : null
+          }
+        });
+        // DEBUG
+        // parse dates
+        const mapped = (data as RentalPostJSONified[]).map(e => ({
+          ...e,
+          date: new Date(e.date),
+          createdAt: new Date(e.date),
+          updatedAt: new Date(e.date)
+        }));
+        console.log("Fetched posts", mapped);
+        // posts.push(...mapped);
+
+        if (concat) {
+          setPosts([...posts, ...mapped]);
+        } else {
+          setPosts(mapped);
+        }
+
+        if (mapped.length > 0 && !selected) {
+          setSelected(mapped[0]);
+        }
+
+        return mapped;
+      } catch (err) {
+        // DEBUG
+        console.error((err as AxiosError)?.response?.data || err);
+      } finally {
+        setIsLoading(false);
+      }
+
+      return null;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [
+      cursor,
+      rentalTypes,
+      maxPrice,
+      searchQuery,
+      setIsLoading,
+      turnstileToken,
+      selected,
+      posts
+    ]
+  );
+
+  useEffect(() => {
+    setCursor(0);
+  }, [turnstileToken, searchQuery]);
+
   useEffect(() => {
     if (!turnstileToken) {
       return;
     }
-
-    fetchData();
+    fetchData(undefined, cursor !== 0); // concatenation if not first page
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cursor, limit]);
+  }, [cursor]);
 
   return (
     <div className="p-2 pb-8">
@@ -160,7 +205,7 @@ const RentFinder = () => {
 
       <div className="mt-6 md:mt-16 grid grid-cols-1 md:grid-cols-2">
         <div>
-          <div className="flex items-center mx-auto">
+          {/* <div className="flex items-center mx-auto">
             <ReactPaginate
               activeClassName={"item active "}
               breakClassName={"item break-me "}
@@ -177,67 +222,67 @@ const RentFinder = () => {
               previousClassName={"item previous"}
               previousLabel={<Backwards />}
             />
-          </div>
+          </div> */}
 
-          {posts && shownPosts && !isLoading ? (
-            <div>
-              {shownPosts.map(e => (
-                <>
-                  <div className="hidden md:block">
-                    <RentCard
-                      key={e.postId}
-                      post={e}
-                      onClick={() => e && setSelected(e)}
-                    />
-                  </div>
-                  <div className="md:hidden">
-                    <RentCard
-                      key={e.postId}
-                      post={e}
-                      onClick={() => navigate(`/${e._id}`)}
-                    />
-                  </div>
-                </>
-              ))}
-
-              <div className="flex items-center mx-auto">
-                <ReactPaginate
-                  activeClassName={"item active "}
-                  breakClassName={"item break-me "}
-                  breakLabel={"..."}
-                  containerClassName={"pagination"}
-                  disabledClassName={"disabled-page"}
-                  marginPagesDisplayed={2}
-                  nextClassName={"item next "}
-                  nextLabel={<Forward />}
-                  onPageChange={handlePageClick}
-                  pageCount={pageCount}
-                  pageClassName={"item pagination-page "}
-                  pageRangeDisplayed={2}
-                  previousClassName={"item previous"}
-                  previousLabel={<Backwards />}
-                />
-              </div>
-            </div>
-          ) : isLoading ? (
-            Array.from({ length: 10 }, (_, i) => i + 1).map(e => (
-              <RentCard key={e} />
-            ))
-          ) : (
-            <p>DEBUG errore</p>
-          )}
+          <InfiniteScroll
+            height={500}
+            dataLength={posts?.length}
+            next={async () => setCursor(cursor + limit)}
+            hasMore={
+              posts?.length === 0
+                ? false
+                : !posts || !count || posts.length < count
+            }
+            loader={
+              <p className="bg-gray-100 flex justify-center items-center w-full min-w-[16rem] h-16 mx-auto animate-pulse">
+                {t("common.loading")}
+              </p>
+            }
+            endMessage={
+              <p style={{ textAlign: "center" }}>
+                <b>{t("rentFinder.noMorePosts")}</b>
+              </p>
+            }
+            // below props only if you need pull down functionality
+            refreshFunction={fetchData}
+            pullDownToRefresh
+            pullDownToRefreshThreshold={50}
+            pullDownToRefreshContent={
+              <h3 style={{ textAlign: "center" }}>
+                &#8595; {t("rentFinder.pullToRefresh")}
+              </h3>
+            }
+            releaseToRefreshContent={
+              <h3 style={{ textAlign: "center" }}>
+                &#8593; {t("rentFinder.releaseToRefresh")}
+              </h3>
+            }
+          >
+            {posts.map(e => (
+              <React.Fragment key={e._id}>
+                <div className="hidden md:block">
+                  <RentCard post={e} onClick={() => e && setSelected(e)} />
+                </div>
+                <div className="md:hidden">
+                  <RentCard post={e} onClick={() => navigate(`/${e._id}`)} />
+                </div>
+              </React.Fragment>
+            ))}
+          </InfiniteScroll>
         </div>
         <div>
-          {selected && !isLoading ? (
+          {selected ? (
             <RentView
               post={selected}
-              className="cursor-pointer"
+              className="cursor-pointer hidden md:block"
               onClick={() => navigate(`/${selected._id}`)}
             />
           ) : isLoading ? (
             <p className="bg-gray-100 w-full min-w-[16rem] h-16 mx-auto animate-pulse"></p>
           ) : (
-            <p>DEBUG ciao</p>
+            <p className="text-center text-gray-500">
+              {t("rentFinder.noPosts")}
+            </p>
           )}
         </div>
       </div>

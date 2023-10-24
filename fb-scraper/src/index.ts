@@ -52,7 +52,6 @@ scrapedDataEvent.on("scrapedData", async fbData => {
                     p.postId
                 }, skipping...`
             );
-            logger.debug(p);
             return;
         }
     } catch (err) {

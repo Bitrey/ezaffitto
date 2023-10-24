@@ -26,7 +26,7 @@ const router = createBrowserRouter([
         element: <RentFinder />
       },
       {
-        path: "/:id",
+        path: "/post/:id",
         element: <ByRentId />
       }
     ]

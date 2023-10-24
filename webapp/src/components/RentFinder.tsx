@@ -6,15 +6,17 @@ import Button from "./Button";
 import RentView from "./RentView";
 import Textbox from "./Textbox";
 import { RentalPostJSONified } from "../interfaces/RentalPost";
-import { rentalTypeOptions } from "../config";
+import { config, rentalTypeOptions } from "../config";
 import Search from "../icons/Search";
 import { useTranslation } from "react-i18next";
 // import ReactPaginate from "react-paginate";
 // import Forward from "../icons/Forward";
 // import Backwards from "../icons/Backwards";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { SearchQueryContext } from "../Homepage";
+import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
+import { translatePostJSON } from "../misc/translatePostJSON";
 
 const RentFinder = () => {
   const [maxPrice, setMaxPrice] = useState<number>(10_000);
@@ -22,31 +24,22 @@ const RentFinder = () => {
   const { isLoading, setIsLoading, searchQuery } =
     useContext(SearchQueryContext);
 
-  // const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   // TOOD debug
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [turnstileToken, setTurnstileToken] = useState<string | null>("valid");
+  // const [turnstileToken, setTurnstileToken] = useState<string | null>("valid");
 
   const navigate = useNavigate();
 
-  // MIGLIORA TYPING!! (array di chiavi di rentalTypeOptions[i].value)
   const [rentalTypes, setRentalTypes] = useState<string[]>(
     rentalTypeOptions.map(e => e.value)
   );
 
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
 
   const [count, setCount] = useState(Infinity);
 
-  async function fetchCount() {
-    try {
-      const { data } = await axios.get("/api/v1/rentalpost/count");
-      console.log("Fetched count", data.count);
-      setCount(data.count);
-    } catch (err) {
-      console.error(err);
-    }
-  }
+  const turnstileRef = React.useRef<TurnstileInstance>();
 
   // let cursor: number = 0;
   const [cursor, setCursor] = useState(0);
@@ -57,6 +50,8 @@ const RentFinder = () => {
 
   const [selected, setSelected] = useState<RentalPostJSONified | null>(null);
 
+  const { state } = useLocation();
+
   const fetchData = useCallback(
     async (
       e?: React.FormEvent<HTMLFormElement>,
@@ -65,13 +60,13 @@ const RentFinder = () => {
       e?.preventDefault();
 
       // TODO DEBUG
-      // if (!turnstileToken) {
-      //   console.error("No turnstile token");
-      //   window.alert("Please solve the captcha");
-      //   return;
-      // }
+      if (!turnstileToken) {
+        console.error("No turnstile token");
+        window.alert("Please solve the captcha");
+        return null;
+      }
 
-      fetchCount();
+      // await fetchCount();
 
       console.log("Fetching posts", {
         limit,
@@ -83,7 +78,7 @@ const RentFinder = () => {
 
       setIsLoading(true);
       try {
-        const { data } = await axios.get("/api/v1/rentalpost", {
+        const res = await axios.get("/api/v1/rentalpost", {
           params: {
             captcha: turnstileToken,
             limit,
@@ -93,15 +88,16 @@ const RentFinder = () => {
             q: searchQuery.length > 0 ? searchQuery : null
           }
         });
+        const { data, count } = res.data;
+
+        setCount(count);
+
         // DEBUG
         // parse dates
-        const mapped = (data as RentalPostJSONified[]).map(e => ({
-          ...e,
-          date: new Date(e.date),
-          createdAt: new Date(e.date),
-          updatedAt: new Date(e.date)
-        }));
-        console.log("Fetched posts", mapped);
+        const mapped = (data as RentalPostJSONified[]).map(e =>
+          translatePostJSON(e)
+        );
+        console.log("Fetched posts", mapped, "out of", count);
         // posts.push(...mapped);
 
         if (concat) {
@@ -123,14 +119,13 @@ const RentFinder = () => {
       }
 
       return null;
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       cursor,
       rentalTypes,
       maxPrice,
       searchQuery,
-      setIsLoading,
       turnstileToken,
       selected,
       posts
@@ -139,7 +134,7 @@ const RentFinder = () => {
 
   useEffect(() => {
     setCursor(0);
-  }, [turnstileToken, searchQuery]);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (!turnstileToken) {
@@ -147,7 +142,7 @@ const RentFinder = () => {
     }
     fetchData(undefined, cursor !== 0); // concatenation if not first page
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cursor]);
+  }, [cursor, turnstileToken]);
 
   return (
     <div className="p-2 pb-8">
@@ -155,15 +150,18 @@ const RentFinder = () => {
         {t("homepage.banner")}
       </h3>
 
-      <form onSubmit={fetchData} className="mt-4 mx-auto w-full md:w-[50vw]">
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          turnstileRef?.current?.reset();
+        }}
+        className="mt-4 mx-auto w-full md:w-[50vw]"
+      >
         <div className="flex items-center gap-4">
           <CustomSelect
             primaryColor="red"
             isMultiple
-            defaultValues={rentalTypeOptions.map(e => ({
-              ...e,
-              label: t(e.label)
-            }))}
+            defaultValues={[]}
             options={rentalTypeOptions.map(e => ({
               ...e,
               label: t(e.label)
@@ -180,12 +178,20 @@ const RentFinder = () => {
         </div>
 
         <div className="mt-2 flex justify-center">
-          {/* TODO add back in prod DEBUG */}
-          {/* <Turnstile
-            siteKey="0x4AAAAAAALPWjAvPc2W_e1h"
+          <Turnstile
+            siteKey={config.turnstileSiteKey}
             onSuccess={setTurnstileToken}
+            onError={() => {
+              window.scrollTo(0, 0);
+              window.alert(t("turnstile.error"));
+            }}
             onExpire={() => setTurnstileToken(null)}
-          /> */}
+            options={{
+              action: "find-rentalposts",
+              language: i18n.language
+            }}
+            ref={turnstileRef}
+          />
         </div>
 
         <div className="mt-2 flex justify-center items-center gap-2">
@@ -225,9 +231,12 @@ const RentFinder = () => {
           </div> */}
 
           <InfiniteScroll
-            height={500}
+            // height={600}
             dataLength={posts?.length}
-            next={async () => setCursor(cursor + limit)}
+            next={async () => {
+              setCursor(cursor + limit);
+              turnstileRef?.current?.reset(); // reset captcha
+            }}
             hasMore={
               posts?.length === 0
                 ? false
@@ -264,7 +273,16 @@ const RentFinder = () => {
                   <RentCard post={e} onClick={() => e && setSelected(e)} />
                 </div>
                 <div className="md:hidden">
-                  <RentCard post={e} onClick={() => navigate(`/${e._id}`)} />
+                  <RentCard
+                    post={e}
+                    onClick={() =>
+                      navigate(`/post/${e._id}`, {
+                        state: {
+                          post: JSON.stringify(e)
+                        }
+                      })
+                    }
+                  />
                 </div>
               </React.Fragment>
             ))}
@@ -275,13 +293,19 @@ const RentFinder = () => {
             <RentView
               post={selected}
               className="cursor-pointer hidden md:block"
-              onClick={() => navigate(`/${selected._id}`)}
+              onClick={() =>
+                navigate(`/post/${selected._id}`, {
+                  state: {
+                    post: JSON.stringify(selected)
+                  }
+                })
+              }
             />
           ) : isLoading ? (
             <p className="bg-gray-100 w-full min-w-[16rem] h-16 mx-auto animate-pulse"></p>
           ) : (
             <p className="text-center text-gray-500">
-              {t("rentFinder.noPosts")}
+              {t("rentFinder.noPostSelected")}
             </p>
           )}
         </div>

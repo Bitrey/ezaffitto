@@ -12,6 +12,8 @@ FAI: trova modo per salvare non rentals.
 
 [OK] Fixa FB scraper Protocol Error **target closed**:
 
+Lo screenshots/ non è importante ma lo crea come root, devi fixare
+
 Fixa Zappyrent Scraper che non funziona
 
 ```

@@ -11,6 +11,7 @@ type ButtonAndHrefProps = AnchorHTMLAttributes<HTMLAnchorElement> &
 interface ButtonProps extends ButtonAndHrefProps {
   className?: string;
   href?: string;
+  state?: any;
 }
 
 const Button: FunctionComponent<ButtonProps> = ({

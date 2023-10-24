@@ -1,13 +1,19 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
+import { Resource } from "i18next";
 
-const resources = {
+const resources: Resource = {
     en: {
         translation: {
             common: {
+                appName: "ezaffitto - Find your rent in Bologna!",
+                appNameShort: "ezaffitto",
                 contact: "Contact",
                 loading: "Loading..."
+            },
+            turnstile: {
+                error: "Error in Turnstile CAPTCHA"
             },
             textbox: {
                 searchPlaceholder: "Search..."
@@ -16,6 +22,8 @@ const resources = {
                 noMoreOptions: "No more options found",
                 searchPlaceholder: "Single room Corticella",
                 maxPrice: "Up to",
+                noPosts: "No posts",
+                noPostSelected: "No post selected",
                 noMorePosts: "No more posts found",
                 pullToRefresh: "Pull to refresh",
                 releaseToRefresh: "Release to refresh"
@@ -23,7 +31,8 @@ const resources = {
             rentViewer: {
                 perMonth: "/month",
                 backToSearch: "Back to search",
-                postNotFound: "Post not found"
+                postNotFound: "Post not found",
+                invalidPost: "Invalid post"
             },
             homepage: {
                 banner: "Find your rent in Bologna!",
@@ -42,8 +51,13 @@ const resources = {
     it: {
         translation: {
             common: {
+                appName: "ezaffitto - Trova il tuo affitto a Bologna!",
+                appNameShort: "ezaffitto",
                 contact: "Contatta",
                 loading: "Caricamento..."
+            },
+            turnstile: {
+                error: "Errore nel CAPTCHA Turnstile"
             },
             textbox: {
                 searchPlaceholder: "Cerca..."
@@ -52,6 +66,8 @@ const resources = {
                 noMoreOptions: "Nessun'altra opzione trovata",
                 searchPlaceholder: "Stanza singola Corticella",
                 maxPrice: "Fino a",
+                noPosts: "Nessun post",
+                noPostSelected: "Nessun post selezionato",
                 noMorePosts: "Nessun altro post trovato",
                 pullToRefresh: "Tira per aggiornare",
                 releaseToRefresh: "Rilascia per aggiornare"
@@ -59,7 +75,8 @@ const resources = {
             rentViewer: {
                 perMonth: "/mese",
                 backToSearch: "Torna alla ricerca",
-                postNotFound: "Post non trovato"
+                postNotFound: "Post non trovato",
+                invalidPost: "Post non valido"
             },
             homepage: {
                 banner: "Trova il tuo affitto a Bologna!",
@@ -77,11 +94,10 @@ const resources = {
     }
 };
 
-i18n.use(initReactI18next)
-    .use(LanguageDetector)
+i18n.use(LanguageDetector)
+    .use(initReactI18next)
     .init({
         resources,
-        lng: "en",
         fallbackLng: "en",
         interpolation: {
             escapeValue: false

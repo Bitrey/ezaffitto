@@ -1,10 +1,10 @@
 import axios from "axios";
 import { NextFunction, Request, Response } from "express";
-import { config } from "../config";
 import { envs } from "../config/envs";
 import requestIp from "request-ip";
 import { logger } from "../shared/logger";
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "http-status";
+import { config } from "../config";
 
 interface TurnstileRequest {
     secret: string;
@@ -24,15 +24,18 @@ export async function captchaQueryParam(
     res: Response,
     next: NextFunction
 ) {
-    const captcha = req.query;
-    if (!captcha) {
+    const { captcha } = req.query;
+
+    logger.debug("atoken is " + JSON.stringify(captcha));
+
+    if (typeof captcha !== "string") {
         return res.status(BAD_REQUEST).json({ err: "Missing captcha" });
     }
 
     try {
         const _res = await axios.post(config.TURNSTILE_URL, {
             secret: envs.TURNSTILE_SECRET,
-            response: req.params!.token,
+            response: captcha,
             remoteip: requestIp.getClientIp(req)
         } as TurnstileRequest);
         const data: TurnstileResponse = _res.data;
@@ -43,8 +46,7 @@ export async function captchaQueryParam(
             logger.debug("Turnstile request failed");
             logger.debug(data);
             res.status(BAD_REQUEST).json({
-                success: false,
-                err: "Anti-bot verification failed"
+                err: "CAPTCHA verification failed"
             });
         }
     } catch (err) {

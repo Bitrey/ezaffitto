@@ -121,16 +121,21 @@ export class Scraper {
         }
 
         // DEBUG SCREENSHOT
-        await mkdir(path.join(process.cwd(), "/screenshots"), {
-            recursive: true
-        });
-        await page.screenshot({
-            path:
-                "screenshots/" +
-                (elements.length === 0
-                    ? "/no_posts_fetched.png"
-                    : "/end_page.png")
-        });
+        try {
+            await mkdir(path.join(process.cwd(), "/screenshots"), {
+                recursive: true
+            });
+            await page.screenshot({
+                path:
+                    "screenshots/" +
+                    (elements.length === 0
+                        ? "/no_posts_fetched.png"
+                        : "/end_page.png")
+            });
+        } catch (err) {
+            logger.warn("Error while taking screenshot:");
+            logger.warn(err);
+        }
 
         // this is a for of with index of 'elements'
         for (const [i, e] of elements.entries()) {

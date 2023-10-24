@@ -84,10 +84,11 @@ export class Scraper {
                 rentalType: this.mapRentalType(e.type),
                 hasAirConditioning: e.furniture.includes("air"),
                 hasElevator: e.services.includes("elevator"),
-                date: moment(
-                    e.firstAvailablePeriods.start_date,
-                    "YYYY-MM-DD"
-                ).toDate(),
+                // date: moment(
+                //     e.firstAvailablePeriods.start_date,
+                //     "YYYY-MM-DD"
+                // ).toDate(),
+                date: moment(e.updated_at).toDate(),
                 smokingAllowed: e.smoking == null ? undefined : !!e.smoking,
                 availabilityStartDate: e.firstAvailablePeriods.start_date
                     ? moment(

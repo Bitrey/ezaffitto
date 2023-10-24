@@ -5,7 +5,5 @@ export const config = Object.freeze({
     POST_ID_KEY: "postId",
     SCRAPER_RAW_DATA_KEY: "scraperRawData",
 
-    TURNSTILE_URL: "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-
     SCRAPER_TYPES: ["facebook", "subito", "bakeca", "zappyrent"] as const
 });

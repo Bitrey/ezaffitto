@@ -6,11 +6,11 @@ import axios, { AxiosError } from "axios";
 import { format } from "date-fns";
 import { enUS, it } from "date-fns/locale";
 import Button from "./Button";
-import { RentalPost } from "../interfaces/RentalPost";
+import { RentalPostJSONified } from "../interfaces/RentalPost";
 import { useTranslation } from "react-i18next";
 
 interface RentViewProps extends HTMLAttributes<HTMLDivElement> {
-  post?: RentalPost;
+  post?: RentalPostJSONified;
 }
 
 const RentView: FunctionComponent<RentViewProps> = ({
@@ -39,10 +39,10 @@ const RentView: FunctionComponent<RentViewProps> = ({
   useEffect(() => {
     setImages(null);
     async function filterImages() {
-      if (!post) return;
+      if (!Array.isArray(post?.images)) return;
 
       const existingImages: string[] = [];
-      for (const img of post.images) {
+      for (const img of post!.images) {
         const exists = await imageExists(img);
         if (exists) existingImages.push(img);
       }
@@ -51,6 +51,24 @@ const RentView: FunctionComponent<RentViewProps> = ({
     filterImages();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jsonImages]);
+
+  useEffect(() => {
+    if (!post || window.location.pathname === "/") {
+      window.document.title = `${t("common.appName")}`;
+    } else {
+      window.document.title = `${
+        post.description
+          ? post.description.slice(0, 30) + "..."
+          : `${t(`rentalType.${post.rentalType}`)} ${
+              post.address ||
+              (post.date &&
+                format(post.date, "E d MMM yyyy HH:mm", {
+                  locale: i18n.language === "it" ? it : enUS
+                }))
+            }`
+      } - ${t("common.appNameShort")}`;
+    }
+  }, [i18n.language, post, t]);
 
   return (
     <div className={`sticky top-0 ${className || ""}`} {...rest}>
@@ -86,7 +104,7 @@ const RentView: FunctionComponent<RentViewProps> = ({
       )}
 
       <div className="p-2">
-        <div className="mt-4 mb-8 grid grid-cols-1 md:grid-cols-2">
+        <div className="mt-4 mb-8 grid grid-cols-1 md:grid-cols-3">
           <div>
             {post?.rentalType && (
               <p className="font-semibold tracking-tighter">
@@ -110,17 +128,52 @@ const RentView: FunctionComponent<RentViewProps> = ({
               <p className="mt-2 text-gray-700">📍 {post?.address}</p>
             )}
           </div>
+          <div>
+            {/* print post?.source */}
+            {post && <span>🌐</span>}{" "}
+            {post?.url && window.location.pathname !== "/" ? (
+              <a
+                href={new URL(post.url).origin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-700 hover:text-red-600 transition-colors"
+              >
+                {new URL(post.url).hostname}
+              </a>
+            ) : (
+              <span className="text-gray-700 hover:text-gray-800 transition-colors">
+                {post?.url ? new URL(post.url).hostname : post?.source}
+              </span>
+            )}
+          </div>
         </div>
         <p>{post?.description}</p>
         {post && (
           <div className="mt-4 flex justify-center">
-            <Button
-              href={post.url || "#"}
-              className="p-3 rounded-full font-medium tracking-tight"
-            >
-              {t("common.contact")}{" "}
-              <span className="font-bold">{post?.authorUsername}</span>
-            </Button>
+            {/* if we are at /, show <Link>, else button */}
+            {window.location.pathname === "/" ? (
+              <Button
+                className="p-3 rounded-full font-medium tracking-tight"
+                href={`/post/${post._id}`}
+              >
+                {t("common.contact")}{" "}
+                <span className="font-bold">
+                  {" "}
+                  {post?.authorUsername || `on ${post.source}`}
+                </span>
+              </Button>
+            ) : (
+              <Button
+                href={post.url || "#"}
+                className="p-3 rounded-full font-medium tracking-tight"
+              >
+                <span>🔗 | </span>
+                {t("common.contact")}{" "}
+                <span className="font-bold">
+                  {post?.authorUsername || `on ${post.source}`}
+                </span>
+              </Button>
+            )}
           </div>
         )}
         {/* <h1>debug</h1>

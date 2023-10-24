@@ -1,8 +1,5 @@
 import { Request, Response, Router } from "express";
-import RentalPost, {
-    RentalPostClass,
-    RentalTypes
-} from "../../models/RentalPost";
+import RentalPost, { RentalPostClass } from "../../models/RentalPost";
 import { logger } from "../../shared/logger";
 import { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, OK } from "http-status";
 import { validateModel } from "../../middlewares/validateModel";
@@ -10,79 +7,8 @@ import { config } from "../../config";
 import { body, param, query } from "express-validator";
 import { validate } from "../../middlewares/expressValidator";
 import { FilterQuery } from "mongoose";
-import { captchaQueryParam } from "../../middlewares/captcha";
 
 const router = Router();
-
-router.get(
-    "/count",
-    // captchaQueryParam,
-    async (req: Request, res: Response) => {
-        logger.debug("Getting data count");
-
-        const count = await RentalPost.countDocuments();
-        logger.debug("Data count retrieved successfully");
-
-        return res.json({ count });
-    }
-);
-
-router.get(
-    "/",
-    // TODO add in prod DEBUG
-    // captchaQueryParam,
-    query("limit").isInt().optional(),
-    query("skip").isInt().optional(),
-    query("maxPrice").isInt({ gt: 0 }).optional(),
-    // TODO! fixa questo
-    // isIn(Object.values(RentalTypes))
-    query("rentalTypes").isArray().optional(),
-    query("q").isString().optional(),
-    validate,
-    async (req: Request, res: Response) => {
-        logger.debug(
-            `Getting all data skipping ${
-                req.query.skip || "none"
-            } limiting to ${req.query.limit || Infinity}`
-        );
-
-        const query: FilterQuery<RentalPostClass> = {
-            isRental: true,
-            isForRent: true
-        };
-
-        const rentalTypes = req.query.rentalTypes as RentalTypes[] | null;
-        if (rentalTypes) query.rentalType = { $in: rentalTypes };
-
-        if (req.query.maxPrice) {
-            query.monthlyPrice = {
-                $lt: parseInt(req.query.maxPrice as string)
-            };
-        }
-
-        if (req.query.q) {
-            query.$text = {
-                $search: req.query.q as string,
-                $caseSensitive: false,
-                $diacriticSensitive: false
-            };
-        }
-
-        const data = RentalPost.find(query).sort({ date: -1 });
-        if (req.query.limit) {
-            data.limit(parseInt(req.query.limit as string));
-        }
-        if (req.query.skip) {
-            data.skip(parseInt(req.query.skip as string));
-        }
-
-        const result = await data.exec();
-
-        logger.debug(`Data retrieved successfully (total: ${result.length})`);
-
-        return res.json(result);
-    }
-);
 
 // TODO: make these private!!
 router.post(
@@ -115,30 +41,6 @@ router.post(
                 )}..."`
             );
         }
-
-        return res.json(data);
-    }
-);
-
-router.get("/count", async (req: Request, res: Response) => {
-    logger.debug("Getting data count");
-
-    const count = await RentalPost.countDocuments();
-    logger.debug("Data count retrieved successfully");
-
-    return res.json({ count });
-});
-
-router.get(
-    "/postid/:id",
-    param("id").isString(),
-    validate,
-    // captchaQueryParam,
-    async (req: Request, res: Response) => {
-        logger.debug("Getting data by postId");
-
-        const data = await RentalPost.findOne({ postId: req.params.id });
-        logger.debug("Data retrieved successfully by postId");
 
         return res.json(data);
     }

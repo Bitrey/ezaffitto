@@ -1,0 +1,52 @@
+PLEASE NOTE THAT THE TERMS OF SERVICE AND THE COOKIE POLICY ARE ONLY AVAILABLE IN ITALIAN, AND THAT THE ENGLISH TRANSLATION IS PROVIDED FOR CONVENIENCE ONLY. THE ITALIAN VERSION IS THE ONLY LEGALLY BINDING VERSION.
+
+Cookie Policy of ezaffitto.com
+
+This Cookie Policy applies to the website ezaffitto.com, managed by Alessandro Amella, email info@bitrey.it (hereinafter referred to as "the Owner").
+
+This Cookie Policy is intended to inform users visiting the website ezaffitto.com (hereinafter referred to as "Users") about the use of cookies and similar technologies by the Owner and third parties.
+
+What Are Cookies
+
+Cookies are small text files that websites visited by Users send to their devices (computers, smartphones, tablets, etc.), where they are stored to be transmitted back to the same websites upon Users' subsequent visits.
+
+Cookies can serve various functions, such as enabling efficient navigation between pages, remembering Users' preferences, collecting statistical information about website usage, offering personalized services, etc.
+
+Cookies can be classified based on their duration, origin, and purpose.
+
+Based on duration, cookies can be:
+
+Session Cookies: These are temporary and expire when the User closes the browser or leaves the website.
+Persistent Cookies: These remain on the User's device for a specified period or until the User manually deletes them.
+Based on origin, cookies can be:
+
+First-party Cookies: Sent by the website visited by the User and belonging to the Owner.
+Third-party Cookies: Sent by websites or domains different from the one visited by the User and belonging to entities other than the Owner.
+Based on purpose, cookies can be:
+
+Technical Cookies: Necessary for the proper functioning of the website and to provide the services requested by Users. They can be divided into:
+Navigation or Session Cookies: Ensure normal navigation and use of the website.
+Functional Cookies: Allow the website to remember choices made by Users (e.g., language or font size).
+Analytical Cookies: Collect information about website usage by Users (e.g., number of visitors, most visited pages, time spent on the website, etc.) in aggregated and anonymous form.
+Profiling Cookies: Used to create User profiles based on their preferences, interests, and behavior exhibited during navigation on the website or other websites. These cookies can be used to send Users personalized advertising messages in line with the created profiles.
+Cookies Used by ezaffitto.com
+
+The ezaffitto.com website does not use its own profiling cookies. The Owner only uses certain technical cookies necessary for the functioning of the website and to provide Users with the offered service. Specifically, the Owner uses:
+
+A cookie used to store the User's choice regarding the use of cookies and acceptance of the terms and conditions of website usage.
+A session cookie that serves to identify the User's session on the server. This cookie expires at the end of the session or when the User closes the browser.
+A persistent cookie used to store the language chosen by the User for website display.
+A persistent cookie used to keep track of which rental post the User has viewed on the website.
+The Owner also uses some third-party cookies, namely cookies sent by entities other than the Owner and which may serve different purposes. Specifically, the Owner uses:
+
+Cloudflare Turnstile: A service offered by Cloudflare, Inc. that protects the website from cyber attacks and unwanted traffic. This service may issue technical cookies to verify whether the User is a human or a bot. For more information about Cloudflare Turnstile and the cookies used, please refer to the documentation available at the following link.
+Google Analytics: A service offered by Google LLC that collects statistical information about Users' usage of the website. This service may issue analytical cookies to track and analyze Users' behavior on the website anonymously. For more information about Google Analytics and the cookies used, please refer to the documentation available at the following link.
+Managing Cookies
+
+Users can manage their cookie preferences through their browser settings. This way, Users can decide whether to accept or reject all cookies or only certain types of cookies. Users can also delete cookies already stored on their device.
+
+However, please note that disabling or deleting cookies may compromise the proper functioning of the website or limit the offered functionalities.
+
+Changes to the Cookie Policy
+
+The Owner reserves the right to change this Cookie Policy at any time and without notice, to adapt it to any legal, technological, or organizational changes. Changes to the Cookie Policy will be published on the website and will be effective from the moment of publication. Users are encouraged to periodically check the website for any changes to the Cookie Policy.

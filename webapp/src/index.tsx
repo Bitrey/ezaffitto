@@ -16,6 +16,11 @@ import Homepage from "./Homepage";
 import ByRentId from "./ByRentId";
 import RentFinder from "./components/RentFinder";
 
+import ReactGA from "react-ga4";
+import { config } from "./config";
+
+ReactGA.initialize(config.ga4Token);
+
 const router = createBrowserRouter([
   {
     path: "/",

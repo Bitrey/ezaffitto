@@ -43,7 +43,7 @@ const Header = () => {
         </h1>
       </div>
       <div className="hidden md:block" />
-      <div className="flex justify-center items-center gap-4">
+      <div className="flex justify-center items-center gap-4 z-50">
         {/* en and it emojis to change lng */}
         <div tabIndex={0} className="group relative inline-block p-5">
           <button className="flex items-center bg-gray-50  text-red-600 hover:text-red-700 underline transition-colors px-1 rounded p-2 text-[16px] focus:outline-none">

@@ -5,6 +5,7 @@ import { validate } from "../../middlewares/expressValidator";
 import { logger } from "../../shared/logger";
 import { RentalTypes } from "../../interfaces/shared";
 import { db } from "../../config/db";
+import { ObjectId } from "mongodb";
 
 const router = Router();
 
@@ -71,17 +72,23 @@ router.get(
 );
 
 router.get(
-    "/postid/:id",
+    "/:id",
     captchaQueryParam,
-    param("id").isString(),
+    param("id").isMongoId(),
     validate,
     async (req: Request, res: Response) => {
-        logger.debug("Getting data by postId");
+        logger.debug("Getting data by _id");
 
         const collection = (await db).collection("rentalposts");
-        const data = collection.findOne({ postId: req.params.id });
+        const data = await collection.findOne({
+            _id: new ObjectId(req.params.id)
+        });
 
-        logger.debug("Data retrieved successfully by postId");
+        logger.debug("Data retrieved successfully by _id " + req.params.id);
+
+        if (!data) {
+            return res.status(404).json({ err: "Not found" });
+        }
 
         return res.json(data);
     }

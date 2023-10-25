@@ -1,7 +1,9 @@
-import { FunctionComponent, useState } from "react";
+import { FunctionComponent, useEffect, useState } from "react";
 import Header from "./Header";
 import { Outlet } from "react-router-dom";
 import { createContext } from "react";
+import { useCookies } from "react-cookie";
+import TosCookiesAccept from "./components/TosCookies";
 
 // function Homepage() {
 
@@ -22,6 +24,24 @@ const Homepage: FunctionComponent<any> = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const [cookies, setCookie, removeCookie] = useCookies();
+  const [tosCookiesAccepted, setTosCookiesAccepted] = useState<boolean>(false);
+
+  function acceptTosCookies() {
+    setCookie("tosCookiesAccepted", true, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365 // 1 year
+    });
+    setTosCookiesAccepted(true);
+  }
+
+  useEffect(() => {
+    if (cookies.tosCookiesAccepted) {
+      setTosCookiesAccepted(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <SearchQueryContext.Provider
       value={{ searchQuery, setSearchQuery, isLoading, setIsLoading }}
@@ -34,6 +54,10 @@ const Homepage: FunctionComponent<any> = () => {
             <Outlet />
           </div>
         </section>
+
+        {!tosCookiesAccepted && (
+          <TosCookiesAccept onAccept={acceptTosCookies} />
+        )}
       </main>
     </SearchQueryContext.Provider>
   );

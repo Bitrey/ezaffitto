@@ -1,0 +1,55 @@
+Cookie policy di ezaffitto.com
+
+Questa cookie policy si applica al sito web ezaffitto.com, gestito da Alessandro Amella,  email info@bitrey.it (di seguito, "il Titolare").
+
+Questa cookie policy ha lo scopo di informare gli utenti che visitano il sito web ezaffitto.com (di seguito, "gli Utenti") sull'uso dei cookie e delle tecnologie similari da parte del Titolare e di terze parti.
+
+Cosa sono i cookie
+
+I cookie sono piccoli file di testo che i siti web visitati dagli Utenti inviano ai loro dispositivi (computer, smartphone, tablet, ecc.), dove vengono memorizzati per essere poi ritrasmessi agli stessi siti web alla successiva visita degli stessi Utenti.
+
+I cookie possono avere diverse funzioni, come consentire la navigazione tra le pagine in modo efficiente, ricordare le preferenze degli Utenti, raccogliere informazioni statistiche sull'uso del sito web, offrire servizi personalizzati, ecc.
+
+I cookie possono essere classificati in base alla loro durata, alla loro provenienza e alla loro finalità.
+
+In base alla durata, i cookie possono essere:
+
+- Cookie di sessione: sono temporanei e scadono quando l'Utente chiude il browser o lascia il sito web.
+- Cookie persistenti: rimangono sul dispositivo dell'Utente per un periodo di tempo determinato o fino a quando l'Utente li elimina manualmente.
+
+In base alla provenienza, i cookie possono essere:
+
+- Cookie di prima parte: sono inviati dal sito web visitato dall'Utente e appartengono al Titolare.
+- Cookie di terze parti: sono inviati da siti web o da domini diversi da quello visitato dall'Utente e appartengono a soggetti diversi dal Titolare.
+
+In base alla finalità, i cookie possono essere:
+
+- Cookie tecnici: sono necessari per il corretto funzionamento del sito web e per fornire i servizi richiesti dagli Utenti. Possono essere suddivisi in:
+  - Cookie di navigazione o di sessione: garantiscono la normale navigazione e fruizione del sito web.
+  - Cookie funzionali: permettono di memorizzare le scelte effettuate dagli Utenti sul sito web (ad esempio, la lingua o le dimensioni dei caratteri).
+  - Cookie analitici: raccolgono informazioni sull'uso del sito web da parte degli Utenti (ad esempio, il numero di visitatori, le pagine più visitate, il tempo di permanenza sul sito web, ecc.) in forma aggregata e anonima.
+- Cookie di profilazione: sono utilizzati per creare profili degli Utenti in base alle loro preferenze, ai loro interessi e al loro comportamento manifestati durante la navigazione sul sito web o su altri siti web. Questi cookie possono essere utilizzati per inviare agli Utenti messaggi pubblicitari personalizzati in linea con i profili creati.
+
+Quali cookie utilizza ezaffitto.com
+
+Il sito web ezaffitto.com non utilizza cookie propri di profilazione. Il Titolare utilizza solo alcuni cookie tecnici necessari per il funzionamento del sito web e per fornire agli Utenti il servizio offerto. In particolare, il Titolare utilizza:
+
+- Un cookie utilizzato per memorizzare la scelta dell'Utente in merito all'utilizzo dei cookie e all'accettazione dei termini e delle condizioni di utilizzo del sito web.
+- Un cookie di sessione che serve a identificare la sessione dell'Utente sul server. Questo cookie scade al termine della sessione o quando l'Utente chiude il browser.
+- Un cookie persistente che serve a memorizzare la lingua scelta dall'Utente per la visualizzazione del sito web.
+- Un cookie persistente che serve a tenere conto di quale post riguardante gli affitti l'Utente ha visualizzato sul sito web.
+
+Il Titolare utilizza inoltre alcuni cookie di terze parti, ovvero cookie inviati da soggetti diversi dal Titolare e che possono avere diverse finalità. In particolare, il Titolare utilizza:
+
+- Cloudflare Turnstile, un servizio offerto da Cloudflare, Inc. che serve a proteggere il sito web da attacchi informatici e da traffico indesiderato. Questo servizio può rilasciare dei cookie tecnici per verificare se l'Utente è un essere umano o un bot. Per maggiori informazioni su Cloudflare Turnstile e sui cookie utilizzati, si prega di consultare la documentazione disponibile al seguente link.
+- Google Analytics, un servizio offerto da Google LLC che serve a raccogliere informazioni statistiche sull'uso del sito web da parte degli Utenti. Questo servizio può rilasciare dei cookie analitici per tracciare e analizzare il comportamento degli Utenti sul sito web in forma anonima. Per maggiori informazioni su Google Analytics e sui cookie utilizzati, si prega di consultare la documentazione disponibile al seguente link.
+
+Come gestire i cookie
+
+Gli Utenti possono gestire le proprie preferenze sui cookie attraverso le impostazioni del proprio browser. In questo modo, gli Utenti possono decidere se accettare o rifiutare tutti i cookie o solo alcuni tipi di cookie. Gli Utenti possono anche cancellare i cookie già memorizzati sul proprio dispositivo.
+
+Tuttavia, si avvisa che disabilitare o cancellare i cookie può compromettere il corretto funzionamento del sito web o limitare le funzionalità offerte.
+
+Modifiche alla cookie policy
+
+Il Titolare si riserva il diritto di modificare la presente cookie policy in qualsiasi momento e senza preavviso, per adeguarla a eventuali cambiamenti normativi, tecnologici o organizzativi. Le modifiche alla cookie policy saranno pubblicate sul sito web e saranno efficaci dal momento della pubblicazione. Gli Utenti sono invitati a consultare periodicamente il sito web per prendere visione delle eventuali modifiche alla cookie policy.

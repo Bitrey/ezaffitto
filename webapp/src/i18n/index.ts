@@ -10,7 +10,17 @@ const resources: Resource = {
                 appName: "ezaffitto - Find your rent in Bologna!",
                 appNameShort: "ezaffitto",
                 contact: "Contact",
-                loading: "Loading..."
+                loading: "Loading...",
+                error: "Error",
+                close: "Close"
+            },
+            tos: {
+                using: "By using this site, you agree to the",
+                tos: "Terms of Service",
+                and: "and",
+                cookie: "cookie policy",
+                accept: "Accept",
+                note: "Please note that the Terms of Service and the Cookie Policy are only available in Italian, and that the English translation is provided for convenience only. The Italian version is the only legally binding version."
             },
             turnstile: {
                 error: "Error in Turnstile CAPTCHA"
@@ -54,7 +64,17 @@ const resources: Resource = {
                 appName: "ezaffitto - Trova il tuo affitto a Bologna!",
                 appNameShort: "ezaffitto",
                 contact: "Contatta",
-                loading: "Caricamento..."
+                loading: "Caricamento...",
+                error: "Errore",
+                close: "Chiudi"
+            },
+            tos: {
+                using: "Utilizzando questo sito, accetti i",
+                tos: "Termini di Servizio",
+                and: "e la",
+                cookie: "cookie policy",
+                accept: "Accetto",
+                note: ""
             },
             turnstile: {
                 error: "Errore nel CAPTCHA Turnstile"

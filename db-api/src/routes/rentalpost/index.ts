@@ -10,7 +10,29 @@ import { FilterQuery } from "mongoose";
 
 const router = Router();
 
-// TODO: make these private!!
+router.get("/", validate, async (req: Request, res: Response) => {
+    logger.debug("Getting all rental posts");
+
+    const data = await RentalPost.find();
+    logger.debug("Data retrieved successfully");
+
+    return res.json(data);
+});
+
+router.get(
+    "/postid/:id",
+    param("id").isString(),
+    validate,
+    async (req: Request, res: Response) => {
+        logger.debug("Getting data by postId");
+
+        const data = await RentalPost.findOne({ postId: req.params.id });
+        logger.debug("Data retrieved successfully by postId");
+
+        return res.json(data);
+    }
+);
+
 router.post(
     "/text",
     body("text").isString().isLength({ min: 1 }),

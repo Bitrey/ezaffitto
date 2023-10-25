@@ -456,7 +456,32 @@ export class Scraper {
             logger.error(err);
         }
 
-        await browser.close();
+        let closed = false;
+        try {
+            await browser.close();
+            closed = true;
+        } catch (err) {
+            logger.error("CRITICAL! Error while closing browser:");
+            logger.error(err);
+        }
+
+        if (!closed) {
+            try {
+                // kill browser
+                const code = browser.process()?.kill();
+                logger.debug(
+                    "Killed browser with code " +
+                        code +
+                        " for groupUrl " +
+                        groupUrl +
+                        this.getElapsedStr()
+                );
+            } catch (err) {
+                logger.error("CRITICAL! Error while killing browser:");
+                logger.error(err);
+            }
+        }
+
         logger.info(
             "Scrape finished for groupUrl " + groupUrl + this.getElapsedStr()
         );

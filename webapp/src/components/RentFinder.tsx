@@ -1,21 +1,22 @@
 import axios, { AxiosError } from "axios";
 import React, { useCallback, useContext, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
+import InfiniteScroll from "react-infinite-scroll-component";
+import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
+import ReactGA from "react-ga4";
 import RentCard from "./RentCard";
 import CustomSelect from "./Select";
 import Button from "./Button";
 import RentView from "./RentView";
 import Textbox from "./Textbox";
 import { RentalPostJSONified } from "../interfaces/RentalPost";
-import { config, rentalTypeOptions } from "../config";
+import { config, gaEvents, rentalTypeOptions } from "../config";
 import Search from "../icons/Search";
-import { useTranslation } from "react-i18next";
 // import ReactPaginate from "react-paginate";
 // import Forward from "../icons/Forward";
 // import Backwards from "../icons/Backwards";
-import { useLocation, useNavigate } from "react-router-dom";
-import InfiniteScroll from "react-infinite-scroll-component";
 import { SearchQueryContext } from "../Homepage";
-import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 import { translatePostJSON } from "../misc/translatePostJSON";
 
 const RentFinder = () => {
@@ -49,8 +50,6 @@ const RentFinder = () => {
   const [posts, setPosts] = useState<RentalPostJSONified[]>([]);
 
   const [selected, setSelected] = useState<RentalPostJSONified | null>(null);
-
-  const { state } = useLocation();
 
   const fetchData = useCallback(
     async (
@@ -89,6 +88,14 @@ const RentFinder = () => {
           }
         });
         const { data, count } = res.data;
+
+        ReactGA.event(gaEvents.findPosts, {
+          searchQuery,
+          rentalTypes,
+          maxPrice,
+          q: searchQuery,
+          count
+        });
 
         setCount(count);
 

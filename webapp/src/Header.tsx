@@ -47,7 +47,7 @@ const Header = () => {
         {/* en and it emojis to change lng */}
         <div tabIndex={0} className="group relative inline-block p-5">
           <button className="flex items-center bg-gray-50  text-red-600 hover:text-red-700 underline transition-colors px-1 rounded p-2 text-[16px] focus:outline-none">
-            {mapLngToLabel(i18n.language)} ⌄
+            {mapLngToLabel(i18n.language) || "-- select language --"} ⌄
           </button>
           <ul className="hidden group-focus-within:block list-none absolute bg-gray-50 w-40 z-1 shadow-lg animate-slideIn">
             {config.languages.map(e => (

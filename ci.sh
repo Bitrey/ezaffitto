@@ -6,6 +6,7 @@ PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 node_dirs=(
   "./bakeca-scraper/"
   "./db-api/"
+  "./client-api/"
   "./fb-scraper/"
   "./parser/"
   "./webapp/"

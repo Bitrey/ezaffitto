@@ -1,31 +1,50 @@
 PLEASE NOTE THAT THE TERMS OF SERVICE AND THE COOKIE POLICY ARE ONLY AVAILABLE IN ITALIAN, AND THAT THE ENGLISH TRANSLATION IS PROVIDED FOR CONVENIENCE ONLY. THE ITALIAN VERSION IS THE ONLY LEGALLY BINDING VERSION.
 
-Welcome to ezaffitto.com, the website that allows you to easily find rental listings in Bologna. The website is managed by Alessandro Amella, email info@bitrey.it (hereinafter referred to as "the Owner").
+Terms and Conditions of ezaffitto.com
 
-This document contains the terms and conditions that govern the use of the ezaffitto.com website (hereinafter referred to as "the Site") by users accessing it (hereinafter referred to as "Users"). Please read this document carefully before using the Site. By accessing the Site, Users agree to be bound by these terms and conditions. If you do not accept these terms and conditions, please do not use the Site.
+Welcome to ezaffitto.com, the website that allows you to easily find rental listings in Bologna. 
+The website is operated by Alessandro Amella, email info@bitrey.it (hereinafter referred to as "the Owner").
 
-Purpose of the Service
-The Site offers Users the possibility to freely consult rental listings in Bologna published on various third-party websites, such as Facebook, Subito.it, Bakeca, and ZappyRent (hereinafter referred to as "the Source Sites"). The Site does not directly publish the listings but automatically collects them from the Source Sites and saves them in a database, creating a repository for rental listings in Bologna. The Site has no direct relationship with the owners or intermediaries of the properties featured in the listings, nor with Users interested in them. The Site merely provides Users with an informational and search service.
+This document contains the terms and conditions that govern the use of the ezaffitto.com website (hereinafter referred to as "the Site") by users accessing it (hereinafter referred to as "Users"). Please read this document carefully before using the Site. By accessing the Site, Users agree to be bound by these terms and conditions. If you do not agree to these terms and conditions, please do not use the Site.
 
-Limitation of Liability
-The Owner assumes no responsibility regarding the accuracy, correctness, timeliness, completeness, or legality of the listings published on the Source Sites and reproduced on the Site. The Owner does not conduct any prior or subsequent checks on the listings, nor does it verify the quality, safety, or legality of the properties featured in the listings. The Owner does not guarantee in any way the availability or suitability of the properties featured in the listings, nor the good faith or reliability of the owners or intermediaries thereof. The Owner is not a party to any rental contracts potentially concluded between Users and the owners or intermediaries of the properties featured in the listings.
+1. Purpose of the Service
 
-Users are therefore invited to personally verify the information contained in the listings before taking any action based on them. Users are solely responsible for their decisions regarding the properties featured in the listings and the consequences arising from them. Users are aware that the Site does not provide any guarantee or protection in case of disputes or issues related to the properties featured in the listings or the rental contracts potentially concluded.
+The Site offers Users the possibility to freely browse rental listings in Bologna published on various third-party websites, such as Facebook, Subito.it, Bakeca, and ZappyRent (hereinafter referred to as "Source Sites"). The Site does not directly publish the listings but automatically collects them from the Source Sites and saves them in a database, creating a repository for rental listings in Bologna. The Site has no direct relationship with the owners or intermediaries of the properties listed, nor with Users interested in them. The Site merely provides Users with an informational and search service.
 
-The Owner assumes no responsibility for the operation of the Site or the continuity of the service offered. The Owner reserves the right to modify, suspend, or interrupt the service at any time and without notice, for technical, organizational, or other reasons. The Owner is not liable for any damages or losses resulting from the use or inability to use the Site or the service offered.
+2. Limitation of Liability
 
-Intellectual Property
-The Owner is the exclusive owner of all intellectual property rights related to the Site, its content, its trademark, its logo, and its domain name. The Site and its content are protected by Italian and international laws on copyright and industrial property.
+The Owner assumes no responsibility for the accuracy, correctness, timeliness, completeness, or legality of the listings published on the Source Sites and reproduced on the Site. The Owner does not conduct any prior or subsequent checks on the listings, nor does it verify the quality, safety, or legality of the properties listed. The Owner does not guarantee in any way the availability or suitability of the properties listed, nor the good faith or reliability of the owners or intermediaries. The Owner is not a party to any rental agreements that may be concluded between Users and the owners or intermediaries of the properties listed in the advertisements.
 
-Users undertake to respect the intellectual property rights of the Owner and the Source Sites. Users may not copy, modify, distribute, transmit, reproduce, publish, license, assign, sell, or in any way exploit the Site or its content, except as expressly permitted by this document or with the prior written authorization of the Owner.
+The Site does not offer any intermediary, advisory, or assistance services to Users who want to contact advertisers or rent the properties shown in the rental listings. Users wishing to contact advertisers or rent properties listed in the rental listings must do so directly through the Source Sites from which they originate.
 
-Protection of Personal Data
+Users are therefore encouraged to personally verify the information contained in the listings before taking any action based on them. Users are solely responsible for their decisions regarding the properties listed and the consequences arising from them. Users are aware that the Site does not provide any guarantee or protection in case of disputes or problems related to the properties listed or the rental agreements that may be concluded.
+
+The Owner assumes no responsibility for the operation of the Site or the continuity of the service offered. The Owner reserves the right to modify, suspend, or interrupt the service at any time and without notice, for technical, organizational, or other reasons. The Owner is not responsible for any damages or losses resulting from the use or inability to use the Site or the service offered.
+
+The Site is provided "as is" and "as available," without any explicit or implicit guarantee of quality, functionality, accuracy, reliability, availability, or suitability for a particular purpose. We do not guarantee that the Site is free from errors, defects, viruses, malware, or other harmful elements. We do not guarantee that the Site meets your expectations or requirements.
+
+We reserve the right to suspend, limit, or terminate your access to the Site at any time and without notice if we believe that you have violated these terms and conditions or any other applicable rules.
+
+Some jurisdictions do not allow the exclusion or limitation of certain warranties or liabilities. In such cases, the above exclusions or limitations will apply to the maximum extent permitted by applicable law.
+
+3. Intellectual Property
+
+The Owner exclusively owns all intellectual property rights related to the Site, its content, its trademark, and its domain name. The Site and its content are protected by Italian and international laws on copyright and industrial property.
+
+Users undertake to respect the intellectual property rights of the Owner and the Source Sites. Users may not copy, modify, distribute, transmit, reproduce, publish, license, assign, sell, or exploit the Site or its content in any way, except as expressly permitted by this document or with the prior written authorization of the Owner.
+
+The rental listings displayed on the Site are the property and responsibility of the respective advertisers or the Source Sites from which they originate. The Owner does not claim any rights or responsibilities for the rental listings displayed on the Site. We respect the intellectual property rights of advertisers and Source Sites from which the rental listings originate and undertake to remove from the Site any rental listings that violate these rights upon written request from the concerned parties.
+
+4. Personal Data Protection
+
 The Owner processes Users' personal data in compliance with the GDPR and applicable national legislation on the protection of personal data. For more information on the processing of Users' personal data, please refer to the privacy policy available on the Site.
 
-The Site uses cookies to improve Users' browsing experience and collect statistical information about the use of the Site. For more information on the use of cookies, please refer to the cookie policy available on the Site.
+The Site uses cookies to improve Users' browsing experience and to collect statistical information about the use of the Site. For more information on the use of cookies, please refer to the cookie policy available on the Site.
 
-Changes to Terms and Conditions
-The Owner reserves the right to modify these terms and conditions at any time and without notice, to comply with any legal, technological, or organizational changes. Changes to the terms and conditions will be published on the Site and will be effective from the moment of publication. Users are encouraged to periodically check the Site for any changes to the terms and conditions.
+5. Changes to Terms and Conditions
 
-Applicable Law and Jurisdiction
-These terms and conditions are governed by Italian law. For any disputes related to these terms and conditions or the use of the Site or the service offered, the court of Bologna shall have jurisdiction.
+The Owner reserves the right to modify these terms and conditions at any time and without notice to adapt them to any regulatory, technological, or organizational changes. Changes to the terms and conditions will be published on the Site and will be effective from the date of publication. By continuing to use the Site after the publication of changes, you accept the modified terms and conditions. Users are encouraged to periodically check the Site for any changes to the terms and conditions.
+
+6. Applicable Law and Jurisdiction
+
+These terms and conditions are governed by Italian law. For any dispute concerning these terms and conditions or the use of the Site or the service offered, the court of Bologna shall have jurisdiction.

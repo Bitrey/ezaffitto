@@ -44,7 +44,7 @@ const RentFinder = () => {
 
   // let cursor: number = 0;
   const [cursor, setCursor] = useState(0);
-  const limit: number = 10;
+  const limit: number = 30;
 
   // const posts: RentalPostJSONified[] = [];
   const [posts, setPosts] = useState<RentalPostJSONified[]>([]);

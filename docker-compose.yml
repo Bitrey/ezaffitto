@@ -11,6 +11,8 @@ secrets:
     file: "./secrets/fb_account_email.secret"
   fb_account_password:
     file: "./secrets/fb_account_password.secret"
+  mongodb_uri:
+    file: "./secrets/mongodb_uri.secret"
 
 services:
   parser:
@@ -188,7 +190,7 @@ services:
   db-api:
     build: ./db-api
     secrets:
-      - turnstile_secret
+      - mongodb_uri
     restart: unless-stopped
     volumes:
       - ./db-api:/usr/src/app
@@ -196,7 +198,6 @@ services:
       - "5500:5500" # hard-coded in giro, non cambiare
     environment:
       - NODE_ENV=development
-      - MONGODB_URI=mongodb://mongodb:27017/ezaffitto-dev
       - PORT=5500
     depends_on:
       mongodb:
@@ -216,6 +217,7 @@ services:
     build: ./client-api
     secrets:
       - turnstile_secret
+      - mongodb_uri
     restart: unless-stopped
     volumes:
       - ./client-api:/usr/src/app
@@ -223,7 +225,6 @@ services:
       - "6500:6500" # hard-coded in giro, non cambiare
     environment:
       - NODE_ENV=development
-      - MONGODB_URI=mongodb://mongodb:27017/ezaffitto-dev
       - PORT=6500
     depends_on:
       mongodb:

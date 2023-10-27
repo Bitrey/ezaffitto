@@ -30,8 +30,8 @@ run().catch(err => {
     logger.error(err);
 });
 
-if (envs.NODE_ENV === "development" && envs.DEBUG_START_EXPRESS_SERVER) {
-    logger.warn("Running in development mode, starting express server");
+if (envs.DEBUG_START_EXPRESS_SERVER) {
+    logger.warn(`Running in ${envs.NODE_ENV} mode and starting express server`);
 
     const app = express();
     app.use(bodyParser.json());
@@ -54,8 +54,8 @@ if (envs.NODE_ENV === "development" && envs.DEBUG_START_EXPRESS_SERVER) {
         }
     });
 
-    app.listen(3000, () => {
-        logger.debug("Listening on port 3000");
+    app.listen(envs.PORT, () => {
+        logger.debug("Listening on port " + envs.PORT);
     });
 } else {
     logger.info(

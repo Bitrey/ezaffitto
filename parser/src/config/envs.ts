@@ -9,6 +9,7 @@ export const envs = {
         NODE_ENV: str({
             choices: ["development", "test", "production", "staging"]
         }),
+        PORT: num(),
         DEBUG_START_EXPRESS_SERVER: bool(),
         PING_SERVER_PORT: num()
     }),

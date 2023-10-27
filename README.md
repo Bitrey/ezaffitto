@@ -12,9 +12,9 @@ FAI: trova modo per salvare non rentals.
 
 [OK] Fixa FB scraper Protocol Error **target closed**:
 
-Lo screenshots/ non è importante ma lo crea come root, devi fixare
+[OK] Lo screenshots/ non è importante ma lo crea come root, devi fixare
 
-Fixa Zappyrent Scraper che non funziona
+[OK] Fixa Zappyrent Scraper che non funziona
 
 ```
 n anticipo\",\n \"createdAt\": \"2023-10-20T18:42:59.521Z\",\n \"updatedAt\": \"2023-10-20T18:42:59.521Z\",\n \"\_\_v\": 0\n}","metadata":{},"timestamp":"2023-10-20 18:49:08"}

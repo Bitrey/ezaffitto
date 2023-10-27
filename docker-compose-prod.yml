@@ -14,7 +14,9 @@ secrets:
 
 services:
   parser:
-    build: ./parser
+    build:
+      context: ./parser
+      dockerfile: Dockerfile.prod
     secrets:
       - openai_api_key
     restart: unless-stopped
@@ -22,6 +24,7 @@ services:
       - ./parser:/usr/src/app
     environment:
       - NODE_ENV=production
+      - PORT=3000
       - MAIN_PROMPT_PATH=./prompt1.txt
       - DESCRIPTION_PROMPT_PATH=./prompt2.txt
       - DEBUG_START_EXPRESS_SERVER=true
@@ -39,7 +42,9 @@ services:
       start_period: 5s
 
   webapp:
-    build: ./webapp
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile.prod
     restart: unless-stopped
     environment:
       - NODE_ENV=production
@@ -52,7 +57,9 @@ services:
       - public-network
 
   fb-scraper:
-    build: ./fb-scraper
+    build:
+      context: ./fb-scraper
+      dockerfile: Dockerfile.prod
     secrets:
       - fb_account_email
       - fb_account_password
@@ -76,7 +83,9 @@ services:
       start_period: 5s
 
   subito-scraper:
-    build: ./subito-scraper
+    build:
+      context: ./subito-scraper
+      dockerfile: Dockerfile.prod
     restart: unless-stopped
     depends_on:
       db-api:
@@ -94,7 +103,9 @@ services:
       start_period: 5s
 
   zappyrent-scraper:
-    build: ./zappyrent-scraper
+    build:
+      context: ./zappyrent-scraper
+      dockerfile: Dockerfile.prod
     restart: unless-stopped
     environment:
       - NODE_ENV=production
@@ -112,7 +123,9 @@ services:
       start_period: 5s
 
   bakeca-scraper:
-    build: ./bakeca-scraper
+    build:
+      context: ./bakeca-scraper
+      dockerfile: Dockerfile.prod
     restart: unless-stopped
     environment:
       - NODE_ENV=production
@@ -146,7 +159,9 @@ services:
   # db-consumer da rifare con Bun
 
   db-api:
-    build: ./db-api
+    build:
+      context: ./db-api
+      dockerfile: Dockerfile.prod
     secrets:
       - turnstile_secret
     restart: unless-stopped
@@ -169,7 +184,9 @@ services:
       start_period: 5s
 
   client-api:
-    build: ./client-api
+    build:
+      context: ./client-api
+      dockerfile: Dockerfile.prod
     secrets:
       - turnstile_secret
     restart: unless-stopped

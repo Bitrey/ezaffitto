@@ -7,8 +7,8 @@ export const envs = {
         NODE_ENV: str({
             choices: ["development", "test", "production", "staging"]
         }),
-        PORT: num(),
-        MONGODB_URI: str()
+        PORT: num()
     }),
-    TURNSTILE_SECRET: readFileSync("/run/secrets/turnstile_secret", "utf8")
+    TURNSTILE_SECRET: readFileSync("/run/secrets/turnstile_secret", "utf8"),
+    MONGODB_URI: readFileSync("/run/secrets/mongodb_uri", "utf8")
 };

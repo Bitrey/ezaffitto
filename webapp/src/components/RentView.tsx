@@ -8,6 +8,7 @@ import { enUS, it } from "date-fns/locale";
 import Button from "./Button";
 import { RentalPostJSONified } from "../interfaces/RentalPost";
 import { useTranslation } from "react-i18next";
+import { getLanguage } from "../misc/getLanguage";
 
 interface RentViewProps extends HTMLAttributes<HTMLDivElement> {
   post?: RentalPostJSONified;
@@ -63,7 +64,7 @@ const RentView: FunctionComponent<RentViewProps> = ({
               post.address ||
               (post.date &&
                 format(post.date, "E d MMM yyyy HH:mm", {
-                  locale: i18n.language === "it" ? it : enUS
+                  locale: getLanguage(i18n.language) === "it" ? it : enUS
                 }))
             }`
       } - ${t("common.appNameShort")}`;
@@ -121,7 +122,7 @@ const RentView: FunctionComponent<RentViewProps> = ({
             <p className="text-gray-700">
               {post?.date &&
                 format(new Date(post.date), "'📅' E d MMM yyyy HH:mm", {
-                  locale: i18n.language === "it" ? it : enUS
+                  locale: getLanguage(i18n.language) === "it" ? it : enUS
                 })}
             </p>
             {post?.address && (

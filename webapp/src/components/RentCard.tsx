@@ -4,6 +4,7 @@ import { formatDistance } from "date-fns";
 import { RentalPost } from "../interfaces/RentalPost";
 import Fb from "../icons/Fb";
 import { useTranslation } from "react-i18next";
+import { getLanguage } from "../misc/getLanguage";
 
 // import ReactPlaceholder from "react-placeholder";
 
@@ -41,11 +42,10 @@ const RentCard: FunctionComponent<RentCardProps> = ({ post, ...rest }) => {
         <div className="flex items-center gap-2">
           <p className="mt-2 text-gray-500">
             {post?.date &&
-              formatDistance(
-                post.date,
-                new Date(),
-                { addSuffix: true, locale: i18n.language === "it" ? it : enUS } // Pass the locale as an option
-              )}
+              formatDistance(post.date, new Date(), {
+                addSuffix: true,
+                locale: getLanguage(i18n.language) === "it" ? it : enUS
+              })}
           </p>
           <p>.</p>
           <p className="mt-2 text-gray-500 capitalize">

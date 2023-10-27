@@ -37,7 +37,7 @@ const RentCard: FunctionComponent<RentCardProps> = ({ post, ...rest }) => {
 
         <p className="mb-2 text-lg font-light">€{post?.monthlyPrice}</p>
 
-        <p className="line-clamp-3">{post?.description}</p>
+        <p className="line-clamp-3">{post?.description || post?.address}</p>
 
         <div className="flex items-center gap-2">
           <p className="mt-2 text-gray-500">

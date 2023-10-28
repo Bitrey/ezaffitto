@@ -18,7 +18,7 @@ const resources: Resource = {
                 using: "By using this site, you agree to the",
                 tos: "Terms of Service",
                 and: "and",
-                cookie: "cookie policy",
+                cookie: "Cookie Policy",
                 accept: "Accept",
                 note: "Please note that the Terms of Service and the Cookie Policy are only available in Italian, and that the English translation is provided for convenience only. The Italian version is the only legally binding version."
             },
@@ -55,6 +55,9 @@ const resources: Resource = {
                 apartment: "Apartment",
                 house: "House",
                 other: "Other"
+            },
+            footer: {
+                madeWithLove: "Made with ♥ by"
             }
         }
     },
@@ -72,7 +75,7 @@ const resources: Resource = {
                 using: "Utilizzando questo sito, accetti i",
                 tos: "Termini di Servizio",
                 and: "e la",
-                cookie: "cookie policy",
+                cookie: "Cookie Policy",
                 accept: "Accetto",
                 note: ""
             },
@@ -109,6 +112,9 @@ const resources: Resource = {
                 apartment: "Appartamento",
                 house: "Casa",
                 other: "Altro"
+            },
+            footer: {
+                madeWithLove: "Creato con ♥ da"
             }
         }
     }

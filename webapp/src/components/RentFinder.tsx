@@ -195,7 +195,8 @@ const RentFinder = () => {
             onExpire={() => setTurnstileToken(null)}
             options={{
               action: "find-rentalposts",
-              language: i18n.language
+              language: i18n.language,
+              theme: "light"
             }}
             ref={turnstileRef}
           />

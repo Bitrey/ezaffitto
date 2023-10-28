@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 import { createContext } from "react";
 import { useCookies } from "react-cookie";
 import TosCookiesAccept from "./components/TosCookies";
+import Footer from "./Footer";
 
 // function Homepage() {
 
@@ -49,7 +50,7 @@ const Homepage: FunctionComponent<any> = () => {
       <main>
         <Header />
 
-        <section className="px-4 md:px-8 lg:px-12 pt-2 min-h-[50vh] flex justify-center">
+        <section className="px-4 md:px-8 lg:px-12 pt-2 min-h-[80vh] md:min-h-[69vh] flex justify-center">
           <div className="w-full">
             <Outlet />
           </div>
@@ -58,6 +59,8 @@ const Homepage: FunctionComponent<any> = () => {
         {!tosCookiesAccepted && (
           <TosCookiesAccept onAccept={acceptTosCookies} />
         )}
+
+        <Footer />
       </main>
     </SearchQueryContext.Provider>
   );

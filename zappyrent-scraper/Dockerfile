@@ -3,6 +3,7 @@ FROM oven/bun:1.0.4-slim
 COPY package.json ./
 COPY bun.lockb ./
 COPY src ./src
+COPY healthcheck.js ./
 
 RUN bun install
 

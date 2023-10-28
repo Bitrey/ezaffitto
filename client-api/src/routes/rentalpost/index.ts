@@ -33,7 +33,11 @@ router.get(
         };
 
         const rentalTypes = req.query.rentalTypes as RentalTypes[] | null;
-        if (rentalTypes) query.rentalType = { $in: rentalTypes };
+        // aggiungo 'other' a rentalTypes
+        if (rentalTypes)
+            query.rentalType = {
+                $in: [...new Set([...rentalTypes, RentalTypes.OTHER])]
+            };
 
         if (req.query.maxPrice) {
             query.monthlyPrice = {

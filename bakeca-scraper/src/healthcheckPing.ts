@@ -13,5 +13,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(envs.PING_SERVER_PORT, () => {
-    logger.debug(`Ping server listening on port ${envs.PING_SERVER_PORT}`);
+    logger.info(`Ping server listening on port ${envs.PING_SERVER_PORT}`);
 });

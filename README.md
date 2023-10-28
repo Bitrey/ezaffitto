@@ -16,6 +16,12 @@ FAI: trova modo per salvare non rentals.
 
 [OK] Fixa Zappyrent Scraper che non funziona
 
+## Note
+
+-   Ogni scraper type (fb, zappyrent, etc) avrà un nome indicato come `source` e dovrà essere presente nell'array `SCRAPER_TYPES` in `db-api/src/config/index.ts`
+
+-   Usiamo `dumb-init` per i Puppeteer in prod in quanto altrimenti Chrome prenderebbe il PID 1 e non verrebbe killato correttamente, restando un processo zombie.
+
 ## DA FARE ON STARTUP
 
 -   Crea cartella `fb-scraper/screenshots/`

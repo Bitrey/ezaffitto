@@ -135,7 +135,11 @@ export class Scraper {
         "https://www.facebook.com/groups/4227281414051454/?locale=it_IT",
         "https://www.facebook.com/groups/affitti.a.bologna/?locale=it_IT",
         "https://www.facebook.com/groups/affittobolonga/?locale=it_IT",
-        "https://www.facebook.com/groups/488856121488809/?locale=it_IT"
+        "https://www.facebook.com/groups/488856121488809/?locale=it_IT",
+        "https://www.facebook.com/groups/bakecaaffittibologna/?locale=it_IT",
+        "https://www.facebook.com/groups/926952708679868/?locale=it_IT",
+        "https://www.facebook.com/groups/1141916849589069/?locale=it_IT",
+        "https://www.facebook.com/groups/6222659174441521/?locale=it_IT"
         // "https://www.facebook.com/groups/114050352266007/?locale=it_IT", // privato
     ];
 
@@ -197,7 +201,7 @@ export class Scraper {
 
         this.setStartEndDate(durationMs);
 
-        logger.debug(
+        logger.info(
             `Starting scrape for groupUrl ${groupUrl}${this.getElapsedStr()}`
         );
         logger.debug(
@@ -483,7 +487,11 @@ export class Scraper {
         }
 
         logger.info(
-            "Scrape finished for groupUrl " + groupUrl + this.getElapsedStr()
+            "Scrape finished for groupUrl " +
+                groupUrl +
+                ", scraped posts: " +
+                fetchedPosts +
+                this.getElapsedStr()
         );
 
         this.startDate = null;

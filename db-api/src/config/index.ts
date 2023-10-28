@@ -5,5 +5,11 @@ export const config = Object.freeze({
     POST_ID_KEY: "postId",
     SCRAPER_RAW_DATA_KEY: "scraperRawData",
 
-    SCRAPER_TYPES: ["facebook", "subito", "bakeca", "zappyrent"] as const
+    SCRAPER_TYPES: [
+        "facebook",
+        "subito",
+        "bakeca",
+        "zappyrent",
+        "immobiliare"
+    ] as const
 });

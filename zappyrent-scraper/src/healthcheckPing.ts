@@ -10,4 +10,4 @@ Bun.serve({
     }
 });
 
-logger.debug(`Ping server listening on port ${envs.PING_SERVER_PORT}`);
+logger.info(`Ping server listening on port ${envs.PING_SERVER_PORT}`);

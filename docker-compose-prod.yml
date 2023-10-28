@@ -98,7 +98,7 @@ services:
     networks:
       - db-api-network
     healthcheck:
-      test: ["CMD-SHELL", "bun run /home/bun/app/src/healthcheck.js || exit 1"]
+      test: ["CMD-SHELL", "bun run /home/bun/app/healthcheck.js || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 3
@@ -118,7 +118,7 @@ services:
     networks:
       - db-api-network
     healthcheck:
-      test: ["CMD-SHELL", "bun run /home/bun/app/src/healthcheck.js || exit 1"]
+      test: ["CMD-SHELL", "bun run /home/bun/app/healthcheck.js || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 3

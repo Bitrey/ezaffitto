@@ -3,10 +3,16 @@ import path from "path";
 export const config = Object.freeze({
     DEBUG_RUN_SCRAPER: true,
 
+    MAX_TIMES_NO_POSTS_FETCHED: 3,
+
     DB_API_BASE_URL: "http://db-api:5500/api/v1",
     PARSER_API_BASE_URL: "http://parser:3000/parse",
 
     COOKIES_JSON_PATH: path.join(process.cwd(), "/cookies/cookies.json"),
+    NEW_COOKIES_JSON_PATH: path.join(
+        process.cwd(),
+        "/cookies/new_cookies.json"
+    ),
     SCREENSHOTS_PATH: path.join(process.cwd(), "/screenshots"),
 
     // between 30 minutes and 1 hour

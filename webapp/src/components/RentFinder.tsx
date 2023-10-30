@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 import ReactGA from "react-ga4";
@@ -61,7 +61,7 @@ const RentFinder = () => {
       // TODO DEBUG
       if (!turnstileToken) {
         console.error("No turnstile token");
-        window.alert("Please solve the captcha");
+        window.alert(t("turnstile.pleaseSolve"));
         return null;
       }
 

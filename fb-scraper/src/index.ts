@@ -15,11 +15,10 @@ import { RentalPost } from "./interfaces/shared";
 import { envs } from "./config/envs";
 
 import "./healthcheckPing";
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, unlink, writeFile } from "fs/promises";
 import { Cookie } from "./interfaces/Cookie";
 import { mapCookiesToPuppeteer } from "./shared/mapCookiesToPuppeteer";
-
-const cookies: Cookie[] = require(config.COOKIES_JSON_PATH);
+import { existsSync } from "fs";
 
 puppeteer.use(pluginStealth());
 
@@ -146,6 +145,8 @@ export class Scraper {
     private startDate: Moment | null = null;
     private endDate: Moment | null = null;
 
+    private timesNoPostsFetched = 0;
+
     private setStartEndDate(durationMs: number) {
         this.startDate = moment();
         this.endDate = moment(this.startDate).add(durationMs, "milliseconds");
@@ -234,6 +235,42 @@ export class Scraper {
         );
 
         const page = await browser.newPage();
+
+        let cookies: Cookie[];
+
+        if (existsSync(config.NEW_COOKIES_JSON_PATH)) {
+            logger.info(
+                "New cookies file found, using it for groupUrl " +
+                    groupUrl +
+                    this.getElapsedStr()
+            );
+            cookies = require(config.NEW_COOKIES_JSON_PATH);
+            try {
+                await unlink(config.NEW_COOKIES_JSON_PATH);
+            } catch (err) {
+                logger.error(
+                    "Error while deleting new cookies file for groupUrl " +
+                        groupUrl +
+                        ":"
+                );
+                logger.error(err);
+            }
+        } else if (existsSync(config.COOKIES_JSON_PATH)) {
+            logger.debug(
+                "New cookies file not found, using old one for groupUrl " +
+                    groupUrl +
+                    this.getElapsedStr()
+            );
+            cookies = require(config.COOKIES_JSON_PATH);
+        } else {
+            logger.error(
+                "No cookies file found for groupUrl " +
+                    groupUrl +
+                    this.getElapsedStr()
+            );
+            this.timesNoPostsFetched++;
+            return;
+        }
 
         try {
             await page.setCookie(...mapCookiesToPuppeteer(cookies));
@@ -430,7 +467,9 @@ export class Scraper {
                     groupUrl +
                     this.getElapsedStr()
             );
+            this.timesNoPostsFetched++;
         } else {
+            this.timesNoPostsFetched = 0;
             // update cookies file
             await writeFile(
                 config.COOKIES_JSON_PATH,
@@ -533,7 +572,23 @@ export class Scraper {
 
             for (const groupUrl of Scraper.fbGroupUrls) {
                 try {
-                    await this.scrape(groupUrl, duration);
+                    // await this.scrape(groupUrl, duration);
+                    if (
+                        // DEBUG
+                        this.timesNoPostsFetched >= 0
+                        // config.MAX_TIMES_NO_POSTS_FETCHED
+                    ) {
+                        logger.error(
+                            "No posts fetched 3 times in a row, sending panic message..."
+                        );
+
+                        await axios.post(config.DB_API_BASE_URL + "/panic", {
+                            service: "fb-scraper",
+                            message:
+                                "No posts fetched 3 times in a row, exiting..."
+                        });
+                        process.exit(1);
+                    }
                 } catch (err) {
                     logger.error(err);
                 }

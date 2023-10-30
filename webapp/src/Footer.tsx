@@ -14,7 +14,6 @@ const Footer = () => {
           target="_blank"
           rel="noreferrer"
         >
-          <span className="scale-75">🔗</span>
           Alessandro Amella
         </a>
       </div>

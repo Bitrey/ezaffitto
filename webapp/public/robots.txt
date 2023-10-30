@@ -1,3 +1,6 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Disallow: /LICENSE_en.txt
+Disallow: /LICENSE_it.txt
+Disallow: /COOKIES_en.txt
+Disallow: /COOKIES_it.txt

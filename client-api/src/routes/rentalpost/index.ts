@@ -5,7 +5,7 @@ import { validate } from "../../middlewares/expressValidator";
 import { logger } from "../../shared/logger";
 import { RentalTypes } from "../../interfaces/shared";
 import { db } from "../../config/db";
-import { ObjectId } from "mongodb";
+import { Document, Filter, ObjectId } from "mongodb";
 
 const router = Router();
 
@@ -27,7 +27,7 @@ router.get(
             } limiting to ${req.query.limit || Infinity}`
         );
 
-        const query: any = {
+        const query: Filter<Document> = {
             isRental: true,
             isForRent: true
         };
@@ -40,9 +40,10 @@ router.get(
             };
 
         if (req.query.maxPrice) {
-            query.monthlyPrice = {
-                $lt: parseInt(req.query.maxPrice as string)
-            };
+            query.$or = [
+                { monthlyPrice: { $gt: req.query.maxPrice as string } },
+                { monthlyPrice: { $exists: false } }
+            ];
         }
 
         if (req.query.q) {

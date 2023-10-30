@@ -25,6 +25,12 @@ const RentCard: FunctionComponent<RentCardProps> = ({ post, ...rest }) => {
           className="w-32 h-32 my-auto mr-3 object-cover object-center"
           src={post.images[0]}
           alt="rental"
+          loading="lazy"
+          onError={e => {
+            (e.target as HTMLImageElement).src =
+              "https://via.placeholder.com/500x500.png?text=" +
+              encodeURIComponent(t("rentViewer.imageError"));
+          }}
         />
       )}
       <div className="flex flex-col">

@@ -41,7 +41,11 @@ router.get(
 
         if (req.query.maxPrice) {
             query.$or = [
-                { monthlyPrice: { $lte: req.query.maxPrice as string } },
+                {
+                    monthlyPrice: {
+                        $lte: parseInt(req.query.maxPrice as string)
+                    }
+                },
                 { monthlyPrice: { $exists: false } }
             ];
         }

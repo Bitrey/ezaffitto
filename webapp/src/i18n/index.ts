@@ -44,7 +44,8 @@ const resources: Resource = {
                 perMonth: "/month",
                 backToSearch: "Back to search",
                 postNotFound: "Post not found",
-                invalidPost: "Invalid post"
+                invalidPost: "Invalid post",
+                imageError: "Error loading image"
             },
             homepage: {
                 banner: "Find your rent in Bologna!",
@@ -103,7 +104,8 @@ const resources: Resource = {
                 perMonth: "/mese",
                 backToSearch: "Torna alla ricerca",
                 postNotFound: "Post non trovato",
-                invalidPost: "Post non valido"
+                invalidPost: "Post non valido",
+                imageError: "Errore nel caricamento"
             },
             homepage: {
                 banner: "Trova il tuo affitto a Bologna!",

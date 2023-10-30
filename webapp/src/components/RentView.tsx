@@ -2,7 +2,6 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import Zoom from "react-medium-image-zoom";
 import { FunctionComponent, HTMLAttributes, useEffect, useState } from "react";
 import { Autoplay, Navigation, Pagination } from "swiper";
-import axios, { AxiosError } from "axios";
 import { format } from "date-fns";
 import { enUS, it } from "date-fns/locale";
 import Button from "./Button";
@@ -21,37 +20,35 @@ const RentView: FunctionComponent<RentViewProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
 
-  async function imageExists(imageUrl: string) {
-    try {
-      // const { data } = await axios.head(imageUrl);
-      // console.log({ data });
-      await axios.head(imageUrl);
-      return true;
-    } catch (err) {
-      console.log((err as AxiosError)?.response?.data || err);
-      return false;
-    }
-  }
-
   const [images, setImages] = useState<string[] | null>(null);
 
+  async function imageExists(imageUrl: string) {
+    // try {
+    //   await axios.head(imageUrl, {
+    //     headers: {
+    //       Accept: "image/webp,image/apng,image/*,*/*;q=0.8"
+    //     }
+    //   });
+    // DA SEMPRE ERRORE!!!!
+    return true;
+    // } catch (err) {
+    //   console.log((err as AxiosError)?.response?.data || err);
+    //   return false;
+    // }
+  }
+
   useEffect(() => {
-    if (!post) return;
+    if (!post || !Array.isArray(post?.images)) return;
 
-    async function filterImages() {
-      if (!Array.isArray(post?.images)) return;
-
+    const filterImages = async () => {
       const existingImages: string[] = [];
-      for (const img of post!.images) {
+      for (const img of post.images) {
         const exists = await imageExists(img);
         if (exists) existingImages.push(img);
       }
       setImages(existingImages);
-    }
-
-    setImages(null);
+    };
     filterImages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [post]);
 
   useEffect(() => {
@@ -91,9 +88,14 @@ const RentView: FunctionComponent<RentViewProps> = ({
               <Zoom>
                 <img
                   loading="lazy"
-                  className="object-contain object-center h-96 w-full"
+                  className="object-contain object-center h-96 max-h-full select-none w-full"
                   src={e}
                   alt={"Post image " + (i + 1)}
+                  onError={e => {
+                    (e.target as HTMLImageElement).src =
+                      "https://via.placeholder.com/500x500.png?text=" +
+                      encodeURIComponent(t("rentViewer.imageError"));
+                  }}
                 />
               </Zoom>
             </SwiperSlide>
@@ -135,7 +137,7 @@ const RentView: FunctionComponent<RentViewProps> = ({
             {post && <span>🌐</span>}{" "}
             {post?.url && window.location.pathname !== "/" ? (
               <a
-                href={new URL(post.url).origin}
+                href={post.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-700 hover:text-red-600 transition-colors"

@@ -12,13 +12,10 @@ import { config, gaEvents } from "./config";
 const ByRentId: FunctionComponent<any> = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  // TODO debug
-  // const [turnstileToken, setTurnstileToken] = useState<string | null>("valid");
-  // const [turnstileToken] = useState<string | null>("valid");
 
   const { i18n, t } = useTranslation();
 
-  const [post, setPost] = useState<RentalPostJSONified | null>(null);
+  const [post, setPost] = useState<RentalPostJSONified | undefined>(undefined);
 
   // route is :id
   const { id } = useParams<{ id: string }>();
@@ -48,11 +45,11 @@ const ByRentId: FunctionComponent<any> = () => {
         );
 
         console.log("Fetched post data", data);
-        setPost(data);
+        setPost(data || undefined);
       } catch (err) {
         // DEBUG
         console.error((err as AxiosError)?.response?.data || err);
-        setPost(null);
+        setPost(undefined);
       } finally {
         setIsLoading(false);
       }
@@ -67,7 +64,8 @@ const ByRentId: FunctionComponent<any> = () => {
     }
 
     fetchPost();
-  }, [post, id, turnstileToken, state?.post]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turnstileToken]);
 
   return (
     <div>
@@ -89,7 +87,7 @@ const ByRentId: FunctionComponent<any> = () => {
           <Button className="rounded-lg" href="/">
             {t("rentViewer.backToSearch")}
           </Button>
-          <RentView className="mt-4" post={post ?? undefined} />
+          <RentView className="mt-4" post={post} />
         </div>
       ) : (
         <div

@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 import ReactGA from "react-ga4";
@@ -29,8 +29,6 @@ const RentFinder = () => {
   // TOOD debug
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   // const [turnstileToken, setTurnstileToken] = useState<string | null>("valid");
-
-  const navigate = useNavigate();
 
   const [rentalTypes, setRentalTypes] = useState<string[]>(
     rentalTypeOptions.map(e => e.value)
@@ -281,16 +279,14 @@ const RentFinder = () => {
                   <RentCard post={e} onClick={() => e && setSelected(e)} />
                 </div>
                 <div className="md:hidden">
-                  <RentCard
-                    post={e}
-                    onClick={() =>
-                      navigate(`/post/${e._id}`, {
-                        state: {
-                          post: JSON.stringify(e)
-                        }
-                      })
-                    }
-                  />
+                  <Link
+                    to={`/post/${e._id}`}
+                    state={{
+                      post: JSON.stringify(e)
+                    }}
+                  >
+                    <RentCard post={e} />
+                  </Link>
                 </div>
               </React.Fragment>
             ))}
@@ -298,17 +294,17 @@ const RentFinder = () => {
         </div>
         <div>
           {selected ? (
-            <RentView
-              post={selected}
-              className="cursor-pointer hidden md:block"
-              onClick={() =>
-                navigate(`/post/${selected._id}`, {
-                  state: {
-                    post: JSON.stringify(selected)
-                  }
-                })
-              }
-            />
+            <Link
+              to={`/post/${selected._id}`}
+              state={{
+                post: JSON.stringify(selected)
+              }}
+            >
+              <RentView
+                post={selected}
+                className="cursor-pointer hidden md:block"
+              />
+            </Link>
           ) : isLoading ? (
             <p className="bg-gray-100 w-full min-w-[16rem] h-16 mx-auto animate-pulse"></p>
           ) : (

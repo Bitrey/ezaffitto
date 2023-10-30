@@ -1,6 +1,6 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import Zoom from "react-medium-image-zoom";
-import React, { FunctionComponent, HTMLAttributes, useEffect } from "react";
+import { FunctionComponent, HTMLAttributes, useEffect, useState } from "react";
 import { Autoplay, Navigation, Pagination } from "swiper";
 import axios, { AxiosError } from "axios";
 import { format } from "date-fns";
@@ -33,12 +33,11 @@ const RentView: FunctionComponent<RentViewProps> = ({
     }
   }
 
-  const [images, setImages] = React.useState<string[] | null>(null);
-
-  const jsonImages = post && JSON.stringify(post.images);
+  const [images, setImages] = useState<string[] | null>(null);
 
   useEffect(() => {
-    setImages(null);
+    if (!post) return;
+
     async function filterImages() {
       if (!Array.isArray(post?.images)) return;
 
@@ -49,9 +48,11 @@ const RentView: FunctionComponent<RentViewProps> = ({
       }
       setImages(existingImages);
     }
+
+    setImages(null);
     filterImages();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jsonImages]);
+  }, [post]);
 
   useEffect(() => {
     if (!post || window.location.pathname === "/") {

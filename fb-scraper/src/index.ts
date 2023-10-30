@@ -574,9 +574,8 @@ export class Scraper {
                 try {
                     // await this.scrape(groupUrl, duration);
                     if (
-                        // DEBUG
-                        this.timesNoPostsFetched >= 0
-                        // config.MAX_TIMES_NO_POSTS_FETCHED
+                        this.timesNoPostsFetched >=
+                        config.MAX_TIMES_NO_POSTS_FETCHED
                     ) {
                         logger.error(
                             "No posts fetched 3 times in a row, sending panic message..."

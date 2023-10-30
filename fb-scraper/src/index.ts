@@ -81,23 +81,26 @@ scrapedDataEvent.on("scrapedData", async fbData => {
             delete post[key as keyof typeof post]
     );
 
-    try {
-        if (post.address) {
+    if (post.address && post.address !== "unknown") {
+        try {
             const coords = await Scraper.geolocate(post.address);
             if (coords) {
                 post.latitude = coords.latitude;
                 post.longitude = coords.longitude;
             }
+        } catch (err) {
+            logger.error(
+                "Error while geolocating address " +
+                    post.address +
+                    " for post " +
+                    fbData.id +
+                    ":"
+            );
+            logger.error(err);
+            delete post.address;
         }
-    } catch (err) {
-        logger.error(
-            "Error while geolocating address " +
-                post.address +
-                " for post " +
-                fbData.id +
-                ":"
-        );
-        logger.error(err);
+    } else {
+        delete post.address;
     }
 
     try {
@@ -572,7 +575,7 @@ export class Scraper {
 
             for (const groupUrl of Scraper.fbGroupUrls) {
                 try {
-                    // await this.scrape(groupUrl, duration);
+                    await this.scrape(groupUrl, duration);
                     if (
                         this.timesNoPostsFetched >=
                         config.MAX_TIMES_NO_POSTS_FETCHED

@@ -148,7 +148,7 @@ export class Scraper {
     private startDate: Moment | null = null;
     private endDate: Moment | null = null;
 
-    private timesNoPostsFetched = 0;
+    private urlsNoPostsFetched: string[] = [];
 
     private setStartEndDate(durationMs: number) {
         this.startDate = moment();
@@ -271,8 +271,11 @@ export class Scraper {
                     groupUrl +
                     this.getElapsedStr()
             );
-            this.timesNoPostsFetched++;
-            return;
+            await axios.post(config.DB_API_BASE_URL + "/panic", {
+                service: "fb-scraper",
+                message: "No cookies file found, exiting"
+            });
+            process.exit(1);
         }
 
         try {
@@ -332,6 +335,7 @@ export class Scraper {
                     const missingProps = config.REQUIRED_PROPS.filter(
                         p => !(p in props)
                     );
+                    fetchedPosts++; // ok basta che funziona
                     if (missingProps.length == 0) {
                         // TODO implement save in case of error?
 
@@ -341,7 +345,6 @@ export class Scraper {
                                 props.id +
                                 this.getElapsedStr()
                         );
-                        fetchedPosts++;
                     } else {
                         logger.debug(
                             "Missing props: " +
@@ -470,9 +473,9 @@ export class Scraper {
                     groupUrl +
                     this.getElapsedStr()
             );
-            this.timesNoPostsFetched++;
+            this.urlsNoPostsFetched.push(groupUrl);
         } else {
-            this.timesNoPostsFetched = 0;
+            this.urlsNoPostsFetched = [];
             // update cookies file
             await writeFile(
                 config.COOKIES_JSON_PATH,
@@ -577,7 +580,7 @@ export class Scraper {
                 try {
                     await this.scrape(groupUrl, duration);
                     if (
-                        this.timesNoPostsFetched >=
+                        this.urlsNoPostsFetched.length >=
                         config.MAX_TIMES_NO_POSTS_FETCHED
                     ) {
                         logger.error(
@@ -586,8 +589,11 @@ export class Scraper {
 
                         await axios.post(config.DB_API_BASE_URL + "/panic", {
                             service: "fb-scraper",
-                            message:
-                                "No posts fetched 3 times in a row, exiting..."
+                            message: `No posts fetched ${
+                                config.MAX_TIMES_NO_POSTS_FETCHED
+                            } times in a row for groups: ${this.urlsNoPostsFetched.join(
+                                ", "
+                            )} - exiting`
                         });
                         process.exit(1);
                     }

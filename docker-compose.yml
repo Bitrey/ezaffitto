@@ -13,6 +13,10 @@ secrets:
     file: "./secrets/fb_account_password.secret"
   mongodb_uri:
     file: "./secrets/mongodb_uri.secret"
+  mail_username:
+    file: "./secrets/mail_username.secret"
+  mail_password:
+    file: "./secrets/mail_password.secret"
 
 services:
   parser:
@@ -177,7 +181,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 5s
+      start_period: 10s
     ports:
       - "5672:5672" # DEBUG
       - "15672:15672" # DEBUG (Web UI)
@@ -204,7 +208,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 5s
+      start_period: 10s
 
   # db-consumer da rifare con Bun
 
@@ -212,6 +216,8 @@ services:
     build: ./db-api
     secrets:
       - mongodb_uri
+      - mail_username
+      - mail_password
     restart: unless-stopped
     volumes:
       - ./db-api:/usr/src/app
@@ -220,6 +226,9 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=5500
+      - MAIL_SERVER=in-v3.mailjet.com
+      - SEND_EMAIL_FROM=info@bitrey.it
+      - SEND_EMAIL_TO=info@bitrey.it
     depends_on:
       mongodb:
         condition: service_healthy
@@ -232,7 +241,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 5s
+      start_period: 10s
 
   client-api:
     build: ./client-api
@@ -259,20 +268,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 5s
-
-  redis:
-    image: redis:7.0.12-alpine
-    restart: always
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-    ports:
-      - "6380:6379" # per non collidere con il redis locale
-    networks:
-      - redis-network
-    command: redis-server --loglevel warning
-    volumes:
-      - redis-data:/data
+      start_period: 10s
 
   # logging
   dozzle:
@@ -288,8 +284,6 @@ volumes:
     driver: local
   rabbitmq-data:
     driver: local
-  redis-data:
-    driver: local
 
 networks:
   rabbitmq-network:
@@ -297,8 +291,6 @@ networks:
   db-network:
     driver: bridge
   db-api-network:
-    driver: bridge
-  redis-network:
     driver: bridge
   public-network:
     driver: bridge

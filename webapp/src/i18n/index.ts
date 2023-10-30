@@ -12,7 +12,8 @@ const resources: Resource = {
                 contact: "Contact",
                 loading: "Loading...",
                 error: "Error",
-                close: "Close"
+                close: "Close",
+                on: "on"
             },
             tos: {
                 using: "By using this site, you agree to the",
@@ -23,7 +24,8 @@ const resources: Resource = {
                 note: "Please note that the Terms of Service and the Cookie Policy are only available in Italian, and that the English translation is provided for convenience only. The Italian version is the only legally binding version."
             },
             turnstile: {
-                error: "Error in Turnstile CAPTCHA"
+                error: "Error in Turnstile CAPTCHA",
+                pleaseSolve: "Please solve the CAPTCHA to continue"
             },
             textbox: {
                 searchPlaceholder: "Search..."
@@ -69,7 +71,8 @@ const resources: Resource = {
                 contact: "Contatta",
                 loading: "Caricamento...",
                 error: "Errore",
-                close: "Chiudi"
+                close: "Chiudi",
+                on: "su"
             },
             tos: {
                 using: "Utilizzando questo sito, accetti i",
@@ -80,7 +83,8 @@ const resources: Resource = {
                 note: ""
             },
             turnstile: {
-                error: "Errore nel CAPTCHA Turnstile"
+                error: "Errore nel CAPTCHA Turnstile",
+                pleaseSolve: "Risolvi il CAPTCHA per continuare"
             },
             textbox: {
                 searchPlaceholder: "Cerca..."

@@ -160,7 +160,7 @@ const RentView: FunctionComponent<RentViewProps> = ({
                 {t("common.contact")}{" "}
                 <span className="font-bold">
                   {" "}
-                  {post?.authorUsername || `on ${post.source}`}
+                  {post?.authorUsername || `${t("common.on")} ${post.source}`}
                 </span>
               </Button>
             ) : (
@@ -171,7 +171,7 @@ const RentView: FunctionComponent<RentViewProps> = ({
                 <span>🔗 | </span>
                 {t("common.contact")}{" "}
                 <span className="font-bold">
-                  {post?.authorUsername || `on ${post.source}`}
+                  {post?.authorUsername || `${t("common.on")} ${post.source}`}
                 </span>
               </Button>
             )}

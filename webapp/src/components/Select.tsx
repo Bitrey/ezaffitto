@@ -32,7 +32,26 @@ const CustomSelect: FunctionComponent<CustomSelectProps> = ({
       onChange={onChangeFn}
       {...rest}
       classNames={{
-        tagItem: () => "flex items-center gap-2 bg-gray-50 p-1 px-2 rounded"
+        menuButton: val =>
+          `flex text-sm text-gray-500 dark:text-white border border-gray-300 dark:border-gray-700 dark:bg-gray-700 rounded shadow-sm transition-all duration-300 focus:outline-none ${
+            val?.isDisabled
+              ? "bg-gray-200"
+              : "bg-white hover:border-gray-400 focus:border-red-500 dark:focus:border-gray-200 focus:ring focus:ring-red-500/20"
+          }`,
+        tagItem: val =>
+          `dark:text-gray-100 flex items-center gap-2 p-1 px-2 rounded ${
+            val?.isDisabled ? "bg-gray-200" : "bg-gray-50 dark:bg-gray-600"
+          }`,
+        tagItemText: "text-sm dark:text-white",
+        tagItemIconContainer:
+          "flex items-center px-1 cursor-pointer rounded-r-sm hover:bg-red-200 dark:hover:bg-gray-500 dark:rounded hover:text-red-600 dark:hover:text-white transition-colors",
+        menu: "absolute z-10 w-full bg-white dark:bg-gray-600 shadow-lg border dark:border-gray-500 rounded py-1 mt-1.5 text-sm text-gray-700",
+        listItem: val =>
+          `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded ${
+            val?.isSelected
+              ? `text-white bg-red-500 dark:bg-gray-600`
+              : `text-gray-500 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-gray-500 hover:text-red-500 hover:dark:text-white`
+          }`
       }}
     />
   );

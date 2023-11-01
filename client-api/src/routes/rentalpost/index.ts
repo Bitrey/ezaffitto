@@ -27,10 +27,7 @@ router.get(
             } limiting to ${req.query.limit || Infinity}`
         );
 
-        const query: Filter<Document> = {
-            isRental: true,
-            isForRent: true
-        };
+        const query: Filter<Document> = {};
 
         const rentalTypes = req.query.rentalTypes as RentalTypes[] | null;
         // aggiungo 'other' a rentalTypes
@@ -59,7 +56,19 @@ router.get(
         }
 
         const collection = (await db).collection("rentalposts");
-        const data = collection.find(query).sort({ date: -1 });
+        const data = collection
+            .find(query)
+            .project({
+                // remove fields that are illegal to send to the client
+                postId: false,
+                rawData: false,
+                authorUserId: false,
+                authorUsername: false,
+                authorUrl: false,
+                isRental: false,
+                isForRent: false
+            })
+            .sort({ date: -1 });
 
         if (req.query.limit) {
             data.limit(parseInt(req.query.limit as string));
@@ -89,9 +98,22 @@ router.get(
         logger.debug("Getting data by _id");
 
         const collection = (await db).collection("rentalposts");
-        const data = await collection.findOne({
-            _id: new ObjectId(req.params.id)
-        });
+        const data = await collection.findOne(
+            {
+                _id: new ObjectId(req.params.id)
+            },
+            {
+                projection: {
+                    postId: false,
+                    rawData: false,
+                    authorUserId: false,
+                    authorUsername: false,
+                    authorUrl: false,
+                    isRental: false,
+                    isForRent: false
+                }
+            }
+        );
 
         logger.debug("Data retrieved successfully by _id " + req.params.id);
 

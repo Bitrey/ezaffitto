@@ -150,7 +150,7 @@ const RentFinder = () => {
   }, [cursor, turnstileToken]);
 
   return (
-    <div className="p-2 pb-8">
+    <div className="p-2 pb-8 dark:bg-gray-800 dark:text-white">
       <h3 className="mt-8 mb-2 text-center font-semibold text-2xl">
         {t("homepage.banner")}
       </h3>
@@ -166,6 +166,7 @@ const RentFinder = () => {
           <CustomSelect
             primaryColor="red"
             isMultiple
+            i18nIsDynamicList
             defaultValues={[]}
             options={rentalTypeOptions.map(e => ({
               ...e,
@@ -193,8 +194,7 @@ const RentFinder = () => {
             onExpire={() => setTurnstileToken(null)}
             options={{
               action: "find-rentalposts",
-              language: i18n.language,
-              theme: "light"
+              language: i18n.language
             }}
             ref={turnstileRef}
           />
@@ -202,16 +202,18 @@ const RentFinder = () => {
 
         <div className="mt-2 flex justify-center items-center gap-2">
           <p>{t("rentFinder.maxPrice")}</p>
-          <div className="flex items-center rounded border border-inherit outline-none focus:border-red-600">
+          <div className="flex items-center dark:bg-gray-700 rounded border border-inherit outline-none focus:border-red-600">
             <p className="ml-2 prefix font-light text-gray-500">€</p>
             <Textbox
               type="number"
               value={maxPrice}
               onChange={v => setMaxPrice(parseInt(v.target.value) || 0)}
-              className="border-none"
+              className="border-none dark:bg-gray-700 dark:text-white"
             />
           </div>
-          <p className="text-gray-600 text-sm">{t("rentViewer.perMonth")}</p>
+          <p className="text-gray-600 dark:text-gray-300 text-sm">
+            {t("rentViewer.perMonth")}
+          </p>
         </div>
       </form>
 
@@ -249,7 +251,7 @@ const RentFinder = () => {
                 : !posts || !count || posts.length < count
             }
             loader={
-              <p className="bg-gray-100 flex justify-center items-center w-full min-w-[16rem] h-16 mx-auto animate-pulse">
+              <p className="bg-gray-100 dark:bg-gray-600 dark:text-white flex justify-center items-center w-full min-w-[16rem] h-16 mx-auto animate-pulse">
                 {t("common.loading")}
               </p>
             }

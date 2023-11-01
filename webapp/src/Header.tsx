@@ -34,11 +34,11 @@ const Header = () => {
   }
 
   return (
-    <header className="w-full min-h-[6rem] flex justify-around items-center bg-gray-50 text-gray-900">
+    <header className="w-full min-h-[6rem] flex justify-around items-center bg-gray-50 dark:bg-black dark:text-white text-gray-900">
       <div className="flex justify-center gap-4 items-center">
-        <h1 className="text-red-600 font-semibold text-3xl tracking-tighter">
+        <h1 className="text-red-600 dark:text-white font-semibold text-3xl tracking-tighter">
           <Link to="/" className="flex items-center gap-2">
-            <Home fill="rgb(220 38 38 / var(--tw-text-opacity))" />
+            <Home className="fill-red-600 dark:fill-white" />
             <span className="select-none">ezaffitto</span>
           </Link>
         </h1>
@@ -47,17 +47,17 @@ const Header = () => {
       <div className="flex justify-center items-center gap-4 z-50">
         {/* en and it emojis to change lng */}
         <div tabIndex={0} className="group relative inline-block p-5">
-          <button className="flex items-center bg-gray-50  text-red-600 hover:text-red-700 underline transition-colors px-1 rounded p-2 text-[16px] focus:outline-none">
+          <button className="flex items-center bg-gray-50 dark:bg-black text-red-600 hover:text-red-700 dark:text-white dark:hover:text-gray-200 underline transition-colors px-1 rounded p-2 text-[16px] focus:outline-none">
             {mapLngToLabel(getLanguage(i18n.language)) ||
               "-- select language --"}{" "}
             ⌄
           </button>
-          <ul className="hidden group-focus-within:block list-none absolute bg-gray-50 w-40 z-1 shadow-lg animate-slideIn">
+          <ul className="hidden group-focus-within:block list-none absolute bg-gray-50 dark:bg-gray-600 w-40 z-1 shadow-lg animate-slideIn">
             {config.languages.map(e => (
               <li
                 key={e}
                 onClick={() => setLanguage(e)}
-                className="py-3 px-4 cursor-pointer hover:bg-gray-200 hover:text-blue-700"
+                className="py-3 px-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-400 hover:text-blue-700 dark:hover:text-white dark:text-gray-100"
               >
                 {mapLngToLabel(e)}
               </li>

@@ -17,7 +17,7 @@ const RentCard: FunctionComponent<RentCardProps> = ({ post, ...rest }) => {
 
   return (
     <div
-      className="cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-300 flex p-4 min-w-[12rem] min-h-[12rem]"
+      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-300 flex p-4 min-w-[12rem] min-h-[12rem]"
       {...rest}
     >
       {post?.images && post.images.length > 0 && (
@@ -41,12 +41,14 @@ const RentCard: FunctionComponent<RentCardProps> = ({ post, ...rest }) => {
           </p>
         )}
 
-        <p className="mb-2 text-lg font-light">€{post?.monthlyPrice}</p>
+        {typeof post?.monthlyPrice === "number" && (
+          <p className="mb-2 text-lg font-light">€{post?.monthlyPrice}</p>
+        )}
 
         <p className="line-clamp-3">{post?.description || post?.address}</p>
 
         <div className="flex items-center gap-2">
-          <p className="mt-2 text-gray-500">
+          <p className="mt-2 text-gray-500 dark:text-gray-400">
             {post?.date &&
               formatDistance(post.date, new Date(), {
                 addSuffix: true,

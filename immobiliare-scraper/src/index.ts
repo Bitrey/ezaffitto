@@ -8,14 +8,13 @@ import { CronJob } from "cron";
 import { config } from "./config";
 import "./healthcheckPing";
 
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 export class Scraper {
     public static scrapeUrl =
         "https://www.immobiliare.it/api-next/search-list/real-estates/";
 
     private static bannedAgencyIds: Readonly<number[]> = [
-        374030 // affitto privato,
+        374030, // affitto privato
+        368620 // trova affitto
     ];
 
     public async scrape(): Promise<RentalPost[]> {

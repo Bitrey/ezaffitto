@@ -20,7 +20,7 @@ const Button: FunctionComponent<ButtonProps> = ({
   className,
   ...rest
 }) => {
-  const _className = `p-2 text-white bg-red-500 hover:bg-red-600 active:bg-red-700 disabled:bg-red-300 disabled:cursor-progress border-none outline-none transition-colors duration-75 ${
+  const _className = `p-2 text-white bg-red-500 dark:bg-red-600 hover:bg-red-600 dark:hover:bg-red-700 active:bg-red-700 disabled:bg-red-300 disabled:cursor-progress border-none outline-none transition-colors duration-75 ${
     className || ""
   }`;
 

@@ -16,6 +16,11 @@ FAI: trova modo per salvare non rentals.
 
 [OK] Fixa Zappyrent Scraper che non funziona
 
+## Importante
+
+-   Dovrebbe essere illegale salvare nomi utente, fai qualcosa
+-   FIXA PROJECTION
+
 ## Note
 
 -   Ogni scraper type (fb, zappyrent, etc) avrà un nome indicato come `source` e dovrà essere presente nell'array `SCRAPER_TYPES` in `db-api/src/config/index.ts`

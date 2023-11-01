@@ -3,7 +3,7 @@ import path from "path";
 export const config = Object.freeze({
     DEBUG_RUN_SCRAPER: true,
 
-    MAX_TIMES_NO_POSTS_FETCHED: 3,
+    MAX_TIMES_NO_POSTS_FETCHED: 10,
 
     DB_API_BASE_URL: "http://db-api:5500/api/v1",
     PARSER_API_BASE_URL: "http://parser:3000/parse",

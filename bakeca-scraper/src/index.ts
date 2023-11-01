@@ -84,7 +84,7 @@ export class Scraper {
         // Limit requests
         await page.setRequestInterception(true);
         page.on("request", async request => {
-            if (request.resourceType() == "image") {
+            if (request.resourceType() === "image") {
                 await request.abort();
             } else {
                 await request.continue();

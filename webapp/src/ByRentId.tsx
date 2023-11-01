@@ -77,8 +77,7 @@ const ByRentId: FunctionComponent<any> = () => {
           onExpire={() => setTurnstileToken(null)}
           options={{
             action: "fetch-rentalpost",
-            language: i18n.language,
-            theme: "light"
+            language: i18n.language
           }}
         />
       )}

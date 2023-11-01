@@ -70,7 +70,12 @@ const RentView: FunctionComponent<RentViewProps> = ({
   }, [i18n.language, post, t]);
 
   return (
-    <div className={`sticky top-0 ${className || ""}`} {...rest}>
+    <div
+      className={`dark:text-white dark:bg-gray-800 sticky top-0 ${
+        className || ""
+      }`}
+      {...rest}
+    >
       {images ? (
         <Swiper
           navigation
@@ -117,19 +122,25 @@ const RentView: FunctionComponent<RentViewProps> = ({
             )}
 
             <p className="text-lg">
-              €{post?.monthlyPrice}{" "}
+              {typeof post?.monthlyPrice === "number" ? (
+                <span>€{post.monthlyPrice}</span>
+              ) : (
+                <span className="font-light">~</span>
+              )}{" "}
               <span className="font-light">{t("rentViewer.perMonth")}</span>
             </p>
           </div>
           <div>
-            <p className="text-gray-700">
+            <p className="text-gray-700 dark:text-gray-300">
               {post?.date &&
                 format(new Date(post.date), "'📅' E d MMM yyyy HH:mm", {
                   locale: getLanguage(i18n.language) === "it" ? it : enUS
                 })}
             </p>
             {post?.address && (
-              <p className="mt-2 text-gray-700">📍 {post?.address}</p>
+              <p className="mt-2 text-gray-700 dark:text-gray-300">
+                📍 {post?.address}
+              </p>
             )}
           </div>
           <div>
@@ -140,18 +151,18 @@ const RentView: FunctionComponent<RentViewProps> = ({
                 href={post.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-700 hover:text-red-600 transition-colors"
+                className="text-gray-700 dark:text-gray-300 hover:text-red-600 transition-colors"
               >
                 {new URL(post.url).hostname}
               </a>
             ) : (
-              <span className="text-gray-700 hover:text-gray-800 transition-colors">
+              <span className="text-gray-700 dark:text-gray-300 hover:text-gray-800 transition-colors">
                 {post?.url ? new URL(post.url).hostname : post?.source}
               </span>
             )}
           </div>
         </div>
-        <p>{post?.description}</p>
+        <p className="text-gray-800 dark:text-gray-200">{post?.description}</p>
         {post && (
           <div className="mt-4 flex justify-center">
             {/* if we are at /, show <Link>, else button */}
@@ -163,7 +174,8 @@ const RentView: FunctionComponent<RentViewProps> = ({
                 {t("common.contact")}{" "}
                 <span className="font-bold">
                   {" "}
-                  {post?.authorUsername || `${t("common.on")} ${post.source}`}
+                  {t("common.on")}
+                  <span className="capitalize"> {post.source}</span>
                 </span>
               </Button>
             ) : (
@@ -174,7 +186,8 @@ const RentView: FunctionComponent<RentViewProps> = ({
                 <span>🔗 | </span>
                 {t("common.contact")}{" "}
                 <span className="font-bold">
-                  {post?.authorUsername || `${t("common.on")} ${post.source}`}
+                  {t("common.on")}
+                  <span className="capitalize"> {post.source}</span>
                 </span>
               </Button>
             )}

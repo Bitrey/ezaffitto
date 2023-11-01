@@ -18,7 +18,8 @@ import "./healthcheckPing";
 import { mkdir, unlink, writeFile } from "fs/promises";
 import { Cookie } from "./interfaces/Cookie";
 import { mapCookiesToPuppeteer } from "./shared/mapCookiesToPuppeteer";
-import { existsSync } from "fs";
+import { existsSync, writeFileSync } from "fs";
+import path from "path";
 
 puppeteer.use(pluginStealth());
 
@@ -145,6 +146,11 @@ export class Scraper {
         // "https://www.facebook.com/groups/114050352266007/?locale=it_IT", // privato
     ];
 
+    private groupQueue: string[] = [];
+
+    private browser: Browser | null = null;
+    private page: Page | null = null;
+
     private startDate: Moment | null = null;
     private endDate: Moment | null = null;
 
@@ -195,7 +201,44 @@ export class Scraper {
         }
     }
 
+    private createRandomQueue() {
+        // place elements from fbGroupUrls in groupQueue in random order
+        this.groupQueue = Scraper.fbGroupUrls
+            .map(url => ({ url, rand: Math.random() }))
+            .sort((a, b) => a.rand - b.rand)
+            .map(elem => elem.url);
+    }
+
+    private getGroupUrl(): string {
+        if (this.groupQueue.length === 0) {
+            this.createRandomQueue();
+        }
+        // string since createRandomQueue() is called before
+        // which populates groupQueue with strings
+        return this.groupQueue.pop() as string;
+    }
+
+    private async init() {
+        // const browser = await puppeteer.launch({ headless: "new" });
+        // const browser = await puppeteer.launch({ headless: false });
+        this.browser = await puppeteer.launch({
+            headless: true,
+            executablePath: "/usr/bin/google-chrome",
+            args: [
+                "--no-sandbox",
+                "--disable-gpu",
+                "--disable-notifications",
+                "--disable-dev-shm-usage"
+            ]
+        });
+        this.page = await this.browser!.newPage();
+        await this.page.setViewport({ width: 1080, height: 1024 });
+    }
+
     private async scrape(groupUrl: string, durationMs: number) {
+        if (!this.browser || !this.page) {
+            await this.init();
+        }
         // new date
         // const scrapeId = moment().format("YYYY-MM-DD_HH-mm-ss");
 
@@ -222,22 +265,10 @@ export class Scraper {
         // const browser = await puppeteer.launch({ headless: "new" });
         // const browser = await puppeteer.launch({ headless: false });
 
-        const browser = (await puppeteer.launch({
-            headless: true,
-            executablePath: "/usr/bin/google-chrome",
-            args: [
-                "--no-sandbox",
-                "--disable-gpu",
-                "--disable-notifications",
-                "--disable-dev-shm-usage"
-            ]
-        })) as Browser;
-
-        logger.debug(
-            "Browser connected for groupUrl " + groupUrl + this.getElapsedStr()
-        );
-
-        const page = await browser.newPage();
+        if (!this.page) {
+            logger.error("CRITICAL! Page is null for groupUrl " + groupUrl);
+            throw new Error("PAGE_IS_NULL");
+        }
 
         let cookies: Cookie[];
 
@@ -273,30 +304,30 @@ export class Scraper {
             );
             await axios.post(config.DB_API_BASE_URL + "/panic", {
                 service: "fb-scraper",
-                message: "No cookies file found, exiting"
+                message: "No cookies file found for groupUrl " + groupUrl
             });
             process.exit(1);
         }
 
         try {
-            await page.setCookie(...mapCookiesToPuppeteer(cookies));
+            await this.page.setCookie(...mapCookiesToPuppeteer(cookies));
         } catch (err) {
             logger.error("CRITICAL: Error while setting cookies:");
             logger.error(err);
         }
 
-        await page.setRequestInterception(true);
+        await this.page.setRequestInterception(true);
 
         const urls: string[] = [];
 
-        page.on("request", interceptedRequest => {
+        this.page.on("request", async interceptedRequest => {
             try {
                 if (interceptedRequest.isInterceptResolutionHandled()) return;
                 if (interceptedRequest.url().includes("graphql")) {
                     urls.push(interceptedRequest.url());
                 }
 
-                interceptedRequest.continue();
+                await interceptedRequest.continue();
             } catch (err) {
                 logger.error("Error while intercepting request:");
                 logger.error(err);
@@ -305,7 +336,9 @@ export class Scraper {
 
         let fetchedPosts = 0;
 
-        page.on("response", async response => {
+        let isError = false;
+
+        this.page.on("response", async response => {
             if (urls.includes(response.url())) {
                 let obj;
                 try {
@@ -317,6 +350,25 @@ export class Scraper {
                     obj = JSON.parse(text);
                 }
                 const arr = Array.isArray(obj) ? obj : [obj];
+
+                if (JSON.stringify(arr).includes("Rate limit exceeded")) {
+                    logger.error(
+                        "Rate limit exceeded for groupUrl " +
+                            groupUrl +
+                            this.getElapsedStr()
+                    );
+                    isError = true;
+                    await axios.post(config.DB_API_BASE_URL + "/panic", {
+                        service: "fb-scraper",
+                        message: "Rate limit exceeded for groupUrl " + groupUrl
+                    });
+                    process.exit(1);
+                }
+
+                if (isError) {
+                    return;
+                }
+
                 for (const elem of arr) {
                     const props = extractor(elem) as FbPost;
 
@@ -357,17 +409,48 @@ export class Scraper {
         });
 
         try {
-            await page.goto(groupUrl, { timeout: 10000 });
-            await page.setViewport({ width: 1080, height: 1024 });
+            await this.page.goto(groupUrl, {
+                timeout: 10_000,
+                waitUntil: "networkidle2"
+            });
+            await this.page.setViewport({ width: 1080, height: 1024 });
         } catch (err) {
             logger.error("Error while going to groupUrl " + groupUrl + ":");
             logger.error(err);
         }
 
-        // DEBUG SCREENSHOT
-        // await page.screenshot({
-        //     path: "screenshots/" + scrapeId + "/start_page.png"
-        // });
+        // screenshot
+        try {
+            await this.page.screenshot({
+                path: "screenshots/start_page.png"
+            });
+        } catch (err) {
+            logger.error("Error while taking screenshot:");
+            logger.error(err);
+        }
+
+        // check if requires login
+        try {
+            const text = "You must log in to continue.";
+            await this.page.waitForXPath(
+                '//*[contains(text(), "' + text + '")]',
+                { timeout: 5_000 }
+            );
+            logger.error(
+                "Login required for groupUrl " + groupUrl + this.getElapsedStr()
+            );
+            await axios.post(config.DB_API_BASE_URL + "/panic", {
+                service: "fb-scraper",
+                message: "Login required for groupUrl " + groupUrl
+            });
+            process.exit(1);
+        } catch (err) {
+            // logger.debug(
+            //     "Login not required for groupUrl " +
+            //         groupUrl +
+            //         this.getElapsedStr()
+            // );
+        }
 
         // click refuse cookie button by selecting aria-label
         const cookieButtonSelector =
@@ -376,17 +459,17 @@ export class Scraper {
 
         // if (page.$(cookieButtonSelector) == null)
         try {
-            await page.waitForSelector(cookieButtonSelector, {
-                timeout: 10_000
+            await this.page.waitForSelector(cookieButtonSelector, {
+                timeout: 2_000
             });
             await wait(Math.random() * 1000);
-            await page.click(cookieButtonSelector);
+            await this.page.click(cookieButtonSelector);
         } catch (err) {
-            logger.debug(
-                "Cookie button not found for groupUrl " +
-                    groupUrl +
-                    this.getElapsedStr()
-            );
+            // logger.debug(
+            //     "Cookie button not found for groupUrl " +
+            //         groupUrl +
+            //         this.getElapsedStr()
+            // );
         }
 
         // click close login button by selecting aria-label
@@ -394,21 +477,21 @@ export class Scraper {
 
         // if (page.$(closeLoginButtonSelector) == null)
         try {
-            await page.waitForSelector(closeLoginButtonSelector, {
-                timeout: 10_000
+            await this.page.waitForSelector(closeLoginButtonSelector, {
+                timeout: 2_000
             });
             await wait(Math.random() * 1000);
-            await page.click(closeLoginButtonSelector);
+            await this.page.click(closeLoginButtonSelector);
         } catch (err) {
-            logger.debug(
-                "Close login button not found for groupUrl " +
-                    groupUrl +
-                    this.getElapsedStr()
-            );
+            // logger.debug(
+            //     "Close login button not found for groupUrl " +
+            //         groupUrl +
+            //         this.getElapsedStr()
+            // );
         }
 
         try {
-            const [orderBySpan] = await page.$x(
+            const [orderBySpan] = await this.page.$x(
                 "//span[contains(., 'Più pertinenti')]"
             );
             if (!orderBySpan) {
@@ -419,7 +502,7 @@ export class Scraper {
                 );
             } else {
                 await orderBySpan.click();
-                const [newPostsSpan] = await page.$x(
+                const [newPostsSpan] = await this.page.$x(
                     "//span[contains(., 'Nuovi post')]"
                 );
                 if (!newPostsSpan) {
@@ -453,7 +536,7 @@ export class Scraper {
             try {
                 await wait(Math.random() * 500 + 500);
                 // await page.keyboard.press("PageDown");
-                await page.mouse.wheel({
+                await this.page.mouse.wheel({
                     deltaY: Math.floor(Math.random() * 500) + 500
                 });
                 await wait(Math.random() * 500 + 500);
@@ -462,10 +545,6 @@ export class Scraper {
                 logger.error(err);
             }
         }
-
-        logger.debug(
-            "Closing browser for groupUrl " + groupUrl + this.getElapsedStr()
-        );
 
         if (fetchedPosts == 0) {
             logger.warn(
@@ -479,7 +558,7 @@ export class Scraper {
             // update cookies file
             await writeFile(
                 config.COOKIES_JSON_PATH,
-                JSON.stringify(await page.cookies(), null, 4)
+                JSON.stringify(await this.page.cookies(), null, 4)
             );
             logger.debug(
                 "Updated cookies file for groupUrl " +
@@ -489,11 +568,7 @@ export class Scraper {
         }
 
         try {
-            // DEBUG SCREENSHOT
-            await mkdir(config.SCREENSHOTS_PATH, {
-                recursive: true
-            });
-            await page.screenshot({
+            await this.page.screenshot({
                 path:
                     "screenshots/" +
                     (fetchedPosts === 0
@@ -505,32 +580,6 @@ export class Scraper {
             logger.error(err);
         }
 
-        let closed = false;
-        try {
-            await browser.close();
-            closed = true;
-        } catch (err) {
-            logger.error("CRITICAL! Error while closing browser:");
-            logger.error(err);
-        }
-
-        if (!closed) {
-            try {
-                // kill browser
-                const code = browser.process()?.kill();
-                logger.debug(
-                    "Killed browser with code " +
-                        code +
-                        " for groupUrl " +
-                        groupUrl +
-                        this.getElapsedStr()
-                );
-            } catch (err) {
-                logger.error("CRITICAL! Error while killing browser:");
-                logger.error(err);
-            }
-        }
-
         logger.info(
             "Scrape finished for groupUrl " +
                 groupUrl +
@@ -538,6 +587,10 @@ export class Scraper {
                 fetchedPosts +
                 this.getElapsedStr()
         );
+
+        // remove page listeners
+        this.page.removeAllListeners("request");
+        this.page.removeAllListeners("response");
 
         this.startDate = null;
         this.endDate = null;
@@ -576,32 +629,32 @@ export class Scraper {
                 `Scraping for ${(duration / 1000).toFixed(3)} seconds...`
             );
 
-            for (const groupUrl of Scraper.fbGroupUrls) {
-                try {
-                    await this.scrape(groupUrl, duration);
-                    if (
-                        this.urlsNoPostsFetched.length >=
-                        config.MAX_TIMES_NO_POSTS_FETCHED
-                    ) {
-                        logger.error(
-                            "No posts fetched 3 times in a row, sending panic message..."
-                        );
+            const groupUrl = this.getGroupUrl();
 
-                        await axios.post(config.DB_API_BASE_URL + "/panic", {
-                            service: "fb-scraper",
-                            message: `No posts fetched ${
-                                config.MAX_TIMES_NO_POSTS_FETCHED
-                            } times in a row for groups: ${this.urlsNoPostsFetched.join(
-                                ", "
-                            )} - exiting`
-                        });
-                        process.exit(1);
-                    }
-                } catch (err) {
-                    logger.error(err);
+            try {
+                await this.scrape(groupUrl, duration);
+                if (
+                    this.urlsNoPostsFetched.length >=
+                    config.MAX_TIMES_NO_POSTS_FETCHED
+                ) {
+                    logger.error(
+                        "No posts fetched 3 times in a row, sending panic message..."
+                    );
+
+                    await axios.post(config.DB_API_BASE_URL + "/panic", {
+                        service: "fb-scraper",
+                        message: `No posts fetched ${
+                            config.MAX_TIMES_NO_POSTS_FETCHED
+                        } times in a row for groups: ${this.urlsNoPostsFetched.join(
+                            ", "
+                        )} - exiting`
+                    });
+                    process.exit(1);
                 }
-                await wait(Math.floor(Math.random() * 5000));
+            } catch (err) {
+                logger.error(err);
             }
+            await wait(Math.floor(Math.random() * 5000));
         }
     }
 }

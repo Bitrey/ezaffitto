@@ -66,18 +66,11 @@ services:
     build:
       context: ./fb-scraper
       dockerfile: Dockerfile.prod
+    restart: on-failure:5
     secrets:
       - fb_account_email
       - fb_account_password
       - geolocation_api_key
-    restart_policy:
-      condition: on-failure
-      # aspetta 5 minuti prima di riprovare (magari sei rate limited)
-      delay: 300s
-      # se dopo 3 volte non ci riesce allora si arrende
-      # => serve intervento manuale!!!
-      max_attempts: 3
-      window: 60s
     environment:
       - NODE_ENV=production
       - PING_SERVER_PORT=3434

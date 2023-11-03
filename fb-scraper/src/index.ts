@@ -102,6 +102,8 @@ scrapedDataEvent.on("scrapedData", async fbData => {
         }
     } else {
         delete post.address;
+        delete post.latitude;
+        delete post.longitude;
     }
 
     try {
@@ -168,7 +170,7 @@ export class Scraper {
     ): Promise<{ latitude: number; longitude: number } | null> {
         const params = {
             access_key: envs.GEOLOCATION_API_KEY.replace(/\r?\n|\r/g, ""),
-            query: "Bologna " + address,
+            query: address,
             country: country,
             region,
             limit: 1,

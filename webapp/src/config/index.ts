@@ -1,7 +1,32 @@
 export const config = Object.freeze({
     languages: ["en", "it"],
     turnstileSiteKey: "0x4AAAAAAALPWjAvPc2W_e1h",
-    ga4Token: "G-MTGX0JZEFL"
+    ga4Token: "G-MTGX0JZEFL",
+    postDynamicFeatures: [
+        "rentalType",
+        "monthlyPrice",
+        "address",
+        "floorNumber",
+        "securityDepositMonths",
+        "zone",
+        "sexRestrictions",
+        "occupationalRestrictions",
+        "lgbtFriendly",
+        "furnished",
+        "availabilityStartDate",
+        "availabilityEndDate",
+        "contractDurationMonths",
+        "hasBalcony",
+        "hasParking",
+        "rooms",
+        "bathrooms",
+        "areaSqMeters",
+        "priceIncludesTaxes",
+        "smokingAllowed",
+        "hasAirConditioning",
+        "hasHeating",
+        "hasElevator"
+    ]
 });
 
 export const gaEvents = {

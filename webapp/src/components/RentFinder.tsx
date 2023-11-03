@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import ReactGA from "react-ga4";
 import RentCard from "./RentCard";
 import CustomSelect from "./Select";
@@ -18,6 +19,10 @@ import Search from "../icons/Search";
 // import Backwards from "../icons/Backwards";
 import { SearchQueryContext } from "../Homepage";
 import { translatePostJSON } from "../misc/translatePostJSON";
+import { MarkerIcon } from "../misc/MarkerIcon";
+import Accordion from "./Accordion";
+import Dropdown, { DropdownOption } from "./Dropdown";
+import { OrderBy } from "../interfaces/orderBy";
 
 const RentFinder = () => {
   const [maxPrice, setMaxPrice] = useState<number>(10_000);
@@ -43,6 +48,21 @@ const RentFinder = () => {
   // let cursor: number = 0;
   const [cursor, setCursor] = useState(0);
   const limit: number = 30;
+
+  const orderByOptions: DropdownOption<OrderBy>[] = [
+    { key: "dateAsc", value: t("orderByOptions.dateAsc") },
+    { key: "dateDesc", value: t("orderByOptions.dateDesc") },
+    { key: "priceAsc", value: t("orderByOptions.priceAsc") },
+    { key: "priceDesc", value: t("orderByOptions.priceDesc") }
+  ];
+
+  const [orderBy, setOrderBy] = useState<OrderBy>("dateDesc");
+
+  async function onOrderChange(option: DropdownOption<OrderBy>): Promise<void> {
+    setOrderBy(option.key);
+    setCursor(0);
+    turnstileRef?.current?.reset(); // reset captcha
+  }
 
   // const posts: RentalPostJSONified[] = [];
   const [posts, setPosts] = useState<RentalPostJSONified[]>([]);
@@ -70,7 +90,8 @@ const RentFinder = () => {
         skip: cursor,
         rentalTypes,
         maxPrice,
-        q: searchQuery
+        q: searchQuery,
+        orderBy
       });
 
       setIsLoading(true);
@@ -82,7 +103,8 @@ const RentFinder = () => {
             skip: cursor,
             rentalTypes: rentalTypes.length > 0 ? rentalTypes : null,
             maxPrice,
-            q: searchQuery.length > 0 ? searchQuery : null
+            q: searchQuery.length > 0 ? searchQuery : null,
+            orderBy
           }
         });
         const { data, count } = res.data;
@@ -105,7 +127,7 @@ const RentFinder = () => {
         console.log("Fetched posts", mapped, "out of", count);
         // posts.push(...mapped);
 
-        if (concat) {
+        if (concat && cursor !== 0) {
           setPosts([...posts, ...mapped]);
         } else {
           setPosts(mapped);
@@ -133,7 +155,8 @@ const RentFinder = () => {
       searchQuery,
       turnstileToken,
       selected,
-      posts
+      posts,
+      orderBy
     ]
   );
 
@@ -160,27 +183,29 @@ const RentFinder = () => {
           e.preventDefault();
           turnstileRef?.current?.reset();
         }}
-        className="mt-4 mx-auto w-full md:w-[50vw]"
+        className="mt-4 mx-auto w-full"
       >
-        <div className="flex items-center gap-4">
-          <CustomSelect
-            primaryColor="red"
-            isMultiple
-            i18nIsDynamicList
-            defaultValues={[]}
-            options={rentalTypeOptions.map(e => ({
-              ...e,
-              label: t(e.label)
-            }))}
-            noOptionsMessage={t("rentFinder.noMoreOptions")}
-            onChange={s => setRentalTypes(s.map(e => e.value))}
-          />
-          <Button
-            type="submit"
-            className="p-3 rounded-full font-medium tracking-tight"
-          >
-            <Search />
-          </Button>
+        <div className="md:w-[50vw] mx-auto">
+          <div className="flex items-center gap-4">
+            <CustomSelect
+              primaryColor="red"
+              isMultiple
+              i18nIsDynamicList
+              defaultValues={[]}
+              options={rentalTypeOptions.map(e => ({
+                ...e,
+                label: t(e.label)
+              }))}
+              noOptionsMessage={t("rentFinder.noMoreOptions")}
+              onChange={s => setRentalTypes(s.map(e => e.value))}
+            />
+            <Button
+              type="submit"
+              className="p-3 rounded-full font-medium tracking-tight"
+            >
+              <Search />
+            </Button>
+          </div>
         </div>
 
         <div className="mt-2 flex justify-center">
@@ -200,24 +225,96 @@ const RentFinder = () => {
           />
         </div>
 
-        <div className="mt-2 flex justify-center items-center gap-2">
-          <p>{t("rentFinder.maxPrice")}</p>
-          <div className="flex items-center dark:bg-gray-700 rounded border border-inherit outline-none focus:border-red-600">
-            <p className="ml-2 prefix font-light text-gray-500">€</p>
-            <Textbox
-              type="number"
-              value={maxPrice}
-              onChange={v => setMaxPrice(parseInt(v.target.value) || 0)}
-              className="border-none dark:bg-gray-700 dark:text-white"
+        <div className="mt-2 flex justify-center md:justify-around w-full flex-col md:flex-row gap-2">
+          <div className="flex justify-center items-center gap-2">
+            <p>{t("rentFinder.maxPrice")}</p>
+            <div className="flex items-center dark:bg-gray-700 rounded border border-inherit outline-none focus:border-red-600">
+              <p className="ml-2 prefix font-light text-gray-500">€</p>
+              <Textbox
+                type="number"
+                value={maxPrice}
+                onChange={v => setMaxPrice(parseInt(v.target.value) || 0)}
+                className="border-none dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">
+              {t("rentViewer.perMonth")}
+            </p>
+          </div>
+
+          <div className="flex justify-center items-center gap-2">
+            <p>{t("rentFinder.orderBy")}</p>
+            <Dropdown
+              onSelectCustom={
+                // si puo' fare tanto passiamo i types giusti
+                onOrderChange as (option: DropdownOption<string>) => void
+              }
+              defaultOption={{
+                key: "dateDesc",
+                value: t("orderByOptions.dateDesc")
+              }}
+              options={orderByOptions}
             />
           </div>
-          <p className="text-gray-600 dark:text-gray-300 text-sm">
-            {t("rentViewer.perMonth")}
-          </p>
         </div>
       </form>
 
-      <div className="mt-6 md:mt-16 grid grid-cols-1 md:grid-cols-2">
+      {posts &&
+        posts.length > 0 &&
+        posts.filter(p => p.latitude && p.longitude).length > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Accordion
+              title={t("map.findOnMap") + " 🧭"}
+              className="w-full max-h-[80vh]"
+            >
+              <MapContainer
+                style={{
+                  zIndex: 10,
+                  height: "80vh",
+                  width: "100%"
+                  // maxHeight: "90vh",
+                  // maxWidth: "90%"
+                }}
+                center={[44.494936, 11.342849]}
+                zoom={13}
+                scrollWheelZoom={false}
+              >
+                <TileLayer
+                  attribution='&copy; <a target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                {posts
+                  .filter(e => e.latitude && e.longitude)
+                  .map(e => (
+                    <Marker
+                      key={e._id}
+                      icon={MarkerIcon}
+                      position={[e.latitude as number, e.longitude as number]}
+                    >
+                      <Popup>
+                        <Link
+                          to={`/post/${e._id}`}
+                          state={{
+                            post: JSON.stringify(e)
+                          }}
+                        >
+                          {e.monthlyPrice && (
+                            <p className="mb-0 pb-0 m-0">
+                              <strong>{e.monthlyPrice}</strong>
+                              <span>{t("rentViewer.perMonth")}</span>
+                            </p>
+                          )}
+                          {e.address || `${e.latitude},${e.longitude}`}
+                        </Link>
+                      </Popup>
+                    </Marker>
+                  ))}
+              </MapContainer>
+            </Accordion>
+          </div>
+        )}
+
+      <div className="mt-6 md:mt-12 grid grid-cols-1 md:grid-cols-2">
         <div>
           {/* <div className="flex items-center mx-auto">
             <ReactPaginate

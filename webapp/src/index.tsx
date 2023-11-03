@@ -10,6 +10,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import "react-medium-image-zoom/dist/styles.css";
+import "leaflet/dist/leaflet.css";
 
 import "react-lazy-load-image-component/src/effects/blur.css";
 import Homepage from "./Homepage";

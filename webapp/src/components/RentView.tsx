@@ -1,13 +1,22 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import Zoom from "react-medium-image-zoom";
-import { FunctionComponent, HTMLAttributes, useEffect, useState } from "react";
+import {
+  Fragment,
+  FunctionComponent,
+  HTMLAttributes,
+  useEffect,
+  useState
+} from "react";
 import { Autoplay, Navigation, Pagination } from "swiper";
 import { format } from "date-fns";
 import { enUS, it } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import Button from "./Button";
 import { RentalPostJSONified } from "../interfaces/RentalPost";
-import { useTranslation } from "react-i18next";
 import { getLanguage } from "../misc/getLanguage";
+import { config } from "../config";
+import { MarkerIcon } from "../misc/MarkerIcon";
 
 interface RentViewProps extends HTMLAttributes<HTMLDivElement> {
   post?: RentalPostJSONified;
@@ -51,8 +60,10 @@ const RentView: FunctionComponent<RentViewProps> = ({
     filterImages();
   }, [post]);
 
+  const pathname = window.location.pathname;
+
   useEffect(() => {
-    if (!post || window.location.pathname === "/") {
+    if (!post || pathname === "/") {
       window.document.title = `${t("common.appName")}`;
     } else {
       window.document.title = `${
@@ -67,7 +78,7 @@ const RentView: FunctionComponent<RentViewProps> = ({
             }`
       } - ${t("common.appNameShort")}`;
     }
-  }, [i18n.language, post, t]);
+  }, [i18n.language, pathname, post, t]);
 
   return (
     <div
@@ -93,7 +104,7 @@ const RentView: FunctionComponent<RentViewProps> = ({
               <Zoom>
                 <img
                   loading="lazy"
-                  className="object-contain object-center h-96 max-h-full select-none w-full"
+                  className="object-contain object-center h-96 max-h-full w-full"
                   src={e}
                   alt={"Post image " + (i + 1)}
                   onError={e => {
@@ -146,7 +157,7 @@ const RentView: FunctionComponent<RentViewProps> = ({
           <div>
             {/* print post?.source */}
             {post && <span>🌐</span>}{" "}
-            {post?.url && window.location.pathname !== "/" ? (
+            {post?.url && pathname !== "/" ? (
               <a
                 href={post.url}
                 target="_blank"
@@ -163,10 +174,100 @@ const RentView: FunctionComponent<RentViewProps> = ({
           </div>
         </div>
         <p className="text-gray-800 dark:text-gray-200">{post?.description}</p>
+
+        <div className="mx-2 my-6 grid border grid-cols-2 justify-center items-center">
+          {/* any sennò rompe */}
+          {config.postDynamicFeatures
+            .filter(
+              e => post && e in post && post[e as keyof typeof post] !== null
+            )
+            .map((e, i) => {
+              if (!post) return false;
+              return (
+                <Fragment key={e}>
+                  <p
+                    className={`pl-4 py-1 font-medium tracking-tight ${
+                      i % 2 === 0
+                        ? "bg-white dark:bg-gray-800"
+                        : "bg-gray-50 dark:bg-gray-600"
+                    }`}
+                  >
+                    {t("rentalPost." + e)}
+                  </p>
+                  <p
+                    className={`pr-4 py-1 ${
+                      i % 2 === 0
+                        ? "bg-white dark:bg-gray-800"
+                        : "bg-gray-50 dark:bg-gray-600"
+                    }`}
+                  >
+                    {e === "sexRestrictions"
+                      ? t("sexRestrictions." + post[e])
+                      : e === "occupationalRestrictions"
+                      ? t("occupationalRestrictions." + post[e])
+                      : typeof post[e as keyof typeof post] === "boolean"
+                      ? post[e as keyof typeof post]
+                        ? "✅"
+                        : "❌"
+                      : [
+                          "availabilityStartDate",
+                          "availabilityEndDate"
+                        ].includes(e)
+                      ? format(
+                          new Date(post[e as keyof typeof post]),
+                          "E d MMM yyyy",
+                          {
+                            locale:
+                              getLanguage(i18n.language) === "it" ? it : enUS
+                          }
+                        )
+                      : e === "rentalType"
+                      ? t("rentalType." + post[e as keyof typeof post])
+                      : e === "monthlyPrice"
+                      ? "€" + post[e as keyof typeof post]
+                      : post[e as keyof typeof post]?.toString()}
+                  </p>
+                </Fragment>
+              );
+            })}
+        </div>
+
+        {post?.latitude && post?.longitude && (
+          <div className="my-6 flex flex-col items-center justify-center w-full select-none">
+            <h3 className="mb-2 text-lg font-medium">
+              {t("map.approxPosition")}
+            </h3>
+            <MapContainer
+              style={{
+                height: "50vh",
+                width: "70vw",
+                maxWidth: "90%",
+                boxShadow: "0px 0px 10px 0px rgba(0,0,0,0.5)"
+              }}
+              center={[post.latitude, post.longitude]}
+              zoom={14}
+              scrollWheelZoom={false}
+            >
+              <TileLayer
+                attribution='&copy; <a target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <Marker
+                icon={MarkerIcon}
+                position={[post.latitude, post.longitude]}
+              >
+                <Popup>
+                  {post.address || `${post.latitude},${post.longitude}`}
+                </Popup>
+              </Marker>
+            </MapContainer>
+          </div>
+        )}
+
         {post && (
           <div className="mt-4 flex justify-center">
             {/* if we are at /, show <Link>, else button */}
-            {window.location.pathname === "/" ? (
+            {pathname === "/" ? (
               <Button
                 className="p-3 rounded-full font-medium tracking-tight"
                 href={`/post/${post._id}`}

@@ -38,7 +38,14 @@ const resources: Resource = {
                 noPostSelected: "No post selected",
                 noMorePosts: "No more posts found",
                 pullToRefresh: "Pull to refresh",
-                releaseToRefresh: "Release to refresh"
+                releaseToRefresh: "Release to refresh",
+                orderBy: "Order by"
+            },
+            orderByOptions: {
+                priceAsc: "Price (ascending)",
+                priceDesc: "Price (descending)",
+                dateAsc: "Date (ascending)",
+                dateDesc: "Date (descending)"
             },
             rentViewer: {
                 perMonth: "/month",
@@ -61,6 +68,50 @@ const resources: Resource = {
             },
             footer: {
                 madeWithLove: "Made with ♥ by"
+            },
+            rentalPost: {
+                rentalType: "Rental type 🏠",
+                monthlyPrice: "Monthly price 💰",
+                securityDepositMonths: "Security deposit (months) 💰",
+                zone: "Zone 🌍",
+                sexRestrictions: "Sex restrictions ♂️♀️",
+                occupationalRestrictions: "Occupational restrictions 👩‍⚕️",
+                lgbtFriendly: "LGBT friendly 🏳️‍🌈",
+                furnished: "Furnished 🛋️",
+                availabilityStartDate: "Availability start date 🗓️",
+                availabilityEndDate: "Availability end date 🗓️",
+                contractDurationMonths: "Contract duration (months) ⏳",
+                hasBalcony: "Balcony 🌇",
+                hasParking: "Parking 🚗",
+                address: "Address 🏠",
+                floorNumber: "Floor number 🔼",
+                rooms: "Rooms 🛏️",
+                bathrooms: "Bathrooms 🚿",
+                areaSqMeters: "Area (sq meters) 📏",
+                priceIncludesTaxes: "Price includes taxes 💰",
+                smokingAllowed: "Smoking allowed 🚬",
+                hasAirConditioning: "Air conditioning ❄️",
+                hasHeating: "Heating 🔥",
+                hasElevator: "Elevator 🛗: "
+            },
+            sexRestrictions: {
+                everyone: "Everyone",
+                males: "Males",
+                females: "Females",
+                other: "Other"
+            },
+            occupationalRestrictions: {
+                everyone: "Everyone",
+                students: "Students",
+                workers: "Workers",
+                other: "Other"
+            },
+            map: {
+                findOnMap: "Find on map",
+                approxPosition: "Approximate position"
+            },
+            dropdown: {
+                noOptions: "No options"
             }
         }
     },
@@ -98,7 +149,14 @@ const resources: Resource = {
                 noPostSelected: "Nessun post selezionato",
                 noMorePosts: "Nessun altro post trovato",
                 pullToRefresh: "Tira per aggiornare",
-                releaseToRefresh: "Rilascia per aggiornare"
+                releaseToRefresh: "Rilascia per aggiornare",
+                orderBy: "Ordina per"
+            },
+            orderByOptions: {
+                priceAsc: "Prezzo (crescente)",
+                priceDesc: "Prezzo (decrescente)",
+                dateAsc: "Data (crescente)",
+                dateDesc: "Data (decrescente)"
             },
             rentViewer: {
                 perMonth: "/mese",
@@ -121,6 +179,50 @@ const resources: Resource = {
             },
             footer: {
                 madeWithLove: "Creato con ♥ da"
+            },
+            rentalPost: {
+                rentalType: "Tipo di affitto 🏠",
+                monthlyPrice: "Prezzo mensile 💰",
+                securityDepositMonths: "Cauzione (mesi) 💰",
+                zone: "Zona 🌍",
+                sexRestrictions: "Restrizioni di sesso ♂️♀️",
+                occupationalRestrictions: "Restrizioni di occupazione 👩‍⚕️",
+                lgbtFriendly: "LGBT friendly 🏳️‍🌈",
+                furnished: "Arredato 🛋️",
+                availabilityStartDate: "Disponibile dal 🗓️",
+                availabilityEndDate: "Disponibile fino al 🗓️",
+                contractDurationMonths: "Durata del contratto (mesi) ⏳",
+                hasBalcony: "Balcone 🌇",
+                hasParking: "Parcheggio 🚗",
+                address: "Indirizzo 🏠",
+                floorNumber: "Numero piano 🔼",
+                rooms: "Stanze 🛏️",
+                bathrooms: "Bagni 🚿",
+                areaSqMeters: "Area (mq) 📏",
+                priceIncludesTaxes: "Prezzo include tasse 💰",
+                smokingAllowed: "Permesso fumare 🚬",
+                hasAirConditioning: "Aria condizionata ❄️",
+                hasHeating: "Riscaldamento 🔥",
+                hasElevator: "Ascensore 🛗: "
+            },
+            sexRestrictions: {
+                everyone: "Chiunque",
+                males: "Maschi",
+                females: "Femmine",
+                other: "Altro"
+            },
+            occupationalRestrictions: {
+                everyone: "Chiunque",
+                students: "Studenti",
+                workers: "Lavoratori",
+                other: "Altro"
+            },
+            map: {
+                findOnMap: "Trova sulla mappa",
+                approxPosition: "Posizione approssimativa"
+            },
+            dropdown: {
+                noOptions: "Nessuna opzione"
             }
         }
     }

@@ -5,7 +5,9 @@ import { validate } from "../../middlewares/expressValidator";
 import { logger } from "../../shared/logger";
 import { RentalTypes } from "../../interfaces/shared";
 import { db } from "../../config/db";
-import { Document, Filter, ObjectId } from "mongodb";
+import { Document, Filter, ObjectId, Sort } from "mongodb";
+import moment from "moment";
+import { config } from "../../config";
 
 const router = Router();
 
@@ -19,6 +21,7 @@ router.get(
     // isIn(Object.values(RentalTypes))
     query("rentalTypes").isArray().optional(),
     query("q").isString().optional(),
+    query("orderBy").isIn(config.orderByOptions).optional(),
     validate,
     async (req: Request, res: Response) => {
         logger.debug(
@@ -29,7 +32,8 @@ router.get(
 
         const query: Filter<Document> = {
             isRental: true,
-            isForRent: true
+            isForRent: true,
+            date: { $gte: moment().subtract(3, "months").toDate() }
         };
 
         const rentalTypes = req.query.rentalTypes as RentalTypes[] | null;
@@ -58,6 +62,33 @@ router.get(
             };
         }
 
+        let sort: Sort;
+        // orderByOptions: ["priceAsc", "priceDesc", "dateAsc", "dateDesc"] as const
+        if (req.query.orderBy) {
+            switch (req.query.orderBy) {
+                case "priceAsc":
+                    sort = { monthlyPrice: 1 };
+                    break;
+                case "priceDesc":
+                    sort = { monthlyPrice: -1 };
+                    break;
+                case "dateAsc":
+                    sort = { date: 1 };
+                    break;
+                case "dateDesc":
+                    sort = { date: -1 };
+                    break;
+                default:
+                    // default is date descending
+                    sort = { date: -1 };
+                    break;
+            }
+        } else {
+            sort = { date: -1 };
+        }
+
+        logger.debug("Sorting by " + JSON.stringify(sort));
+
         const collection = (await db).collection("rentalposts");
         const data = collection
             .find(query)
@@ -71,7 +102,7 @@ router.get(
                 isRental: false,
                 isForRent: false
             })
-            .sort({ date: -1 });
+            .sort(sort);
 
         if (req.query.limit) {
             data.limit(parseInt(req.query.limit as string));
@@ -105,7 +136,8 @@ router.get(
             {
                 _id: new ObjectId(req.params.id),
                 isRental: true,
-                isForRent: true
+                isForRent: true,
+                date: { $gte: moment().subtract(3, "months").toDate() }
             },
             {
                 projection: {

@@ -27,7 +27,10 @@ router.get(
             } limiting to ${req.query.limit || Infinity}`
         );
 
-        const query: Filter<Document> = {};
+        const query: Filter<Document> = {
+            isRental: true,
+            isForRent: true
+        };
 
         const rentalTypes = req.query.rentalTypes as RentalTypes[] | null;
         // aggiungo 'other' a rentalTypes
@@ -100,7 +103,9 @@ router.get(
         const collection = (await db).collection("rentalposts");
         const data = await collection.findOne(
             {
-                _id: new ObjectId(req.params.id)
+                _id: new ObjectId(req.params.id),
+                isRental: true,
+                isForRent: true
             },
             {
                 projection: {

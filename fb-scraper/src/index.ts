@@ -20,6 +20,7 @@ import { Cookie } from "./interfaces/Cookie";
 import { mapCookiesToPuppeteer } from "./shared/mapCookiesToPuppeteer";
 import { existsSync, writeFileSync } from "fs";
 import path from "path";
+import { GeolocationRoot } from "./interfaces/geolocation";
 
 puppeteer.use(pluginStealth());
 
@@ -86,6 +87,7 @@ scrapedDataEvent.on("scrapedData", async fbData => {
         try {
             const coords = await Scraper.geolocate(post.address);
             if (coords) {
+                post.address = coords.formattedAddress;
                 post.latitude = coords.latitude;
                 post.longitude = coords.longitude;
             }
@@ -163,7 +165,48 @@ export class Scraper {
         this.endDate = moment(this.startDate).add(durationMs, "milliseconds");
     }
 
-    public static async geolocate(
+    public static async geolocate(address: string): Promise<{
+        formattedAddress: string;
+        latitude: number;
+        longitude: number;
+    } | null> {
+        const params = {
+            key: envs.GEOLOCATION_API_KEY.replace(/\r?\n|\r/g, ""),
+            address
+        };
+
+        try {
+            const res = await axios.get(
+                "https://maps.googleapis.com/maps/api/geocode/json",
+                { params }
+            );
+            const data: GeolocationRoot = res.data;
+
+            if (data.results.length === 0) {
+                logger.debug(
+                    `Geolocation no results found for query ${address}`
+                );
+                return null;
+            }
+
+            const { lat, lng } = data.results[0].geometry.location;
+            logger.debug(
+                `Geolocated query ${address} to lat ${lat} lng ${lng}`
+            );
+
+            return {
+                formattedAddress: data.results[0].formatted_address,
+                latitude: lat,
+                longitude: lng
+            };
+        } catch (err) {
+            logger.error("Error while geolocating query");
+            logger.error((err as AxiosError).response?.data || err);
+            throw new Error("GEOLOCATION_API_FAILED"); // TODO change with custom error
+        }
+    }
+
+    public static async geolocate_old(
         address: string,
         country = "IT",
         region = "Bologna"

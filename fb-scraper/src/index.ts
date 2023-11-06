@@ -447,6 +447,9 @@ export class Scraper {
                     path.join(config.SCREENSHOTS_PATH, "login_required.html"),
                     html
                 );
+                await this.page.screenshot({
+                    path: "screenshots" + "/login_required.png"
+                });
 
                 // try to login: write email on input .inputtext with id email
                 await this.page.type("#email", envs.FB_ACCOUNT_EMAIL, {
@@ -494,6 +497,14 @@ export class Scraper {
                 path: "screenshots" + "/login_failed.png"
             });
 
+            logger.error(
+                "Login required for groupUrl " +
+                    groupUrl +
+                    " - login with email " +
+                    envs.FB_ACCOUNT_EMAIL +
+                    " failed" +
+                    this.getElapsedStr()
+            );
             await axios.post(config.DB_API_BASE_URL + "/panic", {
                 service: "fb-scraper",
                 message: `Login required for groupUrl ${groupUrl} - login with email ${envs.FB_ACCOUNT_EMAIL} failed`

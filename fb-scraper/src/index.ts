@@ -514,7 +514,7 @@ export class Scraper {
                 // just to be sure
                 await this.page.waitForNavigation({
                     waitUntil: "networkidle2",
-                    timeout: 3_000
+                    timeout: 1_000
                 });
             } catch (err) {}
 
@@ -525,7 +525,7 @@ export class Scraper {
                 // exit if still requires login
                 await this.page.waitForXPath(
                     '//*[contains(text(), "' + loginText + '")]',
-                    { timeout: 3_000 }
+                    { timeout: 2_000 }
                 );
                 loginRequiredAgain = true;
             } catch (err) {

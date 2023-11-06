@@ -471,12 +471,51 @@ export class Scraper {
                 });
                 await this.page.click("#loginbutton");
                 await wait(Math.random() * 1000 + 500);
+                await this.page.screenshot({
+                    path: "screenshots" + "/before_login_try_clicked.png"
+                });
+            } catch (err) {}
 
-                await this.page.waitForNavigation({
-                    waitUntil: "networkidle2",
+            let passFieldPresent = false;
+            try {
+                // check if pass field is still present
+                await this.page.waitForSelector("#pass", {
                     timeout: 5_000
                 });
+                passFieldPresent = true;
+            } catch (err) {}
+
+            if (passFieldPresent) {
+                await this.page.screenshot({
+                    path: "screenshots" + "/passfield_present.png"
+                });
+                await this.page.type("#pass", envs.FB_ACCOUNT_PASSWORD, {
+                    delay: Math.random() * 100 + 50
+                });
                 await wait(Math.random() * 1000 + 500);
+                await this.page.screenshot({
+                    path: "screenshots" + "/passfield_present_typed.png"
+                });
+                await this.page.click("#loginbutton");
+                await wait(Math.random() * 1000 + 500);
+                await this.page.screenshot({
+                    path: "screenshots" + "/passfield_present_clicked.png"
+                });
+            } else {
+                await this.page.screenshot({
+                    path: "screenshots" + "/passfield_not_present.png"
+                });
+            }
+
+            try {
+                // just to be sure
+                await this.page.waitForNavigation({
+                    waitUntil: "networkidle2",
+                    timeout: 3_000
+                });
+            } catch (err) {}
+
+            try {
                 await this.page.screenshot({
                     path: "screenshots" + "/after_login_try.png"
                 });

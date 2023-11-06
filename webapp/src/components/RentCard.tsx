@@ -33,49 +33,49 @@ const RentCard: FunctionComponent<RentCardProps> = ({ post, ...rest }) => {
           }}
         />
       )}
-      <div className="flex flex-col">
-        {/* <ReactPlaceholder showLoadingAnimation type="text" ready={!!post}> */}
-        {post?.rentalType && (
-          <p className="font-semibold tracking-tighter">
-            {t(`rentalType.${post.rentalType}`)}
+      {/* <ReactPlaceholder showLoadingAnimation type="text" ready={!!post}> */}
+      {post?.rentalType && (
+        <p className="font-semibold tracking-tighter">
+          {t(`rentalType.${post.rentalType}`)}
+        </p>
+      )}
+
+      {typeof post?.monthlyPrice === "number" && (
+        <p className="mb-2 text-lg font-light">€{post?.monthlyPrice}</p>
+      )}
+
+      <p className="line-clamp-3">{post?.description || post?.address}</p>
+
+      <div className="flex flex-col md:flex-row">
+        <div className="flex items-center gap-2">
+          <p className="mt-2 text-gray-500 dark:text-gray-400">
+            {post?.date &&
+              formatDistance(post.date, new Date(), {
+                addSuffix: true,
+                locale: getLanguage(i18n.language) === "it" ? it : enUS
+              })}
           </p>
-        )}
-
-        {typeof post?.monthlyPrice === "number" && (
-          <p className="mb-2 text-lg font-light">€{post?.monthlyPrice}</p>
-        )}
-
-        <p className="line-clamp-3">{post?.description || post?.address}</p>
-
-        <div className="flex flex-col md:flex-row">
-          <div className="flex items-center gap-2">
-            <p className="mt-2 text-gray-500 dark:text-gray-400">
-              {post?.date &&
-                formatDistance(post.date, new Date(), {
-                  addSuffix: true,
-                  locale: getLanguage(i18n.language) === "it" ? it : enUS
-                })}
-            </p>
-            <p className="hidden md:block">.</p>
-            <p className="hidden md:block mt-2 text-gray-500 capitalize">
-              {post?.source === "facebook" ? (
-                <Fb className="fill-gray-500" />
-              ) : post?.source ? (
-                post?.source
-              ) : null}
-            </p>
-          </div>
-          {post?.address && (
-            <>
-              <p className="hidden md:block">.</p>
-              <p className="mt-2 text-gray-500 text-center hidden md:block">
-                {post?.address}
-              </p>
-            </>
-          )}
+          <p className="hidden md:block">.</p>
+          <p className="hidden md:block mt-2 text-gray-500 capitalize">
+            {post?.source === "facebook" ? (
+              <Fb className="fill-gray-500" />
+            ) : post?.source ? (
+              post?.source
+            ) : null}
+          </p>
         </div>
-        {/* </ReactPlaceholder> */}
+        {post?.address && (
+          <>
+            <p className="hidden md:block">.</p>
+            <p className="mt-2 text-gray-500 hidden md:block">
+              {post?.address.length > 15
+                ? post?.address.slice(0, 15) + "..."
+                : post?.address}
+            </p>
+          </>
+        )}
       </div>
+      {/* </ReactPlaceholder> */}
     </div>
   );
 };

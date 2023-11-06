@@ -424,12 +424,15 @@ export class Scraper {
 
         let loginRequired = false;
         let loginRequiredAgain = false;
+        let cantUseFeature = false;
+        let passFieldAgain = false;
         const loginText = "You must log in to continue.";
+        const cantUseText = "You can't use this feature at the moment";
 
         try {
             await this.page.waitForXPath(
                 '//*[contains(text(), "' + loginText + '")]',
-                { timeout: 5_000 }
+                { timeout: 3_000 }
             );
             loginRequired = true;
         } catch (err) {
@@ -480,7 +483,7 @@ export class Scraper {
             try {
                 // check if pass field is still present
                 await this.page.waitForSelector("#pass", {
-                    timeout: 5_000
+                    timeout: 3_000
                 });
                 passFieldPresent = true;
             } catch (err) {}
@@ -515,23 +518,39 @@ export class Scraper {
                 });
             } catch (err) {}
 
+            await this.page.screenshot({
+                path: "screenshots" + "/after_login_try.png"
+            });
             try {
-                await this.page.screenshot({
-                    path: "screenshots" + "/after_login_try.png"
-                });
-
                 // exit if still requires login
                 await this.page.waitForXPath(
                     '//*[contains(text(), "' + loginText + '")]',
-                    { timeout: 5_000 }
+                    { timeout: 3_000 }
                 );
                 loginRequiredAgain = true;
             } catch (err) {
                 // login not required
             }
+
+            try {
+                // check if can't use feature
+                await this.page.waitForXPath(
+                    '//*[contains(text(), "' + cantUseText + '")]',
+                    { timeout: 1_000 }
+                );
+                cantUseFeature = true;
+            } catch (err) {}
+
+            try {
+                // check if pass field is still present
+                await this.page.waitForSelector("#pass", {
+                    timeout: 1_000
+                });
+                passFieldAgain = true;
+            } catch (err) {}
         }
 
-        if (loginRequiredAgain) {
+        if (loginRequiredAgain || cantUseFeature || passFieldAgain) {
             await this.page.screenshot({
                 path: "screenshots" + "/login_failed.png"
             });
@@ -541,12 +560,17 @@ export class Scraper {
                     groupUrl +
                     " - login with email " +
                     envs.FB_ACCOUNT_EMAIL +
-                    " failed" +
+                    " failed: " +
+                    loginRequiredAgain +
+                    " - cantUseFeature: " +
+                    cantUseFeature +
+                    " - passFieldAgain: " +
+                    passFieldAgain +
                     this.getElapsedStr()
             );
             await axios.post(config.DB_API_BASE_URL + "/panic", {
                 service: "fb-scraper",
-                message: `Login required for groupUrl ${groupUrl} - login with email ${envs.FB_ACCOUNT_EMAIL} failed`
+                message: `Login required for groupUrl ${groupUrl} - login with email ${envs.FB_ACCOUNT_EMAIL} failed: ${loginRequiredAgain} - cantUseFeature: ${cantUseFeature} - passFieldAgain: ${passFieldAgain} - exiting`
                 // message: "Login required for groupUrl " + groupUrl
             });
             process.exit(1);

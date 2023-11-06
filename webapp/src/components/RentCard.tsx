@@ -17,7 +17,7 @@ const RentCard: FunctionComponent<RentCardProps> = ({ post, ...rest }) => {
 
   return (
     <div
-      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-300 flex p-4 min-w-[12rem] min-h-[12rem]"
+      className="max-w-full overflow-hidden text-ellipsis cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-300 flex p-4 min-w-[12rem] min-h-[12rem]"
       {...rest}
     >
       {post?.images && post.images.length > 0 && (
@@ -47,22 +47,32 @@ const RentCard: FunctionComponent<RentCardProps> = ({ post, ...rest }) => {
 
         <p className="line-clamp-3">{post?.description || post?.address}</p>
 
-        <div className="flex items-center gap-2">
-          <p className="mt-2 text-gray-500 dark:text-gray-400">
-            {post?.date &&
-              formatDistance(post.date, new Date(), {
-                addSuffix: true,
-                locale: getLanguage(i18n.language) === "it" ? it : enUS
-              })}
-          </p>
-          <p>.</p>
-          <p className="mt-2 text-gray-500 capitalize">
-            {post?.source === "facebook" ? (
-              <Fb className="fill-gray-500" />
-            ) : post?.source ? (
-              post?.source
-            ) : null}
-          </p>
+        <div className="flex flex-col md:flex-row">
+          <div className="flex items-center gap-2">
+            <p className="mt-2 text-gray-500 dark:text-gray-400">
+              {post?.date &&
+                formatDistance(post.date, new Date(), {
+                  addSuffix: true,
+                  locale: getLanguage(i18n.language) === "it" ? it : enUS
+                })}
+            </p>
+            <p className="hidden md:block">.</p>
+            <p className="hidden md:block mt-2 text-gray-500 capitalize">
+              {post?.source === "facebook" ? (
+                <Fb className="fill-gray-500" />
+              ) : post?.source ? (
+                post?.source
+              ) : null}
+            </p>
+          </div>
+          {post?.address && (
+            <>
+              <p className="hidden md:block">.</p>
+              <p className="mt-2 text-gray-500 text-center hidden md:block">
+                {post?.address}
+              </p>
+            </>
+          )}
         </div>
         {/* </ReactPlaceholder> */}
       </div>

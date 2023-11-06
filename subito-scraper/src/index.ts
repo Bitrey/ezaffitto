@@ -1,4 +1,4 @@
-import axios, { isAxiosError } from "axios";
+import axios, { AxiosError, isAxiosError } from "axios";
 import { CronJob } from "cron";
 import {
     Feature,
@@ -112,6 +112,7 @@ export class Scraper {
                     !e.advertiser.company &&
                     !Scraper.bannedAgencyIds.includes(e.advertiser.user_id)
             );
+            logger.debug(`Fetched ${filtered.length} posts`);
             return filtered.map(e => {
                 const features = e.features.map(e =>
                     this.mapFeatureToKey(e, type)
@@ -154,6 +155,28 @@ export class Scraper {
             throw err;
         }
     }
+
+    public static async reverseGeolocate(
+        lat: number,
+        lng: number
+    ): Promise<{
+        formattedAddress: string;
+        latitude: number;
+        longitude: number;
+    } | null> {
+        try {
+            const { data } = await axios.get(
+                config.DB_API_BASE_URL + "/geolocate/reverse",
+                { params: { lat, lng } }
+            );
+
+            return data;
+        } catch (err) {
+            logger.error("Error while reverse geolocating query");
+            logger.error((err as AxiosError).response?.data || err);
+            throw new Error("GEOLOCATION_API_FAILED"); // TODO change with custom error
+        }
+    }
 }
 
 let lastScrapeType = ScrapeType.APARTMENTS;
@@ -191,6 +214,92 @@ const job = new CronJob(
         }
 
         logger.info(`Scraped ${scraped.length} posts`);
+
+        for (let i = 0; i < scraped.length; i++) {
+            const post = scraped[i];
+
+            // check if already exists in order to not
+            // run geolocation on already existing posts
+            try {
+                const res1 = await axios.post(
+                    config.DB_API_BASE_URL + "/rentalpost/text",
+                    { text: post.description, source: "subito" }
+                );
+                const res2 = await axios.get(
+                    config.DB_API_BASE_URL + "/rentalpost/postid/" + post.postId
+                );
+                const p =
+                    res1.data &&
+                    typeof res1.data === "object" &&
+                    Object.keys(res1.data).length > 0
+                        ? res1.data
+                        : res2.data;
+                if (p) {
+                    logger.debug(
+                        `Post ${post.postId} (${
+                            post.description?.slice(0, 30) || "(no description)"
+                        }...) already exists with _id ${p._id} - postId ${
+                            p.postId
+                        }, skipping...`
+                    );
+                    scraped.splice(i, 1);
+                    i--;
+                } else {
+                    logger.debug(
+                        `Post ${post.postId} (${
+                            post.description?.slice(0, 30) || "(no description)"
+                        }...) does not exist, continuing...`
+                    );
+                }
+            } catch (err) {
+                logger.error(
+                    `Error while checking if post ${post.postId} already exists:`
+                );
+                logger.error((err as AxiosError)?.response?.data || err);
+                return;
+            }
+        }
+
+        // geolocate
+        for (const post of scraped) {
+            if (
+                typeof post.latitude !== "number" ||
+                typeof post.longitude !== "number" ||
+                typeof post.address === "string"
+            ) {
+                logger.debug(
+                    `Skipping post ${post.postId} (${post.description?.slice(
+                        0,
+                        30
+                    )}...) because already has address or no coordinates`
+                );
+                continue;
+            }
+            try {
+                logger.debug(
+                    `Geolocating post ${post.postId} (${post.description?.slice(
+                        0,
+                        30
+                    )}...)`
+                );
+                const geolocated = await Scraper.reverseGeolocate(
+                    post.latitude,
+                    post.longitude
+                );
+                if (geolocated) {
+                    post.address = geolocated.formattedAddress;
+                }
+                logger.debug(
+                    `Geolocated post ${post.postId} (${post.description?.slice(
+                        0,
+                        30
+                    )}...) to ${post.address}`
+                );
+            } catch (err) {
+                logger.error("Error in reverse geolocation");
+                logger.error(err);
+            }
+        }
 
         logger.warn("Sending data to db-api");
         for (const post of scraped) {

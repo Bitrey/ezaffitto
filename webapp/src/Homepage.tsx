@@ -25,7 +25,7 @@ const Homepage: FunctionComponent<any> = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const [cookies, setCookie, removeCookie] = useCookies();
+  const [cookies, setCookie] = useCookies();
   const [tosCookiesAccepted, setTosCookiesAccepted] = useState<boolean>(false);
 
   function acceptTosCookies() {

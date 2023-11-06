@@ -13,5 +13,9 @@ export const envs = {
     }),
     MONGODB_URI: readFileSync("/run/secrets/mongodb_uri", "utf8").trim(),
     MAIL_USERNAME: readFileSync("/run/secrets/mail_username", "utf8").trim(),
-    MAIL_PASSWORD: readFileSync("/run/secrets/mail_password", "utf8").trim()
+    MAIL_PASSWORD: readFileSync("/run/secrets/mail_password", "utf8").trim(),
+    GEOLOCATION_API_KEY: readFileSync(
+        "/run/secrets/geolocation_api_key",
+        "utf8"
+    ).trim()
 };

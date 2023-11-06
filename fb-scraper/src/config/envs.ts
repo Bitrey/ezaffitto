@@ -12,9 +12,5 @@ export const envs = {
     FB_ACCOUNT_PASSWORD: readFileSync(
         "/run/secrets/fb_account_password",
         "utf8"
-    ),
-    GEOLOCATION_API_KEY: readFileSync(
-        "/run/secrets/geolocation_api_key",
-        "utf8"
     )
 };

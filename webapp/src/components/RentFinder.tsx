@@ -23,6 +23,9 @@ import { MarkerIcon } from "../misc/MarkerIcon";
 import Accordion from "./Accordion";
 import Dropdown, { DropdownOption } from "./Dropdown";
 import { OrderBy } from "../interfaces/orderBy";
+import { format } from "date-fns";
+import { getLanguage } from "../misc/getLanguage";
+import { enUS, it } from "date-fns/locale";
 
 const RentFinder = () => {
   const [maxPrice, setMaxPrice] = useState<number>(10_000);
@@ -270,7 +273,7 @@ const RentFinder = () => {
               <MapContainer
                 style={{
                   zIndex: 10,
-                  height: "80vh",
+                  height: "70vh",
                   width: "100%"
                   // maxHeight: "90vh",
                   // maxWidth: "90%"
@@ -288,7 +291,14 @@ const RentFinder = () => {
                   .map(e => (
                     <Marker
                       key={e._id}
-                      icon={MarkerIcon}
+                      icon={MarkerIcon(
+                        e.monthlyPrice
+                          ? {
+                              cost: e.monthlyPrice
+                              // title: t("rentalType." + e.rentalType)
+                            }
+                          : {}
+                      )}
                       position={[e.latitude as number, e.longitude as number]}
                     >
                       <Popup>
@@ -300,11 +310,39 @@ const RentFinder = () => {
                         >
                           {e.monthlyPrice && (
                             <p className="mb-0 pb-0 m-0">
-                              <strong>{e.monthlyPrice}</strong>
-                              <span>{t("rentViewer.perMonth")}</span>
+                              <strong className="text-black">
+                                €{e.monthlyPrice}
+                              </strong>
+                              <span className="text-black">
+                                {t("rentViewer.perMonth")}
+                              </span>
+                              <span className="mx-1 text-gray-600">·</span>
+                              <span className="text-gray-600">
+                                {e?.date &&
+                                  format(new Date(e.date), "d MMM yyyy", {
+                                    locale:
+                                      getLanguage(i18n.language) === "it"
+                                        ? it
+                                        : enUS
+                                  })}
+                              </span>
+                              <span className="mx-1 text-gray-600">·</span>
+                              <span className="text-gray-600">
+                                {t("rentalType." + e.rentalType)}
+                              </span>
                             </p>
                           )}
                           {e.address || `${e.latitude},${e.longitude}`}
+                          <span className="mx-1 text-gray-600">·</span>
+                          {e.url ? (
+                            <span className="text-gray-600">
+                              {new URL(e.url).hostname.replace("www.", "")}
+                            </span>
+                          ) : (
+                            <span className="text-gray-600 capitalize">
+                              {e.source}
+                            </span>
+                          )}
                         </Link>
                       </Popup>
                     </Marker>

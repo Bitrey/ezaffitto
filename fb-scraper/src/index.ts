@@ -20,7 +20,6 @@ import { Cookie } from "./interfaces/Cookie";
 import { mapCookiesToPuppeteer } from "./shared/mapCookiesToPuppeteer";
 import { existsSync } from "fs";
 import path from "path";
-import { GeolocationRoot } from "./interfaces/geolocation";
 
 puppeteer.use(pluginStealth());
 
@@ -40,10 +39,15 @@ scrapedDataEvent.on("scrapedData", async fbData => {
             config.DB_API_BASE_URL + "/rentalpost/text",
             { text: fbData.text, source: "facebook" }
         );
-        // const res2 = await axios.get(
-        //     config.DB_API_BASE_URL + "/rentalpost/postid/" + fbData.id
-        // );
-        const p = res1.data; /* || res2.data */
+        const res2 = await axios.get(
+            config.DB_API_BASE_URL + "/rentalpost/postid/" + fbData.id
+        );
+        const p =
+            res1.data &&
+            typeof res1.data === "object" &&
+            Object.keys(res1.data).length > 0
+                ? res1.data
+                : res2.data;
         if (p) {
             logger.debug(
                 `Post ${fbData.id} (${fbData.text.slice(
@@ -113,6 +117,10 @@ scrapedDataEvent.on("scrapedData", async fbData => {
             config.DB_API_BASE_URL + "/rentalpost",
             {
                 ...post,
+                isForRent:
+                    typeof post.isForRent === "boolean" ? post.isForRent : true,
+                isRental:
+                    typeof post.isRental === "boolean" ? post.isRental : true,
                 postId: fbData.id,
                 source: "facebook",
                 date: fbData.date,
@@ -170,77 +178,15 @@ export class Scraper {
         latitude: number;
         longitude: number;
     } | null> {
-        const params = {
-            key: envs.GEOLOCATION_API_KEY.replace(/\r?\n|\r/g, ""),
-            address
-        };
-
-        try {
-            const res = await axios.get(
-                "https://maps.googleapis.com/maps/api/geocode/json",
-                { params }
-            );
-            const data: GeolocationRoot = res.data;
-
-            if (data.results.length === 0) {
-                logger.debug(
-                    `Geolocation no results found for query ${address}`
-                );
-                return null;
-            }
-
-            const { lat, lng } = data.results[0].geometry.location;
-            logger.debug(
-                `Geolocated query ${address} to lat ${lat} lng ${lng}`
-            );
-
-            return {
-                formattedAddress: data.results[0].formatted_address,
-                latitude: lat,
-                longitude: lng
-            };
-        } catch (err) {
-            logger.error("Error while geolocating query");
-            logger.error((err as AxiosError).response?.data || err);
-            throw new Error("GEOLOCATION_API_FAILED"); // TODO change with custom error
-        }
-    }
-
-    public static async geolocate_old(
-        address: string,
-        country = "IT",
-        region = "Bologna"
-    ): Promise<{ latitude: number; longitude: number } | null> {
-        const params = {
-            access_key: envs.GEOLOCATION_API_KEY.replace(/\r?\n|\r/g, ""),
-            query: address,
-            country: country,
-            region,
-            limit: 1,
-            output: "json"
-        };
-
         try {
             const { data } = await axios.get(
-                "http://api.positionstack.com/v1/forward",
-                { params }
+                config.DB_API_BASE_URL + "/geolocate/forward",
+                { params: { address } }
             );
 
-            if (data.data.length === 0) {
-                logger.debug(
-                    `Geolocation no results found for address ${address}`
-                );
-                return null;
-            }
-
-            const { latitude, longitude } = data.data[0];
-            logger.debug(
-                `Geolocated address ${address} to lat ${latitude} long ${longitude}`
-            );
-
-            return { latitude, longitude };
+            return data;
         } catch (err) {
-            logger.error("Error while geolocating address");
+            logger.error("Error while geolocating query");
             logger.error((err as AxiosError).response?.data || err);
             throw new Error("GEOLOCATION_API_FAILED"); // TODO change with custom error
         }
@@ -490,6 +436,30 @@ export class Scraper {
                 path.join(config.SCREENSHOTS_PATH, "login_required.html"),
                 html
             );
+
+            // try to login: write email on input .inputtext with id email
+            await this.page.type("#email", envs.FB_ACCOUNT_EMAIL, {
+                delay: Math.random() * 100 + 50
+            });
+            await wait(Math.random() * 1000 + 500);
+            await this.page.type("#pass", envs.FB_ACCOUNT_PASSWORD, {
+                delay: Math.random() * 100 + 50
+            });
+            await wait(Math.random() * 1000 + 500);
+            await this.page.click("#loginbutton");
+            await wait(Math.random() * 1000 + 500);
+            await this.page.waitForNavigation({ waitUntil: "networkidle2" });
+            await wait(Math.random() * 1000 + 500);
+            await this.page.screenshot({
+                path: "screenshots" + "/new_login.png"
+            });
+
+            // exit if still requires login
+            await this.page.waitForXPath(
+                '//*[contains(text(), "' + text + '")]',
+                { timeout: 5_000 }
+            );
+
             await axios.post(config.DB_API_BASE_URL + "/panic", {
                 service: "fb-scraper",
                 message: "Login required for groupUrl " + groupUrl

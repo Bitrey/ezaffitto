@@ -6,6 +6,11 @@ module.exports = {
     ],
     theme: {
         extend: {
+            colors: {
+                "red-500-transparent": "rgba(220, 38, 38, 0.69)",
+                "green-500-transparent": "rgba(34, 197, 94, 0.69)",
+                "blue-500-transparent": "rgba(59, 130, 246, 0.69)"
+            },
             keyframes: {
                 slideIn: {
                     "0%": {

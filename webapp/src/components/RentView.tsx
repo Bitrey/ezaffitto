@@ -253,7 +253,7 @@ const RentView: FunctionComponent<RentViewProps> = ({
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               <Marker
-                icon={MarkerIcon}
+                icon={MarkerIcon({ title: post.address })}
                 position={[post.latitude, post.longitude]}
               >
                 <Popup>

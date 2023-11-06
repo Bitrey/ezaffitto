@@ -8,6 +8,7 @@ import { db } from "../../config/db";
 import { Document, Filter, ObjectId, Sort } from "mongodb";
 import moment from "moment";
 import { config } from "../../config";
+import { NOT_FOUND } from "http-status";
 
 const router = Router();
 
@@ -155,7 +156,7 @@ router.get(
         logger.debug("Data retrieved successfully by _id " + req.params.id);
 
         if (!data) {
-            return res.status(404).json({ err: "Not found" });
+            return res.status(NOT_FOUND).json({ err: "Not found" });
         }
 
         return res.json(data);

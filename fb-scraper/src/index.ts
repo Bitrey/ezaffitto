@@ -18,7 +18,7 @@ import "./healthcheckPing";
 import { mkdir, unlink, writeFile } from "fs/promises";
 import { Cookie } from "./interfaces/Cookie";
 import { mapCookiesToPuppeteer } from "./shared/mapCookiesToPuppeteer";
-import { existsSync, writeFileSync } from "fs";
+import { existsSync } from "fs";
 import path from "path";
 import { GeolocationRoot } from "./interfaces/geolocation";
 
@@ -483,6 +483,12 @@ export class Scraper {
             );
             logger.error(
                 "Login required for groupUrl " + groupUrl + this.getElapsedStr()
+            );
+            // save html to screenshots
+            const html = await this.page.content();
+            await writeFile(
+                path.join(config.SCREENSHOTS_PATH, "login_required.html"),
+                html
             );
             await axios.post(config.DB_API_BASE_URL + "/panic", {
                 service: "fb-scraper",

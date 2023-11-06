@@ -421,56 +421,85 @@ export class Scraper {
         }
 
         // check if requires login
+
+        let loginRequired = false;
+        let loginRequiredAgain = false;
+        const loginText = "You must log in to continue.";
+
         try {
-            const text = "You must log in to continue.";
             await this.page.waitForXPath(
-                '//*[contains(text(), "' + text + '")]',
+                '//*[contains(text(), "' + loginText + '")]',
                 { timeout: 5_000 }
             );
+            loginRequired = true;
+        } catch (err) {
+            // login not required
+        }
+
+        if (loginRequired) {
             logger.error(
                 "Login required for groupUrl " + groupUrl + this.getElapsedStr()
             );
-            // save html to screenshots
-            const html = await this.page.content();
-            await writeFile(
-                path.join(config.SCREENSHOTS_PATH, "login_required.html"),
-                html
-            );
+            try {
+                // save html to screenshots
+                const html = await this.page.content();
+                await writeFile(
+                    path.join(config.SCREENSHOTS_PATH, "login_required.html"),
+                    html
+                );
 
-            // try to login: write email on input .inputtext with id email
-            await this.page.type("#email", envs.FB_ACCOUNT_EMAIL, {
-                delay: Math.random() * 100 + 50
-            });
-            await wait(Math.random() * 1000 + 500);
-            await this.page.type("#pass", envs.FB_ACCOUNT_PASSWORD, {
-                delay: Math.random() * 100 + 50
-            });
-            await wait(Math.random() * 1000 + 500);
-            await this.page.click("#loginbutton");
-            await wait(Math.random() * 1000 + 500);
-            await this.page.waitForNavigation({ waitUntil: "networkidle2" });
-            await wait(Math.random() * 1000 + 500);
+                // try to login: write email on input .inputtext with id email
+                await this.page.type("#email", envs.FB_ACCOUNT_EMAIL, {
+                    delay: Math.random() * 100 + 50
+                });
+                await wait(Math.random() * 1000 + 500);
+                await this.page.type("#pass", envs.FB_ACCOUNT_PASSWORD, {
+                    delay: Math.random() * 100 + 50
+                });
+                await wait(Math.random() * 1000 + 500);
+                logger.info(
+                    "Trying to login with email " +
+                        envs.FB_ACCOUNT_EMAIL +
+                        "..." +
+                        this.getElapsedStr()
+                );
+                await this.page.screenshot({
+                    path: "screenshots" + "/before_login_try.png"
+                });
+                await this.page.click("#loginbutton");
+                await wait(Math.random() * 1000 + 500);
+
+                await this.page.waitForNavigation({
+                    waitUntil: "networkidle2",
+                    timeout: 5_000
+                });
+                await wait(Math.random() * 1000 + 500);
+                await this.page.screenshot({
+                    path: "screenshots" + "/after_login_try.png"
+                });
+
+                // exit if still requires login
+                await this.page.waitForXPath(
+                    '//*[contains(text(), "' + loginText + '")]',
+                    { timeout: 5_000 }
+                );
+                loginRequiredAgain = true;
+            } catch (err) {
+                // login not required
+            }
+        }
+
+        if (loginRequiredAgain) {
             await this.page.screenshot({
-                path: "screenshots" + "/new_login.png"
+                path: "screenshots" + "/login_failed.png"
             });
-
-            // exit if still requires login
-            await this.page.waitForXPath(
-                '//*[contains(text(), "' + text + '")]',
-                { timeout: 5_000 }
-            );
 
             await axios.post(config.DB_API_BASE_URL + "/panic", {
                 service: "fb-scraper",
-                message: "Login required for groupUrl " + groupUrl
+                message: `Login required for groupUrl ${groupUrl} - login with email ${envs.FB_ACCOUNT_EMAIL} failed`
+                // message: "Login required for groupUrl " + groupUrl
             });
             process.exit(1);
-        } catch (err) {
-            // logger.debug(
-            //     "Login not required for groupUrl " +
-            //         groupUrl +
-            //         this.getElapsedStr()
-            // );
         }
 
         // click refuse cookie button by selecting aria-label

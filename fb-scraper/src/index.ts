@@ -349,6 +349,9 @@ export class Scraper {
                             this.getElapsedStr()
                     );
                     isError = true;
+                    await this.page?.screenshot({
+                        path: "screenshots/rate_limit_exceeded.png"
+                    });
                     await axios.post(config.DB_API_BASE_URL + "/panic", {
                         service: "fb-scraper",
                         message: "Rate limit exceeded for groupUrl " + groupUrl

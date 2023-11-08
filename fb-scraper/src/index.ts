@@ -423,6 +423,62 @@ export class Scraper {
             logger.error(err);
         }
 
+        // if div with aria-label="Get started" exists
+        // click on it
+        try {
+            await this.page.waitForSelector('[aria-label="Get started"]', {
+                timeout: 3_000
+            });
+            await this.page.click('[aria-label="Get started"]');
+            await wait(Math.random() * 1000 + 1000);
+
+            // get span with text "Use for free"
+            const [useForFreeSpan] = await this.page.$x(
+                "//span[contains(., 'Use for free')]"
+            );
+            if (!useForFreeSpan) {
+                logger.warn(
+                    "useForFreeSpan not found for groupUrl " +
+                        groupUrl +
+                        this.getElapsedStr()
+                );
+                throw new Error("useForFreeSpan not found");
+            }
+            await useForFreeSpan.click();
+            await wait(Math.random() * 1000 + 1000);
+
+            // get span with text "Agree"
+            const [agreeSpan] = await this.page.$x(
+                "//span[contains(., 'Agree')]"
+            );
+            if (!agreeSpan) {
+                logger.warn(
+                    "agreeSpan not found for groupUrl " +
+                        groupUrl +
+                        this.getElapsedStr()
+                );
+                throw new Error("agreeSpan not found");
+            }
+            await agreeSpan.click();
+
+            await this.page.waitForNavigation({
+                waitUntil: "networkidle2",
+                timeout: 5_000
+            });
+
+            // update cookies file
+            await writeFile(
+                config.COOKIES_JSON_PATH,
+                JSON.stringify(await this.page.cookies(), null, 4)
+            );
+        } catch (err) {
+            // logger.debug(
+            //     "Get started button not found for groupUrl " +
+            //         groupUrl +
+            //         this.getElapsedStr()
+            // );
+        }
+
         // check if requires login
 
         let loginRequired = false;

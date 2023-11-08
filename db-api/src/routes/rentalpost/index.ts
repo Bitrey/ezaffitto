@@ -75,6 +75,30 @@ router.post("/validate", validateModel(RentalPost), async (req, res) => {
 });
 
 router.get(
+    "/setnotrental/:id",
+    param("id").isMongoId(),
+    validate,
+    async (req, res) => {
+        logger.info("Setting not rental post " + req.params.id);
+
+        const data = await RentalPost.findOne({ _id: req.params.id });
+        if (!data) {
+            logger.warn("Data not found");
+
+            return res.status(BAD_REQUEST).json({ err: "Data not found" });
+        }
+
+        data.isRental = false;
+        data.isForRent = false;
+        await data.save();
+
+        logger.info("Data updated successfully");
+
+        return res.json(data);
+    }
+);
+
+router.get(
     "/:id",
     param("id").isMongoId(),
     validate,

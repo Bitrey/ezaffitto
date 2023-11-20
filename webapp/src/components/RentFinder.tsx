@@ -382,8 +382,7 @@ const RentFinder = () => {
             // height={600}
             dataLength={posts?.length}
             next={async () => {
-              if (isLoading) return;
-
+              if (isLoading || posts.length === 0) return;
               setCursor(cursor + limit);
 
               // try to reset recaptcha

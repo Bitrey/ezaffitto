@@ -11,5 +11,16 @@ export const config = Object.freeze({
         "bakeca",
         "zappyrent",
         "immobiliare"
-    ] as const
+    ] as const,
+
+    EZAFFITTO_CITIES: [
+        "bologna",
+        "milano",
+        "roma",
+        "torino",
+        "firenze",
+        "napoli",
+        "padova",
+        "genova"
+    ]
 });

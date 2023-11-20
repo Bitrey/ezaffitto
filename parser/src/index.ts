@@ -40,11 +40,16 @@ if (envs.DEBUG_START_EXPRESS_SERVER) {
         logger.debug("Received POST request to /parse");
 
         if (!req.body.text) {
+            logger.error("Missing text field for POST /parse");
             res.status(400).json({ error: "Missing text field" });
+            return;
+        } else if (!req.body.city) {
+            logger.error("Missing city field for POST /parse");
+            res.status(400).json({ error: "Missing city field" });
             return;
         }
         try {
-            const resp = await parser.parse(req.body.text);
+            const resp = await parser.parse(req.body.text, req.body.city);
             // console.log(resp);
             res.json(resp);
         } catch (err) {

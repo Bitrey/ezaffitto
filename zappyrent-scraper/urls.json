@@ -1,0 +1,10 @@
+[
+    {
+        "city": "bologna",
+        "urls": [
+            {
+                "url": "https://www.zappyrent.com/api/propertylisting/get/20/filter"
+            }
+        ]
+    }
+]

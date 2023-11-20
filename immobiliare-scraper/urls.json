@@ -1,0 +1,16 @@
+[
+    {
+        "city": "bologna",
+        "urls": [
+            {
+                "url": "https://www.immobiliare.it/api-next/search-list/real-estates/",
+                "fkRegione": "emi",
+                "idComune": "5890",
+                "idNazione": "IT",
+                "idProvincia": "BO",
+                "path": "%2Faffitto-stanze%2Fbologna%2F"
+            }
+        ],
+        "bannedAgencyIds": [374030, 368620]
+    }
+]

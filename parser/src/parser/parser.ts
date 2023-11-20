@@ -9,6 +9,7 @@ import { envs } from "../config/envs";
 import { logger } from "../shared/logger";
 import { config } from "../config/config";
 import {
+    EzaffittoCity,
     RentalPost,
     RentalPostWithoutDescription
 } from "../interfaces/RentalPost";
@@ -28,10 +29,12 @@ class Parser {
     constructor() {
         logger.info("Parser initialized");
         logger.info(`Using GPT model: ${config.GPT_MODEL}`);
-        this.getPrompt("{0}").then(prompt => {
-            logger.info("Prompt:");
-            logger.info(prompt);
-        });
+        this.getPrompt("{text}", EzaffittoCity.BOLOGNA /* esempio */).then(
+            prompt => {
+                logger.info("Prompt:");
+                logger.info(prompt);
+            }
+        );
         logger.debug(
             `Secret is ${envs.OPENAI_API_KEY.slice(
                 0,
@@ -57,21 +60,29 @@ class Parser {
         return JSON.parse(match[0]);
     };
 
-    private async getPrompt(humanText?: string): Promise<string> {
+    private async getPrompt(
+        humanText: string,
+        city: EzaffittoCity
+    ): Promise<string> {
         const basePrompt = await readFile(
             path.join(process.cwd(), envs.MAIN_PROMPT_PATH),
             "utf-8"
         );
-        const replaced = basePrompt.replace("{0}", new Date().toISOString());
-        return humanText ? replaced.replace("{1}", humanText) : replaced;
+        return basePrompt
+            .replace("{0}", city)
+            .replace("{1}", new Date().toISOString())
+            .replace("{2}", humanText);
     }
 
-    private async getDescriptionPrompt(humanText: string): Promise<string> {
+    private async getDescriptionPrompt(
+        humanText: string,
+        city: EzaffittoCity
+    ): Promise<string> {
         const basePrompt = await readFile(
             path.join(process.cwd(), envs.DESCRIPTION_PROMPT_PATH),
             "utf-8"
         );
-        return basePrompt.replace("{0}", humanText);
+        return basePrompt.replace("{0}", city).replace("{1}", humanText);
     }
 
     private findMostConsistent<T extends object>(
@@ -238,7 +249,10 @@ class Parser {
         }
     }
 
-    public async parse(humanText: string): Promise<RentalPost> {
+    public async parse(
+        humanText: string,
+        city: EzaffittoCity
+    ): Promise<RentalPost> {
         logger.info(`Pushed to queue: ${humanText.substring(0, 30)}...`);
 
         return this.queue.add(async () => {
@@ -246,7 +260,7 @@ class Parser {
 
             const startDate = moment();
 
-            const prompt = await this.getPrompt(humanText);
+            const prompt = await this.getPrompt(humanText, city);
 
             const reqTokens = this.getTokenNumber(prompt);
             if (reqTokens > config.MAX_GPT_TOKENS) {
@@ -295,7 +309,8 @@ class Parser {
                     `Fetching description for: ${humanText.substring(0, 30)}...`
                 );
                 const descriptionPrompt = await this.getDescriptionPrompt(
-                    humanText
+                    humanText,
+                    city
                 );
                 descriptionTokens = this.getTokenNumber(descriptionPrompt);
                 description = await this.fetchGpt(descriptionPrompt);

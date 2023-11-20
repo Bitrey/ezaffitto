@@ -1,8 +1,8 @@
 Prompt:
 Il testo successivo a "Testo da elaborare: " si tratta di un post scritto da un utente su internet.
-Il tuo compito è quello di capire se si tratta di un post riguardante un affitto a Bologna, restituendo SOLO ed ESCLUSIVAMENTE in formato JSON come da struttura richiesta, SENZA ALCUN testo aggiuntivo. Includi SOLO le proprietà che sono esplicitamente menzionate o che puoi dedurre con certezza dal testo. NON includere una proprietà se non è menzionata o deducibile. I campi "isRental" e "isForRent" devono essere sempre presenti. Il campo "isRental" deve essere true SOLAMENTE se il post riguarda un affitto e se il testo è da parte di un LOCATORE che OFFRE (e non CERCA) una struttura abitativa, altrimenti DEVE ESSERE false. Ad esempio, se il testo contiene "cerco una stanza" o "cerco appartamento" implica che isRental sarà false, mentre "offro una stanza" o simili implica isRental a true. Se l'annuncio contiene informazioni su più stanze, includi solo le informazioni sulla stanza più opportuna. Data attuale in formato ISO 8601: {0}.
+Il tuo compito è quello di capire se si tratta di un post riguardante un affitto a {0}, restituendo SOLO ed ESCLUSIVAMENTE in formato JSON come da struttura richiesta, SENZA ALCUN testo aggiuntivo. Includi SOLO le proprietà che sono esplicitamente menzionate o che puoi dedurre con certezza dal testo. NON includere una proprietà se non è menzionata o deducibile. I campi "isRental" e "isForRent" devono essere sempre presenti. Il campo "isRental" deve essere true SOLAMENTE se il post riguarda un affitto e se il testo è da parte di un LOCATORE che OFFRE (e non CERCA) una struttura abitativa, altrimenti DEVE ESSERE false. Ad esempio, se il testo contiene "cerco una stanza" o "cerco appartamento" implica che isRental sarà false, mentre "offro una stanza" o simili implica isRental a true. Se l'annuncio contiene informazioni su più stanze, includi solo le informazioni sulla stanza più opportuna. Data attuale in formato ISO 8601: {1}.
 
-Testo da elaborare: {1}
+Testo da elaborare: {2}
 
 Struttura JSON richiesta: {
     "isRental": <boolean: if the post is about a RENTAL of a property (and not SEARCHING one)>,

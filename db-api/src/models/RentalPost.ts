@@ -30,6 +30,17 @@ export enum OccupationalRestrictions {
     OTHER = "other"
 }
 
+export enum EzaffittoCity {
+    BOLOGNA = "bologna",
+    MILANO = "milano",
+    ROMA = "roma",
+    TORINO = "torino",
+    FIRENZE = "firenze",
+    NAPOLI = "napoli",
+    PADOVA = "padova",
+    GENOVA = "genova"
+}
+
 @modelOptions({
     schemaOptions: { timestamps: true, autoIndex: true },
     options: { customName: "rentalposts" }
@@ -45,6 +56,9 @@ export class RentalPostClass {
         type: () => mongoose.Schema.Types.Mixed
     })
     public rawData!: any;
+
+    @prop({ required: true, enum: config.EZAFFITTO_CITIES })
+    ezaffittoCity!: EzaffittoCity;
 
     // Metadata
     @prop({ required: true, enum: config.SCRAPER_TYPES })

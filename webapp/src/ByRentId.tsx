@@ -6,14 +6,15 @@ import { useTranslation } from "react-i18next";
 import RentView from "./components/RentView";
 import Button from "./components/Button";
 import { RentalPostJSONified } from "./interfaces/RentalPost";
-import { config, gaEvents } from "./config";
+import { gaEvents } from "./config";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 const ByRentId: FunctionComponent<any> = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const { i18n, t } = useTranslation();
+  const { t } = useTranslation();
 
   const { executeRecaptcha } = useGoogleReCaptcha();
 
@@ -73,6 +74,7 @@ const ByRentId: FunctionComponent<any> = () => {
         );
 
         console.log("Fetched post data", data);
+        setError(null);
         setPost(data || undefined);
       } catch (err) {
         // DEBUG
@@ -80,7 +82,8 @@ const ByRentId: FunctionComponent<any> = () => {
           | { err: string }
           | undefined;
         console.error(errorStr || err);
-        window.alert(errorStr?.err ? t(errorStr.err) : t("common.error"));
+        // window.alert(errorStr?.err ? t(errorStr.err) : t("common.error"));
+        setError(errorStr?.err || "common.error");
         setPost(undefined);
       } finally {
         setIsLoading(false);
@@ -105,7 +108,10 @@ const ByRentId: FunctionComponent<any> = () => {
           className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
           role="alert"
         >
-          <strong className="font-bold">{t("common.error")}</strong>
+          <p>
+            <span className="font-bold">{t("common.error")}</span>
+            {error && <span className="ml-2">({t(error)})</span>}
+          </p>
           <span className="block">{t("rentViewer.postNotFound")}</span>{" "}
           <Link to="/" className="absolute top-0 bottom-0 right-0 px-4 py-3">
             <svg

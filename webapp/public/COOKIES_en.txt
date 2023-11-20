@@ -40,7 +40,7 @@ A persistent cookie used to store the language chosen by the User for website di
 A persistent cookie used to keep track of which rental post the User has viewed on the website.
 The Owner also uses some third-party cookies, namely cookies sent by entities other than the Owner and which may serve different purposes. Specifically, the Owner uses:
 
-Cloudflare Turnstile: A service offered by Cloudflare, Inc. that protects the website from cyber attacks and unwanted traffic. This service may issue technical cookies to verify whether the User is a human or a bot. For more information about Cloudflare Turnstile and the cookies used, please refer to the documentation available at the following link.
+Google ReCAPTCHA: A service offered by Google LLC Inc. that protects the website from cyber attacks and unwanted traffic. This service may issue technical cookies to verify whether the User is a human or a bot. For more information about Cloudflare Turnstile and the cookies used, please refer to the documentation available at the following link.
 Google Analytics: A service offered by Google LLC that collects statistical information about Users' usage of the website. This service may issue analytical cookies to track and analyze Users' behavior on the website anonymously. For more information about Google Analytics and the cookies used, please refer to the documentation available at the following link.
 Managing Cookies
 

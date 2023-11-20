@@ -41,8 +41,8 @@ Il sito web ezaffitto.com non utilizza cookie propri di profilazione. Il Titolar
 
 Il Titolare utilizza inoltre alcuni cookie di terze parti, ovvero cookie inviati da soggetti diversi dal Titolare e che possono avere diverse finalità. In particolare, il Titolare utilizza:
 
-- Cloudflare Turnstile, un servizio offerto da Cloudflare, Inc. che serve a proteggere il sito web da attacchi informatici e da traffico indesiderato. Questo servizio può rilasciare dei cookie tecnici per verificare se l'Utente è un essere umano o un bot. Per maggiori informazioni su Cloudflare Turnstile e sui cookie utilizzati, si prega di consultare la documentazione disponibile al seguente link.
-- Google Analytics, un servizio offerto da Google LLC che serve a raccogliere informazioni statistiche sull'uso del sito web da parte degli Utenti. Questo servizio può rilasciare dei cookie analitici per tracciare e analizzare il comportamento degli Utenti sul sito web in forma anonima. Per maggiori informazioni su Google Analytics e sui cookie utilizzati, si prega di consultare la documentazione disponibile al seguente link.
+- Google ReCAPTCHA V3, un servizio offerto da Google LLC che serve a proteggere il sito web da attacchi informatici e da traffico indesiderato. Questo servizio può rilasciare dei cookie tecnici per verificare se l'Utente è un essere umano o un bot. Per maggiori informazioni su Google ReCAPTCHA e sui cookie utilizzati, si prega di consultare la documentazione disponibile online.
+- Google Analytics, un servizio offerto da Google LLC che serve a raccogliere informazioni statistiche sull'uso del sito web da parte degli Utenti. Questo servizio può rilasciare dei cookie analitici per tracciare e analizzare il comportamento degli Utenti sul sito web in forma anonima. Per maggiori informazioni su Google Analytics e sui cookie utilizzati, si prega di consultare la documentazione disponibile online.
 
 Come gestire i cookie
 

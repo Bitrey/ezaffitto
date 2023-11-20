@@ -110,7 +110,7 @@ const RentView: FunctionComponent<RentViewProps> = ({
                   onError={e => {
                     (e.target as HTMLImageElement).src =
                       "https://via.placeholder.com/500x500.png?text=" +
-                      encodeURIComponent(t("rentViewer.imageError"));
+                      encodeURIComponent(t("rentViewer.loadingError"));
                   }}
                 />
               </Zoom>

@@ -9,6 +9,9 @@ export const envs = {
         }),
         PORT: num()
     }),
-    TURNSTILE_SECRET: readFileSync("/run/secrets/turnstile_secret", "utf8"),
-    MONGODB_URI: readFileSync("/run/secrets/mongodb_uri", "utf8")
+    RECAPTCHA_SECRET: readFileSync(
+        "/run/secrets/recaptcha_secret",
+        "utf8"
+    ).trim(),
+    MONGODB_URI: readFileSync("/run/secrets/mongodb_uri", "utf8").trim()
 };

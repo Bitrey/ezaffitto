@@ -174,7 +174,7 @@ export class Scraper {
         } catch (err) {
             logger.error("Error while reverse geolocating query");
             logger.error((err as AxiosError).response?.data || err);
-            throw new Error("GEOLOCATION_API_FAILED"); // TODO change with custom error
+            throw new Error("errors.geolocationFailed"); // TODO change with custom error
         }
     }
 }

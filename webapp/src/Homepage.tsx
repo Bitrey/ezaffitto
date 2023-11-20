@@ -1,10 +1,13 @@
-import { FunctionComponent, useEffect, useState } from "react";
-import Header from "./Header";
-import { Outlet } from "react-router-dom";
-import { createContext } from "react";
+import { createContext, FunctionComponent, useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
-import TosCookiesAccept from "./components/TosCookies";
+import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
+import { Outlet } from "react-router-dom";
+
+import Header from "./Header";
 import Footer from "./Footer";
+import TosCookiesAccept from "./components/TosCookies";
+import { config } from "./config";
+import { useTranslation } from "react-i18next";
 
 // function Homepage() {
 
@@ -28,6 +31,8 @@ const Homepage: FunctionComponent<any> = () => {
   const [cookies, setCookie] = useCookies();
   const [tosCookiesAccepted, setTosCookiesAccepted] = useState<boolean>(false);
 
+  const { i18n } = useTranslation();
+
   function acceptTosCookies() {
     setCookie("tosCookiesAccepted", true, {
       path: "/",
@@ -44,25 +49,30 @@ const Homepage: FunctionComponent<any> = () => {
   }, []);
 
   return (
-    <SearchQueryContext.Provider
-      value={{ searchQuery, setSearchQuery, isLoading, setIsLoading }}
+    <GoogleReCaptchaProvider
+      reCaptchaKey={config.captchaV3SiteKey}
+      language={i18n.language}
     >
-      <main>
-        <Header />
+      <SearchQueryContext.Provider
+        value={{ searchQuery, setSearchQuery, isLoading, setIsLoading }}
+      >
+        <main>
+          <Header />
 
-        <section className="px-4 md:px-8 lg:px-12 pt-2 min-h-[80vh] md:min-h-[69vh] flex justify-center dark:bg-gray-800 dark:text-white">
-          <div className="w-full">
-            <Outlet />
-          </div>
-        </section>
+          <section className="px-4 md:px-8 lg:px-12 pt-2 min-h-[80vh] md:min-h-[69vh] flex justify-center dark:bg-gray-800 dark:text-white">
+            <div className="w-full">
+              <Outlet />
+            </div>
+          </section>
 
-        {!tosCookiesAccepted && (
-          <TosCookiesAccept onAccept={acceptTosCookies} />
-        )}
+          {!tosCookiesAccepted && (
+            <TosCookiesAccept onAccept={acceptTosCookies} />
+          )}
 
-        <Footer />
-      </main>
-    </SearchQueryContext.Provider>
+          <Footer />
+        </main>
+      </SearchQueryContext.Provider>
+    </GoogleReCaptchaProvider>
   );
 };
 

@@ -37,4 +37,4 @@ FAI: trova modo per salvare non rentals.
 -   `secrets/fb_account_password.secret`
 -   `secrets/geolocation_api_key.secret`
 -   `secrets/openai_api_key.secret`
--   `secrets/turnstile_secret.secret`
+-   `secrets/recaptcha_secret.secret`

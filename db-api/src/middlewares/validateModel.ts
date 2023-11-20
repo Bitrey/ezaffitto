@@ -16,7 +16,9 @@ export function validateModel(model: mongoose.Model<any>) {
             } else {
                 logger.error("Non-mongoose error while running validator");
                 logger.error(err);
-                res.status(INTERNAL_SERVER_ERROR).json({ err: "Server error" });
+                res.status(INTERNAL_SERVER_ERROR).json({
+                    err: "errros.unknown"
+                });
             }
         }
     };

@@ -1,7 +1,8 @@
 export const config = Object.freeze({
     languages: ["en", "it"],
-    turnstileSiteKey: "0x4AAAAAAALPWjAvPc2W_e1h",
+    captchaV3SiteKey: "6LdjlRUpAAAAABkQdf4BNEdXAlKeANcbNQnpYTT5",
     ga4Token: "G-MTGX0JZEFL",
+    infoEmail: "info@ezaffitto.com",
     postDynamicFeatures: [
         "rentalType",
         "monthlyPrice",

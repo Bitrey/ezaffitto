@@ -15,6 +15,12 @@ const resources: Resource = {
                 close: "Close",
                 on: "on"
             },
+            errors: {
+                notFound: "Not found",
+                unknown: "Unknown error",
+                geolocationFailed: "Geolocation failed",
+                noResultsFound: "No results found"
+            },
             tos: {
                 using: "By using this site, you agree to the",
                 tos: "Terms of Service",
@@ -23,8 +29,10 @@ const resources: Resource = {
                 accept: "Accept",
                 note: "Please note that the Terms of Service and the Cookie Policy are only available in Italian, and that the English translation is provided for convenience only. The Italian version is the only legally binding version."
             },
-            turnstile: {
-                error: "Error in Turnstile CAPTCHA",
+            captcha: {
+                error: "Error in CAPTCHA",
+                missing: "Missing CAPTCHA",
+                failed: "CAPTCHA verification failed (please reload the page)",
                 pleaseSolve: "Please solve the CAPTCHA to continue"
             },
             textbox: {
@@ -52,7 +60,7 @@ const resources: Resource = {
                 backToSearch: "Back to search",
                 postNotFound: "Post not found",
                 invalidPost: "Invalid post",
-                imageError: "Error loading image"
+                loadingError: "Error while loading"
             },
             homepage: {
                 banner: "Find your rent in Bologna!",
@@ -67,7 +75,8 @@ const resources: Resource = {
                 other: "Other"
             },
             footer: {
-                madeWithLove: "Made with ♥ by"
+                madeWithLove: "Made with ♥ by",
+                forInfoAndSuggestions: "For info and suggestions"
             },
             rentalPost: {
                 rentalType: "Rental type 🏠",
@@ -126,6 +135,12 @@ const resources: Resource = {
                 close: "Chiudi",
                 on: "su"
             },
+            errors: {
+                notFound: "Non trovato",
+                unknown: "Errore sconosciuto",
+                geolocationFailed: "Geolocalizzazione fallita",
+                noResultsFound: "Nessun risultato trovato"
+            },
             tos: {
                 using: "Utilizzando questo sito, accetti i",
                 tos: "Termini di Servizio",
@@ -134,8 +149,10 @@ const resources: Resource = {
                 accept: "Accetto",
                 note: ""
             },
-            turnstile: {
-                error: "Errore nel CAPTCHA Turnstile",
+            captcha: {
+                error: "Errore nel CAPTCHA",
+                missing: "CAPTCHA mancante",
+                failed: "Verifica CAPTCHA fallita (per favore ricarica la pagina)",
                 pleaseSolve: "Risolvi il CAPTCHA per continuare"
             },
             textbox: {
@@ -163,7 +180,7 @@ const resources: Resource = {
                 backToSearch: "Torna alla ricerca",
                 postNotFound: "Post non trovato",
                 invalidPost: "Post non valido",
-                imageError: "Errore nel caricamento"
+                loadingError: "Errore nel caricamento"
             },
             homepage: {
                 banner: "Trova il tuo affitto a Bologna!",
@@ -178,7 +195,8 @@ const resources: Resource = {
                 other: "Altro"
             },
             footer: {
-                madeWithLove: "Creato con ♥ da"
+                madeWithLove: "Creato con ♥ da",
+                forInfoAndSuggestions: "Per info e suggerimenti"
             },
             rentalPost: {
                 rentalType: "Tipo di affitto 🏠",

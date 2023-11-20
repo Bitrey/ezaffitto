@@ -3,7 +3,7 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import ReactGA from "react-ga4";
 import RentCard from "./RentCard";
@@ -12,7 +12,7 @@ import Button from "./Button";
 import RentView from "./RentView";
 import Textbox from "./Textbox";
 import { RentalPostJSONified } from "../interfaces/RentalPost";
-import { config, gaEvents, rentalTypeOptions } from "../config";
+import { gaEvents, rentalTypeOptions } from "../config";
 import Search from "../icons/Search";
 // import ReactPaginate from "react-paginate";
 // import Forward from "../icons/Forward";
@@ -33,10 +33,9 @@ const RentFinder = () => {
   const { isLoading, setIsLoading, searchQuery } =
     useContext(SearchQueryContext);
 
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  // TOOD debug
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // const [turnstileToken, setTurnstileToken] = useState<string | null>("valid");
+  const [error, setError] = useState<string | null>(null);
+
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const [rentalTypes, setRentalTypes] = useState<string[]>(
     rentalTypeOptions.map(e => e.value)
@@ -45,8 +44,6 @@ const RentFinder = () => {
   const { i18n, t } = useTranslation();
 
   const [count, setCount] = useState(Infinity);
-
-  const turnstileRef = React.useRef<TurnstileInstance>();
 
   // let cursor: number = 0;
   const [cursor, setCursor] = useState(0);
@@ -64,13 +61,30 @@ const RentFinder = () => {
   async function onOrderChange(option: DropdownOption<OrderBy>): Promise<void> {
     setOrderBy(option.key);
     setCursor(0);
-    turnstileRef?.current?.reset(); // reset captcha
   }
 
   // const posts: RentalPostJSONified[] = [];
   const [posts, setPosts] = useState<RentalPostJSONified[]>([]);
 
   const [selected, setSelected] = useState<RentalPostJSONified | null>(null);
+
+  const { executeRecaptcha } = useGoogleReCaptcha();
+
+  // Create an event handler so you can call the verification on button click event or form submit
+  const handleReCaptchaVerify = useCallback(async () => {
+    if (!executeRecaptcha) {
+      console.log("Execute recaptcha not yet available");
+      return;
+    }
+
+    const token = await executeRecaptcha(gaEvents.findPosts.action);
+    setCaptchaToken(token);
+  }, [executeRecaptcha]);
+
+  // You can use useEffect to trigger the verification as soon as the component being loaded
+  useEffect(() => {
+    handleReCaptchaVerify();
+  }, [handleReCaptchaVerify]);
 
   const fetchData = useCallback(
     async (
@@ -80,9 +94,9 @@ const RentFinder = () => {
       e?.preventDefault();
 
       // TODO DEBUG
-      if (!turnstileToken) {
-        console.error("No turnstile token");
-        window.alert(t("turnstile.pleaseSolve"));
+      if (!captchaToken) {
+        console.error("No ReCAPTCHA token");
+        window.alert(t("captcha.pleaseSolve"));
         return null;
       }
 
@@ -101,7 +115,7 @@ const RentFinder = () => {
       try {
         const res = await axios.get("/api/v1/rentalpost", {
           params: {
-            captcha: turnstileToken,
+            captcha: captchaToken,
             limit,
             skip: cursor,
             rentalTypes: rentalTypes.length > 0 ? rentalTypes : null,
@@ -140,10 +154,18 @@ const RentFinder = () => {
           setSelected(mapped[0]);
         }
 
+        setError(null);
+
         return mapped;
       } catch (err) {
         // DEBUG
-        console.error((err as AxiosError)?.response?.data || err);
+        const errorStr = (err as AxiosError)?.response?.data as
+          | { err: string }
+          | undefined;
+        console.error(errorStr || err);
+        setError(
+          errorStr?.err ? t(errorStr.err) : t("rentViewer.loadingError")
+        );
       } finally {
         setIsLoading(false);
       }
@@ -156,7 +178,7 @@ const RentFinder = () => {
       rentalTypes,
       maxPrice,
       searchQuery,
-      turnstileToken,
+      captchaToken,
       selected,
       posts,
       orderBy
@@ -168,12 +190,12 @@ const RentFinder = () => {
   }, [searchQuery]);
 
   useEffect(() => {
-    if (!turnstileToken) {
+    if (!captchaToken) {
       return;
     }
     fetchData(undefined, cursor !== 0); // concatenation if not first page
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cursor, turnstileToken]);
+  }, [cursor, captchaToken]);
 
   return (
     <div className="p-2 pb-8 dark:bg-gray-800 dark:text-white">
@@ -184,7 +206,7 @@ const RentFinder = () => {
       <form
         onSubmit={e => {
           e.preventDefault();
-          turnstileRef?.current?.reset();
+          // TODO DEBUG DO STUFF
         }}
         className="mt-4 mx-auto w-full"
       >
@@ -209,23 +231,6 @@ const RentFinder = () => {
               <Search />
             </Button>
           </div>
-        </div>
-
-        <div className="mt-2 flex justify-center">
-          <Turnstile
-            siteKey={config.turnstileSiteKey}
-            onSuccess={setTurnstileToken}
-            onError={() => {
-              window.scrollTo(0, 0);
-              window.alert(t("turnstile.error"));
-            }}
-            onExpire={() => setTurnstileToken(null)}
-            options={{
-              action: "find-rentalposts",
-              language: i18n.language
-            }}
-            ref={turnstileRef}
-          />
         </div>
 
         <div className="mt-2 flex justify-center md:justify-around w-full flex-col md:flex-row gap-2">
@@ -378,16 +383,29 @@ const RentFinder = () => {
             dataLength={posts?.length}
             next={async () => {
               setCursor(cursor + limit);
-              turnstileRef?.current?.reset(); // reset captcha
+
+              // try to reset recaptcha
+              await handleReCaptchaVerify();
+
+              // TODO DEBUG do stuff
+              // turnstileRef?.current?.reset(); // reset captcha
             }}
             hasMore={
-              posts?.length === 0
-                ? false
-                : !posts || !count || posts.length < count
+              posts?.length !== 0 ||
+              isLoading ||
+              !posts ||
+              !count ||
+              posts.length < count
             }
             loader={
-              <p className="bg-gray-100 dark:bg-gray-600 dark:text-white flex justify-center items-center w-full min-w-[16rem] h-16 mx-auto animate-pulse">
-                {t("common.loading")}
+              <p
+                className={`rounded ${
+                  error ? "bg-red-100 animate-slideIn" : "bg-gray-100"
+                } dark:bg-gray-600 text-center p-2 dark:text-white flex justify-center items-center w-full min-w-[16rem] h-16 mx-auto ${
+                  error ? "" : "animate-pulse"
+                }`}
+              >
+                {error || t("common.loading")}
               </p>
             }
             endMessage={

@@ -1,8 +1,8 @@
 version: "3.8"
 
 secrets:
-  turnstile_secret:
-    file: "./secrets/turnstile_secret.secret"
+  recaptcha_secret:
+    file: "./secrets/recaptcha_secret.secret"
   geolocation_api_key:
     file: "./secrets/geolocation_api_key.secret"
   openai_api_key:
@@ -201,7 +201,7 @@ services:
       context: ./client-api
       dockerfile: Dockerfile.prod
     secrets:
-      - turnstile_secret
+      - recaptcha_secret
       - mongodb_uri
     restart: unless-stopped
     environment:

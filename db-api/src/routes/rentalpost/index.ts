@@ -57,7 +57,7 @@ router.post(
             );
         } else {
             logger.debug(
-                `Data not found by text "${(req.body.text as string).slice(
+                `errors.notFound by text "${(req.body.text as string).slice(
                     0,
                     30
                 )}..."`
@@ -83,9 +83,8 @@ router.get(
 
         const data = await RentalPost.findOne({ _id: req.params.id });
         if (!data) {
-            logger.warn("Data not found");
-
-            return res.status(BAD_REQUEST).json({ err: "Data not found" });
+            logger.warn("setNotRental notFound");
+            return res.status(BAD_REQUEST).json({ err: "errors.notFound" });
         }
 
         data.isRental = false;
@@ -172,8 +171,8 @@ router.put(
         const data = await RentalPost.findById(req.params.id);
 
         if (!data) {
-            logger.debug("Data not found");
-            return res.status(BAD_REQUEST).json({ err: "Data not found" });
+            logger.debug("errors.notFound");
+            return res.status(BAD_REQUEST).json({ err: "errors.notFound" });
         }
 
         data.updateOne(req.body);
@@ -201,9 +200,9 @@ router.delete(
         const data = await RentalPost.findById(req.params.id);
 
         if (!data) {
-            logger.debug("Data not found");
+            logger.debug("errors.notFound");
 
-            return res.status(BAD_REQUEST).json({ err: "Data not found" });
+            return res.status(BAD_REQUEST).json({ err: "errors.notFound" });
         }
 
         try {

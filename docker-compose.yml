@@ -1,8 +1,8 @@
 version: "3.8"
 
 secrets:
-  turnstile_secret:
-    file: "./secrets/turnstile_secret.secret"
+  recaptcha_secret:
+    file: "./secrets/recaptcha_secret.secret"
   geolocation_api_key:
     file: "./secrets/geolocation_api_key.secret"
   openai_api_key:
@@ -246,7 +246,7 @@ services:
   client-api:
     build: ./client-api
     secrets:
-      - turnstile_secret
+      - recaptcha_secret
       - mongodb_uri
     restart: unless-stopped
     volumes:

@@ -1,6 +1,6 @@
 import "./db";
 
 export const config = Object.freeze({
-    TURNSTILE_URL: "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    RECAPTCHA_URL: "https://www.google.com/recaptcha/api/siteverify",
     orderByOptions: ["priceAsc", "priceDesc", "dateAsc", "dateDesc"] as const
 });

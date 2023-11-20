@@ -156,7 +156,7 @@ router.get(
         logger.debug("Data retrieved successfully by _id " + req.params.id);
 
         if (!data) {
-            return res.status(NOT_FOUND).json({ err: "Not found" });
+            return res.status(NOT_FOUND).json({ err: "errors.notFound" });
         }
 
         return res.json(data);

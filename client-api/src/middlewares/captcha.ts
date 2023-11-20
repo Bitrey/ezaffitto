@@ -6,13 +6,13 @@ import { logger } from "../shared/logger";
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "http-status";
 import { config } from "../config";
 
-interface TurnstileRequest {
+interface RecaptchaRequest {
     secret: string;
     response: string;
     remoteip?: string;
 }
 
-interface TurnstileResponse {
+interface RecaptchaResponse {
     success: boolean;
     "error-codes": string[];
     challenge_ts: string;
@@ -26,32 +26,37 @@ export async function captchaQueryParam(
 ) {
     const { captcha } = req.query;
 
-    logger.debug("atoken is " + JSON.stringify(captcha));
+    logger.debug("token is " + captcha);
 
     if (typeof captcha !== "string") {
-        return res.status(BAD_REQUEST).json({ err: "Missing captcha" });
+        return res.status(BAD_REQUEST).json({ err: "captcha.missing" });
     }
 
     try {
-        const _res = await axios.post(config.TURNSTILE_URL, {
-            secret: envs.TURNSTILE_SECRET,
-            response: captcha,
-            remoteip: requestIp.getClientIp(req)
-        } as TurnstileRequest);
-        const data: TurnstileResponse = _res.data;
+        const params = new URLSearchParams();
+        params.append("secret", envs.RECAPTCHA_SECRET);
+        params.append("response", captcha);
+        const ip = requestIp.getClientIp(req);
+        if (ip) params.append("remoteip", ip);
+
+        const _res = await axios.post(
+            config.RECAPTCHA_URL,
+            params as URLSearchParams /* RecaptchaRequest */
+        );
+        const data: RecaptchaResponse = _res.data;
 
         if (data.success) {
             return next();
         } else {
-            logger.debug("Turnstile request failed");
+            logger.debug("Recaptcha request failed");
             logger.debug(data);
             res.status(BAD_REQUEST).json({
-                err: "CAPTCHA verification failed"
+                err: "captcha.failed"
             });
         }
     } catch (err) {
-        logger.error("Error in Turnstile request");
+        logger.error("Error in Recaptcha request");
         logger.error(err);
-        res.status(INTERNAL_SERVER_ERROR).json({ err: "Server error" });
+        res.status(INTERNAL_SERVER_ERROR).json({ err: "errors.unknown" });
     }
 }

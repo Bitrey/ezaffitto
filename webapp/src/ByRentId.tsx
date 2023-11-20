@@ -1,19 +1,32 @@
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent, useCallback, useEffect, useState } from "react";
 import ReactGA from "react-ga4";
 import axios, { AxiosError } from "axios";
-import { Turnstile } from "@marsidev/react-turnstile";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import RentView from "./components/RentView";
 import Button from "./components/Button";
 import { RentalPostJSONified } from "./interfaces/RentalPost";
 import { config, gaEvents } from "./config";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 const ByRentId: FunctionComponent<any> = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const { i18n, t } = useTranslation();
+
+  const { executeRecaptcha } = useGoogleReCaptcha();
+
+  // Create an event handler so you can call the verification on button click event or form submit
+  const handleReCaptchaVerify = useCallback(async () => {
+    if (!executeRecaptcha) {
+      console.log("Execute recaptcha not yet available");
+      return;
+    }
+
+    const token = await executeRecaptcha(gaEvents.findPosts.action);
+    setCaptchaToken(token);
+  }, [executeRecaptcha]);
 
   const [post, setPost] = useState<RentalPostJSONified | undefined>(undefined);
 
@@ -23,12 +36,27 @@ const ByRentId: FunctionComponent<any> = () => {
   const { state } = useLocation();
 
   useEffect(() => {
+    if (state?.post) {
+      setPost(JSON.parse(state.post));
+      return;
+    } else if (!executeRecaptcha) {
+      console.log("useEffect execute recaptcha not yet available");
+      return;
+    }
+
+    handleReCaptchaVerify();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [executeRecaptcha]);
+
+  useEffect(() => {
+    if (!captchaToken) return;
+
     async function fetchPost() {
       setIsLoading(true);
       try {
         const { data } = (await axios.get(`/api/v1/rentalpost/${id}`, {
           params: {
-            captcha: turnstileToken
+            captcha: captchaToken
           }
         })) as { data: RentalPostJSONified | null };
 
@@ -48,39 +76,23 @@ const ByRentId: FunctionComponent<any> = () => {
         setPost(data || undefined);
       } catch (err) {
         // DEBUG
-        console.error((err as AxiosError)?.response?.data || err);
+        const errorStr = (err as AxiosError)?.response?.data as
+          | { err: string }
+          | undefined;
+        console.error(errorStr || err);
+        window.alert(errorStr?.err ? t(errorStr.err) : t("common.error"));
         setPost(undefined);
       } finally {
         setIsLoading(false);
       }
     }
 
-    if (state?.post) {
-      setPost(JSON.parse(state.post));
-      return;
-    }
-    if (!turnstileToken || post) {
-      return;
-    }
-
     fetchPost();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [turnstileToken]);
+  }, [captchaToken]);
 
   return (
     <div>
-      {!turnstileToken && !state?.post && (
-        <Turnstile
-          siteKey={config.turnstileSiteKey}
-          onError={() => window.alert(t("turnstile.error"))}
-          onSuccess={setTurnstileToken}
-          onExpire={() => setTurnstileToken(null)}
-          options={{
-            action: "fetch-rentalpost",
-            language: i18n.language
-          }}
-        />
-      )}
       {post || isLoading ? (
         <div className="p-2 md:p-4">
           <Button className="rounded-lg" href="/">

@@ -6,6 +6,9 @@ html {
   @apply scroll-smooth;
 }
 
+body {
+  font-family: "Ubuntu", "Segoe UI", sans-serif;
+}
 
 /* .item must be first */
 .item {

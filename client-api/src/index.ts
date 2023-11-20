@@ -12,7 +12,9 @@ app.use(morgan("common", { stream: new LoggerStream() }));
 
 app.use("/api/v1", apiRoutes);
 
-app.all("*", (req, res) => res.status(NOT_FOUND).json({ err: "Not found" }));
+app.all("*", (req, res) =>
+    res.status(NOT_FOUND).json({ err: "errors.notFound" })
+);
 
 app.listen(envs.PORT, () => {
     logger.info(`Server listening on port ${envs.PORT}`);

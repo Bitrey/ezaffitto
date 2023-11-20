@@ -34,7 +34,9 @@ router.get(
                 logger.debug(
                     `Geolocation no results found for query ${address}`
                 );
-                return res.status(NOT_FOUND).json({ err: "NO_RESULTS_FOUND" });
+                return res
+                    .status(NOT_FOUND)
+                    .json({ err: "errors.noResultsFound" });
             }
 
             const { lat, lng } = data.results[0].geometry.location;
@@ -52,7 +54,7 @@ router.get(
             logger.error((err as AxiosError).response?.data || err);
             return res
                 .status(INTERNAL_SERVER_ERROR)
-                .json({ err: "GEOLOCATION_API_FAILED" });
+                .json({ err: "errors.geolocationFailed" });
         }
     }
 );
@@ -84,7 +86,9 @@ router.get(
                     `Reverse geolocation no results found for query ${lat},${lng}:`
                 );
                 logger.debug(data);
-                return res.status(NOT_FOUND).json({ err: "NO_RESULTS_FOUND" });
+                return res
+                    .status(NOT_FOUND)
+                    .json({ err: "errors.noResultsFound" });
             }
 
             const { formatted_address } = data.results[0];
@@ -102,7 +106,7 @@ router.get(
             logger.error((err as AxiosError).response?.data || err);
             return res
                 .status(INTERNAL_SERVER_ERROR)
-                .json({ err: "GEOLOCATION_API_FAILED" });
+                .json({ err: "errors.geolocationFailed" });
         }
     }
 );

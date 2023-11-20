@@ -147,25 +147,25 @@ services:
       retries: 3
       start_period: 5s
 
-  bakeca-scraper:
-    build:
-      context: ./bakeca-scraper
-      dockerfile: Dockerfile.prod
-    restart: unless-stopped
-    environment:
-      - NODE_ENV=production
-      - PING_SERVER_PORT=3434
-    depends_on:
-      db-api:
-        condition: service_healthy
-    networks:
-      - db-api-network
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://localhost:3434/ping || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
+  # bakeca-scraper:
+  #   build:
+  #     context: ./bakeca-scraper
+  #     dockerfile: Dockerfile.prod
+  #   restart: unless-stopped
+  #   environment:
+  #     - NODE_ENV=production
+  #     - PING_SERVER_PORT=3434
+  #   depends_on:
+  #     db-api:
+  #       condition: service_healthy
+  #   networks:
+  #     - db-api-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget -q -O- http://localhost:3434/ping || exit 1"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 3
+  #     start_period: 5s
 
   # db-consumer da rifare con Bun
 

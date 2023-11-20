@@ -1,37 +1,68 @@
 // https://bologna.bakeca.it/annunci/offro-camera/page/2/
 
-import { RentalPost, RentalTypes } from "./interfaces/shared";
+import {
+    CityUrlObj,
+    CityUrls,
+    EzaffittoCity,
+    RentalPost,
+    RentalTypes
+} from "./interfaces/shared";
 import axios, { isAxiosError } from "axios";
 import { ImmobiliareRoot, Property } from "./interfaces/immobiliare";
 import { logger } from "./shared/logger";
 import { CronJob } from "cron";
 import { config } from "./config";
 import "./healthcheckPing";
+import { readFile } from "fs/promises";
 
 export class Scraper {
-    public static scrapeUrl =
-        "https://www.immobiliare.it/api-next/search-list/real-estates/";
+    public static async getMeta(city: EzaffittoCity): Promise<CityUrls | null> {
+        const urls: CityUrls[] = JSON.parse(
+            await readFile(config.URLS_JSON_PATH, { encoding: "utf-8" })
+        );
+        return urls.find(e => e.city === city) || null;
+    }
 
-    private static bannedAgencyIds: Readonly<number[]> = [
-        374030, // affitto privato
-        368620 // trova affitto
-    ];
+    public static async getCities(): Promise<EzaffittoCity[]> {
+        const urls: CityUrls[] = JSON.parse(
+            await readFile(config.URLS_JSON_PATH, { encoding: "utf-8" })
+        );
+        return urls.map(e => e.city);
+    }
 
-    public async scrape(): Promise<RentalPost[]> {
+    private static async getBannedAgencyIds(): Promise<number[]> {
+        const urls: CityUrls[] = JSON.parse(
+            await readFile(config.URLS_JSON_PATH, { encoding: "utf-8" })
+        );
+        return urls
+            .map(e => e.bannedAgencyIds || [])
+            .reduce((acc, curr) => [...acc, ...curr], []);
+    }
+
+    public async scrape(city: EzaffittoCity): Promise<RentalPost[]> {
+        const meta = await Scraper.getMeta(city);
+        if (!meta || !meta.urls[0]) {
+            logger.error(`No meta found for city ${city}`);
+            throw new Error(`No meta found for city ${city}`);
+        }
+
+        const { fkRegione, idComune, idNazione, idProvincia, path, url } =
+            meta.urls[0];
+
         let res;
         try {
-            res = await axios.get(Scraper.scrapeUrl, {
+            res = await axios.get(url, {
                 params: {
-                    fkRegione: "emi",
+                    fkRegione,
                     criterio: "dataModifica",
                     idCategoria: "4",
-                    idComune: "5890",
+                    idComune,
                     idContratto: "2",
-                    idNazione: "IT",
-                    idProvincia: "BO",
+                    idNazione,
+                    idProvincia,
                     ordine: "desc",
                     paramsCount: "1",
-                    path: "%2Faffitto-stanze%2Fbologna%2F",
+                    path,
                     __lang: "it"
                 }
             });
@@ -50,13 +81,13 @@ export class Scraper {
             `Found ${data.results.length} (count: ${data.count}) properties`
         );
 
+        const bannedAgencies = await Scraper.getBannedAgencyIds();
+
         const posts: RentalPost[] = data.results
             .filter(
                 e =>
                     !e.realEstate.advertiser.agency?.id ||
-                    !Scraper.bannedAgencyIds.includes(
-                        e.realEstate.advertiser.agency.id
-                    )
+                    !bannedAgencies.includes(e.realEstate.advertiser.agency.id)
             )
             .map(e => {
                 const prop = e.realEstate.properties[0] as Property | undefined;
@@ -64,6 +95,7 @@ export class Scraper {
                 const obj: RentalPost = {
                     postId: e.realEstate.id.toString(),
                     rawData: e,
+                    ezaffittoCity: city,
                     isRental: true,
                     isForRent: true,
                     source: "immobiliare",
@@ -140,36 +172,40 @@ const job = new CronJob(
 
         const scraper = new Scraper();
 
-        logger.info("Running Immobiliare scraper");
+        for (const city of await Scraper.getCities()) {
+            logger.info("Running Immobiliare scraper for city " + city);
 
-        let scraped;
-        try {
-            scraped = await scraper.scrape();
-        } catch (err) {
-            logger.error("Error in scraping");
-            logger.error(err);
-            return;
-        }
-
-        logger.info(`Scraped ${scraped.length} posts`);
-
-        logger.warn("Sending data to db-api");
-        for (const post of scraped) {
+            let scraped;
             try {
-                // TODO replace with RabbitMQ
-                const { data } = await axios.post(
-                    config.DB_API_BASE_URL + "/rentalpost",
-                    post
-                );
-                logger.info(
-                    `Sent postId ${data.postId} (${post.description?.slice(
-                        0,
-                        30
-                    )}...) to db-api - _id ${data._id}`
-                );
+                scraped = await scraper.scrape(city);
             } catch (err) {
-                logger.error("Error in sending data to db-api");
-                logger.error((isAxiosError(err) && err.response?.data) || err);
+                logger.error("Error in scraping");
+                logger.error(err);
+                return;
+            }
+
+            logger.info(`Scraped ${scraped.length} posts`);
+
+            logger.warn("Sending data to db-api");
+            for (const post of scraped) {
+                try {
+                    // TODO replace with RabbitMQ
+                    const { data } = await axios.post(
+                        config.DB_API_BASE_URL + "/rentalpost",
+                        post
+                    );
+                    logger.info(
+                        `Sent postId ${data.postId} (${post.description?.slice(
+                            0,
+                            30
+                        )}...) to db-api - _id ${data._id}`
+                    );
+                } catch (err) {
+                    logger.error("Error in sending data to db-api");
+                    logger.error(
+                        (isAxiosError(err) && err.response?.data) || err
+                    );
+                }
             }
         }
     },

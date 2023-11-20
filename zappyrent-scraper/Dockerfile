@@ -1,9 +1,10 @@
-FROM oven/bun:1.0.4-slim
+FROM oven/bun:1.0.13-slim
 
 COPY package.json ./
 COPY bun.lockb ./
 COPY src ./src
 COPY healthcheck.js ./
+COPY urls.json ./
 
 RUN bun install
 

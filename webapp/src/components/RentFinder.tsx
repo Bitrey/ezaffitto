@@ -190,7 +190,7 @@ const RentFinder = () => {
   }, [searchQuery]);
 
   useEffect(() => {
-    if (!captchaToken) {
+    if (!captchaToken || isLoading) {
       return;
     }
     fetchData(undefined, cursor !== 0); // concatenation if not first page

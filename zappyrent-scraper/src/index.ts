@@ -3,16 +3,33 @@
 import moment from "moment";
 import { CronJob } from "cron";
 import axios, { isAxiosError } from "axios";
-import { RentalPost, RentalTypes } from "./interfaces/shared";
+import {
+    CityUrls,
+    EzaffittoCity,
+    RentalPost,
+    RentalTypes
+} from "./interfaces/shared";
 import { ZappyRentRoot } from "./interfaces/zappyrent";
 import { logger } from "./shared/logger";
 import { config } from "./config";
 
 import "./healthcheckPing";
+import { readFile } from "fs/promises";
 
 export class Scraper {
-    public static roomsUrl =
-        "https://www.zappyrent.com/api/propertylisting/get/20/filter";
+    public static async getUrl(city: string): Promise<string | null> {
+        const urls: CityUrls[] = JSON.parse(
+            await readFile(config.URLS_JSON_PATH, { encoding: "utf-8" })
+        );
+        return urls.find(e => e.city === city)?.urls[0]?.url || null;
+    }
+
+    public static async getCities(): Promise<EzaffittoCity[]> {
+        const urls: CityUrls[] = JSON.parse(
+            await readFile(config.URLS_JSON_PATH, { encoding: "utf-8" })
+        );
+        return urls.map(e => e.city);
+    }
 
     private mapRentalType(rawType: string): RentalTypes {
         // currently known values are just "Entire Property" and "Studio"
@@ -31,9 +48,12 @@ export class Scraper {
         }
     }
 
-    public async scrape(url: string): Promise<RentalPost[]> {
+    public async scrape(
+        url: string,
+        city: EzaffittoCity
+    ): Promise<RentalPost[]> {
         const res = await axios.post(url, {
-            city: "bologna",
+            city, // bologna va bene, gli altri in teoria idem
             types: [
                 "studio",
                 "entire-property-2-rooms",
@@ -57,6 +77,7 @@ export class Scraper {
             const obj: RentalPost = {
                 postId: e.id.toString(),
                 rawData: e,
+                ezaffittoCity: city,
                 isRental: true,
                 isForRent: true,
                 source: "zappyrent",
@@ -126,33 +147,43 @@ const job = new CronJob(
 
         const scraper = new Scraper();
 
-        logger.info("Running ZappyRent scraper");
+        for (const city of await Scraper.getCities()) {
+            logger.info("Running ZappyRent scraper for city " + city);
 
-        let scraped;
-        try {
-            scraped = await scraper.scrape(Scraper.roomsUrl);
-        } catch (err) {
-            logger.error("Error in scraping");
-            logger.error(err);
-            return;
-        }
+            const url = await Scraper.getUrl(city);
+            if (!url) {
+                logger.error("No url found for city " + city);
+                throw new Error("No url found for city " + city);
+            }
 
-        logger.info(`Scraped ${scraped.length} posts`);
-
-        logger.warn("Sending data to db-api");
-        for (const post of scraped) {
+            let scraped;
             try {
-                // TODO replace with RabbitMQ
-                const { data } = await axios.post(
-                    config.DB_API_BASE_URL + "/rentalpost",
-                    post
-                );
-                logger.info(
-                    `Sent postId ${post.postId}->${data.postId} (${post.address}) to db-api - got _id ${data._id}`
-                );
+                scraped = await scraper.scrape(url, city);
             } catch (err) {
-                logger.error("Error in sending data to db-api");
-                logger.error((isAxiosError(err) && err.response?.data) || err);
+                logger.error("Error in scraping");
+                logger.error(err);
+                return;
+            }
+
+            logger.info(`Scraped ${scraped.length} posts`);
+
+            logger.warn("Sending data to db-api");
+            for (const post of scraped) {
+                try {
+                    // TODO replace with RabbitMQ
+                    const { data } = await axios.post(
+                        config.DB_API_BASE_URL + "/rentalpost",
+                        post
+                    );
+                    logger.info(
+                        `Sent postId ${post.postId}->${data.postId} (${post.address}) to db-api - got _id ${data._id}`
+                    );
+                } catch (err) {
+                    logger.error("Error in sending data to db-api");
+                    logger.error(
+                        (isAxiosError(err) && err.response?.data) || err
+                    );
+                }
             }
         }
     },

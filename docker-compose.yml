@@ -34,11 +34,11 @@ services:
       - DEBUG_START_EXPRESS_SERVER=true
       - PING_SERVER_PORT=3434
     networks:
-      - rabbitmq-network
+      # - rabbitmq-network
       - db-api-network
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
+    # depends_on:
+    #   rabbitmq:
+    #     condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O- http://localhost:3434/ping || exit 1"]
       interval: 5s
@@ -74,12 +74,12 @@ services:
       - NODE_ENV=development
       - PING_SERVER_PORT=3434
     depends_on:
-      rabbitmq:
-        condition: service_healthy
+      #   rabbitmq:
+      #     condition: service_healthy
       parser:
         condition: service_healthy
     networks:
-      - rabbitmq-network
+      # - rabbitmq-network
       - db-api-network
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O- http://localhost:3434/ping || exit 1"]
@@ -93,14 +93,14 @@ services:
     restart: unless-stopped
     volumes:
       - ./subito-scraper:/usr/src/app
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
+    # depends_on:
+    #   rabbitmq:
+    #     condition: service_healthy
     environment:
       - NODE_ENV=development
       - PING_SERVER_PORT=3434
     networks:
-      - rabbitmq-network
+      # - rabbitmq-network
       - db-api-network
     healthcheck:
       test: ["CMD-SHELL", "bun run /home/bun/app/healthcheck.js || exit 1"]
@@ -117,11 +117,11 @@ services:
     environment:
       - NODE_ENV=development
       - PING_SERVER_PORT=3434
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
+    # depends_on:
+    #   rabbitmq:
+    #     condition: service_healthy
     networks:
-      - rabbitmq-network
+      # - rabbitmq-network
       - db-api-network
     healthcheck:
       test: ["CMD-SHELL", "bun run /home/bun/app/healthcheck.js || exit 1"]
@@ -138,11 +138,11 @@ services:
     environment:
       - NODE_ENV=development
       - PING_SERVER_PORT=3434
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
+    # depends_on:
+    #   rabbitmq:
+    #     condition: service_healthy
     networks:
-      - rabbitmq-network
+      # - rabbitmq-network
       - db-api-network
     healthcheck:
       test: ["CMD-SHELL", "bun run /home/bun/app/healthcheck.js || exit 1"]
@@ -172,26 +172,26 @@ services:
   #     retries: 3
   #     start_period: 5s
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    restart: unless-stopped
-    healthcheck:
-      test: rabbitmq-diagnostics check_port_connectivity
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 10s
-    ports:
-      - "5672:5672" # DEBUG
-      - "15672:15672" # DEBUG (Web UI)
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    networks:
-      - rabbitmq-network
-    depends_on:
-      # TODO only for debug, use RabbitMQ in production
-      db-api:
-        condition: service_healthy
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: rabbitmq-diagnostics check_port_connectivity
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 10s
+  #   ports:
+  #     - "5672:5672" # DEBUG
+  #     - "15672:15672" # DEBUG (Web UI)
+  #   volumes:
+  #     - rabbitmq-data:/var/lib/rabbitmq
+  #   networks:
+  #     - rabbitmq-network
+  #   depends_on:
+  #     # TODO only for debug, use RabbitMQ in production
+  #     db-api:
+  #       condition: service_healthy
 
   mongodb:
     image: mongo:6.0.7-jammy
@@ -282,12 +282,12 @@ services:
 volumes:
   db-data:
     driver: local
-  rabbitmq-data:
-    driver: local
+  # rabbitmq-data:
+  #   driver: local
 
 networks:
-  rabbitmq-network:
-    driver: bridge
+  # rabbitmq-network:
+  #   driver: bridge
   db-network:
     driver: bridge
   db-api-network:

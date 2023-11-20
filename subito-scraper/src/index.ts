@@ -1,6 +1,8 @@
 import axios, { AxiosError, isAxiosError } from "axios";
 import { CronJob } from "cron";
 import {
+    CityUrls,
+    EzaffittoCity,
     Feature,
     RentalPost,
     RentalTypes,
@@ -11,20 +13,39 @@ import {
 import { logger } from "./shared/logger";
 import { config } from "./config";
 import moment from "moment-timezone";
+import { readFile } from "fs/promises";
 
 import "./healthcheckPing";
 
 export class Scraper {
-    private static readonly apartmentsUrl =
-        "https://www.subito.it/hades/v1/search/items?c=7&r=8&ci=1&to=037006&t=u&qso=false&shp=false&urg=false&sort=datedesc&lim=30&start=0&advt=0";
-    private static readonly roomsUrl =
-        "https://www.subito.it/hades/v1/search/items?c=43&r=8&ci=1&to=037006&t=u&qso=false&shp=false&urg=false&sort=datedesc&lim=30&start=0";
+    private static async getUrl(
+        city: EzaffittoCity,
+        type: ScrapeType
+    ): Promise<string | null> {
+        const urls: CityUrls[] = JSON.parse(
+            await readFile(config.URLS_JSON_PATH, { encoding: "utf-8" })
+        );
+        return (
+            urls.find(e => e.city === city)?.urls.find(e => e.type === type)
+                ?.url || null
+        );
+    }
 
-    // TODO! specifica che provi ad eliminare agenzie private stupide
-    private static readonly bannedAgencyIds: string[] = [
-        "101628895", // trova affitto
-        "105809558" // affitto privato
-    ];
+    private static async getBannedAgencyIds(): Promise<string[]> {
+        const urls: CityUrls[] = JSON.parse(
+            await readFile(config.URLS_JSON_PATH, { encoding: "utf-8" })
+        );
+        return urls
+            .map(e => e.bannedAgencyIds || [])
+            .reduce((acc, curr) => [...acc, ...curr], []);
+    }
+
+    public static async getCities(): Promise<EzaffittoCity[]> {
+        const urls: CityUrls[] = JSON.parse(
+            await readFile(config.URLS_JSON_PATH, { encoding: "utf-8" })
+        );
+        return urls.map(e => e.city);
+    }
 
     private mapFeatureToKey(
         feature: Feature,
@@ -99,18 +120,27 @@ export class Scraper {
         }
     }
 
-    public async scrape(type: ScrapeType): Promise<RentalPost[]> {
+    public async scrape(
+        city: EzaffittoCity,
+        type: ScrapeType
+    ): Promise<RentalPost[]> {
         try {
-            const res = await axios.get(
-                type === ScrapeType.APARTMENTS
-                    ? Scraper.apartmentsUrl
-                    : Scraper.roomsUrl
-            );
+            const url = await Scraper.getUrl(city, type);
+            if (!url) {
+                logger.error(
+                    "Scrape invalid URL! City: " + city + ", type: " + type
+                );
+                throw new Error("Error while determining URL");
+            }
+
+            const bannedAgencyIds = await Scraper.getBannedAgencyIds();
+
+            const res = await axios.get(url);
             const data = res.data as Root;
             const filtered = data.ads.filter(
                 e =>
                     !e.advertiser.company &&
-                    !Scraper.bannedAgencyIds.includes(e.advertiser.user_id)
+                    !bannedAgencyIds.includes(e.advertiser.user_id)
             );
             logger.debug(`Fetched ${filtered.length} posts`);
             return filtered.map(e => {
@@ -120,6 +150,7 @@ export class Scraper {
 
                 const post: RentalPost = {
                     postId: e.urn.split("ad:")[1]?.split(":")[0] || e.urn,
+                    ezaffittoCity: city,
                     source: "subito",
                     rawData: e,
                     isRental: true,
@@ -174,7 +205,7 @@ export class Scraper {
         } catch (err) {
             logger.error("Error while reverse geolocating query");
             logger.error((err as AxiosError).response?.data || err);
-            throw new Error("errors.geolocationFailed"); // TODO change with custom error
+            throw new Error("Geolocation failed"); // TODO change with custom error
         }
     }
 }
@@ -204,120 +235,130 @@ const job = new CronJob(
                     : "rooms")
         );
 
-        let scraped;
-        try {
-            scraped = await scraper.scrape(lastScrapeType);
-        } catch (err) {
-            logger.error("Error in scraping");
-            logger.error(err);
-            return;
-        }
-
-        logger.info(`Scraped ${scraped.length} posts`);
-
-        for (let i = 0; i < scraped.length; i++) {
-            const post = scraped[i];
-
-            // check if already exists in order to not
-            // run geolocation on already existing posts
+        for (const city of await Scraper.getCities()) {
+            let scraped;
             try {
-                const res1 = await axios.post(
-                    config.DB_API_BASE_URL + "/rentalpost/text",
-                    { text: post.description, source: "subito" }
-                );
-                const res2 = await axios.get(
-                    config.DB_API_BASE_URL + "/rentalpost/postid/" + post.postId
-                );
-                const p =
-                    res1.data &&
-                    typeof res1.data === "object" &&
-                    Object.keys(res1.data).length > 0
-                        ? res1.data
-                        : res2.data;
-                if (p) {
-                    logger.debug(
-                        `Post ${post.postId} (${
-                            post.description?.slice(0, 30) || "(no description)"
-                        }...) already exists with _id ${p._id} - postId ${
-                            p.postId
-                        }, skipping...`
-                    );
-                    scraped.splice(i, 1);
-                    i--;
-                } else {
-                    logger.debug(
-                        `Post ${post.postId} (${
-                            post.description?.slice(0, 30) || "(no description)"
-                        }...) does not exist, continuing...`
-                    );
-                }
+                scraped = await scraper.scrape(city, lastScrapeType);
             } catch (err) {
-                logger.error(
-                    `Error while checking if post ${post.postId} already exists:`
-                );
-                logger.error((err as AxiosError)?.response?.data || err);
+                logger.error("Error in scraping");
+                logger.error(err);
                 return;
             }
-        }
 
-        // geolocate
-        for (const post of scraped) {
-            if (
-                typeof post.latitude !== "number" ||
-                typeof post.longitude !== "number" ||
-                typeof post.address === "string"
-            ) {
-                logger.debug(
-                    `Skipping post ${post.postId} (${post.description?.slice(
-                        0,
-                        30
-                    )}...) because already has address or no coordinates`
-                );
-                continue;
-            }
-            try {
-                logger.debug(
-                    `Geolocating post ${post.postId} (${post.description?.slice(
-                        0,
-                        30
-                    )}...)`
-                );
-                const geolocated = await Scraper.reverseGeolocate(
-                    post.latitude,
-                    post.longitude
-                );
-                if (geolocated) {
-                    post.address = geolocated.formattedAddress;
+            logger.info(`Scraped ${scraped.length} posts`);
+
+            for (let i = 0; i < scraped.length; i++) {
+                const post = scraped[i];
+
+                // check if already exists in order to not
+                // run geolocation on already existing posts
+                try {
+                    const res1 = await axios.post(
+                        config.DB_API_BASE_URL + "/rentalpost/text",
+                        { text: post.description, source: "subito" }
+                    );
+                    const res2 = await axios.get(
+                        config.DB_API_BASE_URL +
+                            "/rentalpost/postid/" +
+                            post.postId
+                    );
+                    const p =
+                        res1.data &&
+                        typeof res1.data === "object" &&
+                        Object.keys(res1.data).length > 0
+                            ? res1.data
+                            : res2.data;
+                    if (p) {
+                        logger.debug(
+                            `Post ${post.postId} (${
+                                post.description?.slice(0, 30) ||
+                                "(no description)"
+                            }...) already exists with _id ${p._id} - postId ${
+                                p.postId
+                            }, skipping...`
+                        );
+                        scraped.splice(i, 1);
+                        i--;
+                    } else {
+                        logger.debug(
+                            `Post ${post.postId} (${
+                                post.description?.slice(0, 30) ||
+                                "(no description)"
+                            }...) does not exist, continuing...`
+                        );
+                    }
+                } catch (err) {
+                    logger.error(
+                        `Error while checking if post ${post.postId} already exists:`
+                    );
+                    logger.error((err as AxiosError)?.response?.data || err);
+                    return;
                 }
-                logger.debug(
-                    `Geolocated post ${post.postId} (${post.description?.slice(
-                        0,
-                        30
-                    )}...) to ${post.address}`
-                );
-            } catch (err) {
-                logger.error("Error in reverse geolocation");
-                logger.error(err);
             }
-        }
 
-        logger.warn("Sending data to db-api");
-        for (const post of scraped) {
-            try {
-                // TODO replace with RabbitMQ
-                const { data } = await axios.post(
-                    config.DB_API_BASE_URL + "/rentalpost",
-                    post
-                );
-                logger.info(
-                    `Sent postId ${data.postId} (${post.description?.slice(
-                        0,
-                        30
-                    )}...) to db-api - _id ${data._id}`
-                );
-            } catch (err) {
-                logger.error("Error in sending data to db-api");
-                logger.error((isAxiosError(err) && err.response?.data) || err);
+            // geolocate
+            for (const post of scraped) {
+                if (
+                    typeof post.latitude !== "number" ||
+                    typeof post.longitude !== "number" ||
+                    typeof post.address === "string"
+                ) {
+                    logger.debug(
+                        `Skipping post ${
+                            post.postId
+                        } (${post.description?.slice(
+                            0,
+                            30
+                        )}...) because already has address or no coordinates`
+                    );
+                    continue;
+                }
+                try {
+                    logger.debug(
+                        `Geolocating post ${
+                            post.postId
+                        } (${post.description?.slice(0, 30)}...)`
+                    );
+                    const geolocated = await Scraper.reverseGeolocate(
+                        post.latitude,
+                        post.longitude
+                    );
+                    if (geolocated) {
+                        post.address = geolocated.formattedAddress;
+                    }
+                    logger.debug(
+                        `Geolocated post ${
+                            post.postId
+                        } (${post.description?.slice(0, 30)}...) to ${
+                            post.address
+                        }`
+                    );
+                } catch (err) {
+                    logger.error("Error in reverse geolocation");
+                    logger.error(err);
+                }
+            }
+
+            logger.warn("Sending data to db-api");
+            for (const post of scraped) {
+                try {
+                    // TODO replace with RabbitMQ
+                    const { data } = await axios.post(
+                        config.DB_API_BASE_URL + "/rentalpost",
+                        post
+                    );
+                    logger.info(
+                        `Sent postId ${data.postId} (${post.description?.slice(
+                            0,
+                            30
+                        )}...) to db-api - _id ${data._id}`
+                    );
+                } catch (err) {
+                    logger.error("Error in sending data to db-api");
+                    logger.error(
+                        (isAxiosError(err) && err.response?.data) || err
+                    );
+                }
             }
         }
     },

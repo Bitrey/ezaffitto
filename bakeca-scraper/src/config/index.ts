@@ -1,7 +1,11 @@
+import path from "path";
+
 export const config = Object.freeze({
     DEBUG_RUN_SCRAPER: true,
 
     DB_API_BASE_URL: "http://db-api:5500/api/v1",
+
+    URLS_JSON_PATH: path.join(process.cwd(), "urls.json"),
 
     AGENCY_TEXT: "agenzia",
 

@@ -21,9 +21,37 @@ export enum OccupationalRestrictions {
     OTHER = "other"
 }
 
+export enum EzaffittoCity {
+    BOLOGNA = "bologna",
+    MILANO = "milano",
+    ROMA = "roma",
+    TORINO = "torino",
+    FIRENZE = "firenze",
+    NAPOLI = "napoli",
+    PADOVA = "padova",
+    GENOVA = "genova"
+}
+
+// urls.json
+export interface CityUrls {
+    city: EzaffittoCity;
+    urls: CityUrlObj[];
+    bannedAgencyIds?: number[];
+}
+
+export interface CityUrlObj {
+    url: string;
+    fkRegione: string;
+    idComune: string;
+    idNazione: string;
+    idProvincia: string;
+    path: string;
+}
+
 export interface RentalPost {
     postId: string;
     rawData: any;
+    ezaffittoCity: EzaffittoCity;
     source: string;
     date: Date;
     images: string[];

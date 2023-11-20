@@ -1,5 +1,5 @@
 import puppeteer from "puppeteer-extra";
-import { Browser, Page, Protocol } from "puppeteer-core";
+import { Browser, Page } from "puppeteer-core";
 import pluginStealth from "puppeteer-extra-plugin-stealth";
 import { ScrapedDataEventEmitter } from "./interfaces/events";
 import EventEmitter from "events";
@@ -11,11 +11,11 @@ import { extractor } from "./extractor";
 // import { runProducer } from "./producer";
 import moment, { Moment } from "moment";
 import axios, { AxiosError, isAxiosError } from "axios";
-import { RentalPost } from "./interfaces/shared";
+import { CityUrls, EzaffittoCity, RentalPost } from "./interfaces/shared";
 import { envs } from "./config/envs";
 
 import "./healthcheckPing";
-import { mkdir, unlink, writeFile } from "fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "fs/promises";
 import { Cookie } from "./interfaces/Cookie";
 import { mapCookiesToPuppeteer } from "./shared/mapCookiesToPuppeteer";
 import { existsSync } from "fs";
@@ -25,7 +25,7 @@ puppeteer.use(pluginStealth());
 
 export const scrapedDataEvent: ScrapedDataEventEmitter = new EventEmitter();
 
-scrapedDataEvent.on("scrapedData", async fbData => {
+scrapedDataEvent.on("scrapedData", async ({ fbData, city }) => {
     // check if exists
     logger.debug(
         "Checking if post already exists with text " +
@@ -71,7 +71,8 @@ scrapedDataEvent.on("scrapedData", async fbData => {
     let post: RentalPost;
     try {
         const { data } = await axios.post(config.PARSER_API_BASE_URL, {
-            text: fbData.text
+            text: fbData.text,
+            city
         });
         post = data;
     } catch (err) {
@@ -86,6 +87,8 @@ scrapedDataEvent.on("scrapedData", async fbData => {
             [null, undefined].includes(post[key as keyof typeof post] as any) &&
             delete post[key as keyof typeof post]
     );
+
+    post.ezaffittoCity = city;
 
     if (post.address && post.address !== "unknown") {
         try {
@@ -143,20 +146,19 @@ scrapedDataEvent.on("scrapedData", async fbData => {
 });
 
 export class Scraper {
-    public static fbGroupUrls: readonly string[] = [
-        // "https://www.facebook.com/groups/172693152831725/?locale=it_IT", // privato, enorme
-        "https://www.facebook.com/groups/AffittoBologna/?locale=it_IT",
-        "https://www.facebook.com/groups/bolognaaffitti/?locale=it_IT",
-        "https://www.facebook.com/groups/4227281414051454/?locale=it_IT",
-        "https://www.facebook.com/groups/affitti.a.bologna/?locale=it_IT",
-        "https://www.facebook.com/groups/affittobolonga/?locale=it_IT",
-        "https://www.facebook.com/groups/488856121488809/?locale=it_IT",
-        "https://www.facebook.com/groups/bakecaaffittibologna/?locale=it_IT",
-        "https://www.facebook.com/groups/926952708679868/?locale=it_IT",
-        "https://www.facebook.com/groups/1141916849589069/?locale=it_IT",
-        "https://www.facebook.com/groups/6222659174441521/?locale=it_IT"
-        // "https://www.facebook.com/groups/114050352266007/?locale=it_IT", // privato
-    ];
+    public static async getUrls(city: EzaffittoCity): Promise<string[]> {
+        const urls: CityUrls[] = JSON.parse(
+            await readFile(config.URLS_JSON_PATH, { encoding: "utf-8" })
+        );
+        return urls.filter(e => e.city === city).map(e => e.urls[0].url);
+    }
+
+    public static async getCities(): Promise<EzaffittoCity[]> {
+        const urls: CityUrls[] = JSON.parse(
+            await readFile(config.URLS_JSON_PATH, { encoding: "utf-8" })
+        );
+        return urls.map(e => e.city);
+    }
 
     private groupQueue: string[] = [];
 
@@ -192,17 +194,27 @@ export class Scraper {
         }
     }
 
-    private createRandomQueue() {
+    private async createRandomQueue(city: EzaffittoCity) {
         // place elements from fbGroupUrls in groupQueue in random order
-        this.groupQueue = Scraper.fbGroupUrls
+        const urls = await Scraper.getUrls(city);
+        if (urls.length === 0) {
+            logger.error("No urls found for city " + city);
+            await axios.post(config.DB_API_BASE_URL + "/panic", {
+                service: "fb-scraper",
+                message: "No urls found for city " + city
+            });
+            process.exit(1);
+        }
+
+        this.groupQueue = urls
             .map(url => ({ url, rand: Math.random() }))
             .sort((a, b) => a.rand - b.rand)
             .map(elem => elem.url);
     }
 
-    private getGroupUrl(): string {
+    private async getGroupUrl(city: EzaffittoCity): Promise<string> {
         if (this.groupQueue.length === 0) {
-            this.createRandomQueue();
+            await this.createRandomQueue(city);
         }
         // string since createRandomQueue() is called before
         // which populates groupQueue with strings
@@ -226,7 +238,11 @@ export class Scraper {
         await this.page.setViewport({ width: 1080, height: 1024 });
     }
 
-    private async scrape(groupUrl: string, durationMs: number) {
+    private async scrape(
+        groupUrl: string,
+        durationMs: number,
+        city: EzaffittoCity
+    ) {
         if (!this.browser || !this.page) {
             await this.init();
         }
@@ -385,7 +401,10 @@ export class Scraper {
                     if (missingProps.length == 0) {
                         // TODO implement save in case of error?
 
-                        scrapedDataEvent.emit("scrapedData", props);
+                        scrapedDataEvent.emit("scrapedData", {
+                            fbData: props,
+                            city
+                        });
                         logger.debug(
                             "Emitting new post with id " +
                                 props.id +
@@ -808,36 +827,40 @@ export class Scraper {
         while (true) {
             const duration = config.GET_DELAY_BETWEEN_SCRAPES_MS();
 
-            logger.info(
-                `Scraping for ${(duration / 1000).toFixed(3)} seconds...`
-            );
+            for (const city of await Scraper.getCities()) {
+                logger.info(
+                    `Scraping for ${(duration / 1000).toFixed(
+                        3
+                    )} seconds city ${city}...`
+                );
 
-            const groupUrl = this.getGroupUrl();
+                const groupUrl = await this.getGroupUrl(city);
 
-            try {
-                await this.scrape(groupUrl, duration);
-                if (
-                    this.urlsNoPostsFetched.length >=
-                    config.MAX_TIMES_NO_POSTS_FETCHED
-                ) {
-                    logger.error(
-                        "No posts fetched 3 times in a row, sending panic message..."
-                    );
+                try {
+                    await this.scrape(groupUrl, duration, city);
+                    if (
+                        this.urlsNoPostsFetched.length >=
+                        config.MAX_TIMES_NO_POSTS_FETCHED
+                    ) {
+                        logger.error(
+                            "No posts fetched 3 times in a row, sending panic message..."
+                        );
 
-                    await axios.post(config.DB_API_BASE_URL + "/panic", {
-                        service: "fb-scraper",
-                        message: `No posts fetched ${
-                            config.MAX_TIMES_NO_POSTS_FETCHED
-                        } times in a row for groups: ${this.urlsNoPostsFetched.join(
-                            ", "
-                        )} - exiting`
-                    });
-                    process.exit(1);
+                        await axios.post(config.DB_API_BASE_URL + "/panic", {
+                            service: "fb-scraper",
+                            message: `No posts fetched ${
+                                config.MAX_TIMES_NO_POSTS_FETCHED
+                            } times in a row for groups: ${this.urlsNoPostsFetched.join(
+                                ", "
+                            )} - exiting`
+                        });
+                        process.exit(1);
+                    }
+                } catch (err) {
+                    logger.error(err);
                 }
-            } catch (err) {
-                logger.error(err);
+                await wait(Math.floor(Math.random() * 5000));
             }
-            await wait(Math.floor(Math.random() * 5000));
         }
     }
 }

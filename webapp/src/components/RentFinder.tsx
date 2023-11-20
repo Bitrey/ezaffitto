@@ -12,7 +12,7 @@ import Button from "./Button";
 import RentView from "./RentView";
 import Textbox from "./Textbox";
 import { RentalPostJSONified } from "../interfaces/RentalPost";
-import { gaEvents, rentalTypeOptions } from "../config";
+import { config, gaEvents, rentalTypeOptions } from "../config";
 import Search from "../icons/Search";
 // import ReactPaginate from "react-paginate";
 // import Forward from "../icons/Forward";
@@ -87,13 +87,7 @@ const RentFinder = () => {
   }, [handleReCaptchaVerify]);
 
   const fetchData = useCallback(
-    async (
-      e?: React.FormEvent<HTMLFormElement>,
-      concat: boolean = false
-    ): Promise<RentalPostJSONified[] | null> => {
-      e?.preventDefault();
-
-      // TODO DEBUG
+    async (concat: boolean = false): Promise<RentalPostJSONified[] | null> => {
       if (!captchaToken) {
         console.error("No ReCAPTCHA token");
         window.alert(t("captcha.pleaseSolve"));
@@ -119,11 +113,16 @@ const RentFinder = () => {
             limit,
             skip: cursor,
             rentalTypes: rentalTypes.length > 0 ? rentalTypes : null,
-            maxPrice,
+            maxPrice: Math.max(maxPrice, config.minMaxPrice),
             q: searchQuery.length > 0 ? searchQuery : null,
             orderBy
           }
         });
+
+        if (maxPrice < config.minMaxPrice) {
+          setMaxPrice(config.minMaxPrice);
+        }
+
         const { data, count } = res.data;
 
         ReactGA.event(gaEvents.findPosts, {
@@ -155,6 +154,7 @@ const RentFinder = () => {
         }
 
         setError(null);
+        setCaptchaToken(null);
 
         return mapped;
       } catch (err) {
@@ -193,7 +193,7 @@ const RentFinder = () => {
     if (!captchaToken || isLoading) {
       return;
     }
-    fetchData(undefined, cursor !== 0); // concatenation if not first page
+    fetchData(cursor !== 0); // concatenation if not first page
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cursor, captchaToken]);
 
@@ -204,9 +204,9 @@ const RentFinder = () => {
       </h3>
 
       <form
-        onSubmit={e => {
+        onSubmit={async e => {
           e.preventDefault();
-          // TODO DEBUG DO STUFF
+          await handleReCaptchaVerify();
         }}
         className="mt-4 mx-auto w-full"
       >
@@ -270,7 +270,7 @@ const RentFinder = () => {
       {posts &&
         posts.length > 0 &&
         posts.filter(p => p.latitude && p.longitude).length > 0 && (
-          <div className="flex items-center justify-center mt-6">
+          <div className="z-0 flex items-center justify-center mt-6">
             <Accordion
               title={t("map.findOnMap") + " 🧭"}
               className="w-full max-h-[80vh]"
@@ -382,13 +382,12 @@ const RentFinder = () => {
             // height={600}
             dataLength={posts?.length}
             next={async () => {
+              if (isLoading) return;
+
               setCursor(cursor + limit);
 
               // try to reset recaptcha
               await handleReCaptchaVerify();
-
-              // TODO DEBUG do stuff
-              // turnstileRef?.current?.reset(); // reset captcha
             }}
             hasMore={
               posts?.length !== 0 ||
@@ -414,7 +413,9 @@ const RentFinder = () => {
               </p>
             }
             // below props only if you need pull down functionality
-            refreshFunction={fetchData}
+            refreshFunction={async () => {
+              await handleReCaptchaVerify();
+            }}
             pullDownToRefresh
             pullDownToRefreshThreshold={50}
             pullDownToRefreshContent={

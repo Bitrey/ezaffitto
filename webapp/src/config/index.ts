@@ -3,6 +3,7 @@ export const config = Object.freeze({
     captchaV3SiteKey: "6LdjlRUpAAAAABkQdf4BNEdXAlKeANcbNQnpYTT5",
     ga4Token: "G-MTGX0JZEFL",
     infoEmail: "info@ezaffitto.com",
+    minMaxPrice: 100,
     postDynamicFeatures: [
         "rentalType",
         "monthlyPrice",

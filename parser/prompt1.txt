@@ -5,7 +5,7 @@ Il tuo compito è quello di capire se si tratta di un post riguardante un affitt
 Testo da elaborare: {1}
 
 Struttura JSON richiesta: {
-    "isRental": <boolean: if the post is about a RENTAL of a property>,
+    "isRental": <boolean: if the post is about a RENTAL of a property (and not SEARCHING one)>,
     "isForRent": <boolean: if the property is about OFFERING a rent and not FINDING a rent>,
     "rentalType": <enum: "singleRoom", "doubleRoom", "studio", "apartment", "house", "other">,
     "monthlyPrice": <number | null: total rent cost for a single MONTH>,

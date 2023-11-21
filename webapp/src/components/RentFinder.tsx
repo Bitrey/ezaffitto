@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { FC, useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -11,7 +11,7 @@ import CustomSelect from "./Select";
 import Button from "./Button";
 import RentView from "./RentView";
 import Textbox from "./Textbox";
-import { RentalPostJSONified } from "../interfaces/RentalPost";
+import { EzaffittoCity, RentalPostJSONified } from "../interfaces/RentalPost";
 import { config, gaEvents, rentalTypeOptions } from "../config";
 import Search from "../icons/Search";
 // import ReactPaginate from "react-paginate";
@@ -27,7 +27,9 @@ import { format } from "date-fns";
 import { getLanguage } from "../misc/getLanguage";
 import { enUS, it } from "date-fns/locale";
 
-const RentFinder = () => {
+interface RentFinderProps {}
+
+const RentFinder: FC<RentFinderProps> = () => {
   const [maxPrice, setMaxPrice] = useState<number>(10_000);
 
   const { isLoading, setIsLoading, searchQuery } =
@@ -55,6 +57,9 @@ const RentFinder = () => {
     { key: "priceAsc", value: t("orderByOptions.priceAsc") },
     { key: "priceDesc", value: t("orderByOptions.priceDesc") }
   ];
+
+  // route is :city
+  const { city } = useParams<{ city: EzaffittoCity }>();
 
   const [orderBy, setOrderBy] = useState<OrderBy>("dateDesc");
 
@@ -97,6 +102,7 @@ const RentFinder = () => {
       // await fetchCount();
 
       console.log("Fetching posts", {
+        city,
         limit,
         skip: cursor,
         rentalTypes,
@@ -110,6 +116,7 @@ const RentFinder = () => {
         const res = await axios.get("/api/v1/rentalpost", {
           params: {
             captcha: captchaToken,
+            city,
             limit,
             skip: cursor,
             rentalTypes: rentalTypes.length > 0 ? rentalTypes : null,
@@ -124,6 +131,8 @@ const RentFinder = () => {
         }
 
         const { data, count } = res.data;
+
+        console.log("Posts count", { count });
 
         ReactGA.event(gaEvents.findPosts, {
           searchQuery,
@@ -200,7 +209,7 @@ const RentFinder = () => {
   return (
     <div className="p-2 pb-8 dark:bg-gray-800 dark:text-white">
       <h3 className="mt-8 mb-2 text-center font-semibold text-2xl">
-        {t("homepage.banner")}
+        {t("homepage.banner", { city: t("city." + city) })}
       </h3>
 
       <form
@@ -389,11 +398,23 @@ const RentFinder = () => {
               await handleReCaptchaVerify();
             }}
             hasMore={
+              (console.log(
+                "posts?.length !== 0",
+                posts?.length !== 0,
+                "\nisLoading",
+                isLoading,
+                "\n!posts",
+                !posts,
+                "\n!count",
+                typeof count !== "number",
+                "\nposts.length < count",
+                posts.length < count
+              ),
               posts?.length !== 0 ||
-              isLoading ||
-              !posts ||
-              !count ||
-              posts.length < count
+                isLoading ||
+                !posts ||
+                typeof count !== "number" ||
+                posts.length < count)
             }
             loader={
               <p

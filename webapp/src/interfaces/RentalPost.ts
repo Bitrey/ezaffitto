@@ -34,6 +34,12 @@ export enum EzaffittoCity {
     GENOVA = "genova"
 }
 
+export const ezaffittoCities = Object.values(EzaffittoCity);
+
+export const isEzaffittoCity = (city: string): city is EzaffittoCity => {
+    return ezaffittoCities.includes(city as EzaffittoCity);
+};
+
 // urls.json
 export interface CityUrls {
     city: EzaffittoCity;

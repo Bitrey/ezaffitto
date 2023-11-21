@@ -15,10 +15,11 @@ import "leaflet/dist/leaflet.css";
 import "react-lazy-load-image-component/src/effects/blur.css";
 import Homepage from "./Homepage";
 import ByRentId from "./ByRentId";
-import RentFinder from "./components/RentFinder";
 
 import ReactGA from "react-ga4";
 import { config } from "./config";
+import IsEzaffittoCity from "./components/IsEzaffittoCity";
+import WelcomeScreen from "./WelcomeScreen";
 
 ReactGA.initialize(config.ga4Token);
 
@@ -29,7 +30,11 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <RentFinder />
+        element: <WelcomeScreen />
+      },
+      {
+        path: "/:city",
+        element: <IsEzaffittoCity />
       },
       {
         path: "/post/:id",

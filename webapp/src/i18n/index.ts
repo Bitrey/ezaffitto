@@ -6,7 +6,14 @@ import { Resource } from "i18next";
 const resources: Resource = {
     en: {
         translation: {
+            welcome: {
+                title: "Welcome to ezaffitto!",
+                subtitle: "Your portal for finding a rent",
+                where: "Where are you looking for a rent?",
+                chooseCity: "Choose your city"
+            },
             common: {
+                // TODO to change
                 appName: "ezaffitto - Find your rent in Bologna!",
                 appNameShort: "ezaffitto",
                 contact: "Contact",
@@ -15,11 +22,24 @@ const resources: Resource = {
                 close: "Close",
                 on: "on"
             },
+            city: {
+                bologna: "Bologna",
+                milano: "Milan",
+                roma: "Rome",
+                torino: "Turin",
+                firenze: "Florence",
+                napoli: "Naples",
+                padova: "Padua",
+                genova: "Genoa"
+            },
             errors: {
                 notFound: "Not found",
                 unknown: "Unknown error",
                 geolocationFailed: "Geolocation failed",
-                noResultsFound: "No results found"
+                noResultsFound: "No results found",
+                invalidCity: "Invalid city",
+                invalidCityDescription:
+                    "The selected city is not among the available ones."
             },
             tos: {
                 using: "By using this site, you agree to the",
@@ -63,7 +83,7 @@ const resources: Resource = {
                 loadingError: "Error while loading"
             },
             homepage: {
-                banner: "Find your rent in Bologna!",
+                banner: "Find your rent in {{city}}!",
                 account: "Account"
             },
             rentalType: {
@@ -126,6 +146,12 @@ const resources: Resource = {
     },
     it: {
         translation: {
+            welcome: {
+                title: "Benvenuto su ezaffitto!",
+                subtitle: "Il tuo portale per la ricerca di affitti",
+                where: "Dove stai cercando un affitto?",
+                chooseCity: "Scegli la tua città"
+            },
             common: {
                 appName: "ezaffitto - Trova il tuo affitto a Bologna!",
                 appNameShort: "ezaffitto",
@@ -135,11 +161,24 @@ const resources: Resource = {
                 close: "Chiudi",
                 on: "su"
             },
+            city: {
+                bologna: "Bologna",
+                milano: "Milano",
+                roma: "Roma",
+                torino: "Torino",
+                firenze: "Firenze",
+                napoli: "Napoli",
+                padova: "Padova",
+                genova: "Genova"
+            },
             errors: {
                 notFound: "Non trovato",
                 unknown: "Errore sconosciuto",
                 geolocationFailed: "Geolocalizzazione fallita",
-                noResultsFound: "Nessun risultato trovato"
+                noResultsFound: "Nessun risultato trovato",
+                invalidCity: "Città non valida",
+                invalidCityDescription:
+                    "La città selezionata non è tra quelle disponibili."
             },
             tos: {
                 using: "Utilizzando questo sito, accetti i",
@@ -183,7 +222,7 @@ const resources: Resource = {
                 loadingError: "Errore nel caricamento"
             },
             homepage: {
-                banner: "Trova il tuo affitto a Bologna!",
+                banner: "Trova il tuo affitto a {{city}}!",
                 account: "Account"
             },
             rentalType: {

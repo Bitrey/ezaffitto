@@ -207,6 +207,12 @@ const RentFinder: FC<RentFinderProps> = () => {
   const { state } = useLocation();
 
   useEffect(() => {
+    window.document.title = `${t("common.roomsInCity", {
+      city: t("city." + city)
+    })} - ${t("common.appNameShort")}`;
+  }, [city, i18n.language, t]);
+
+  useEffect(() => {
     let posts = null;
     let selected = null;
     try {
@@ -498,6 +504,7 @@ const RentFinder: FC<RentFinderProps> = () => {
               >
                 <RentView
                   post={selected}
+                  isEmbed
                   className="cursor-pointer hidden md:block"
                 />
               </Link>

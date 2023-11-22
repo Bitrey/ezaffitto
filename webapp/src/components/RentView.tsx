@@ -20,11 +20,13 @@ import { MarkerIcon } from "../misc/MarkerIcon";
 
 interface RentViewProps extends HTMLAttributes<HTMLDivElement> {
   post?: RentalPostJSONified;
+  isEmbed?: boolean;
 }
 
 const RentView: FunctionComponent<RentViewProps> = ({
   post,
   className,
+  isEmbed,
   ...rest
 }) => {
   const { t, i18n } = useTranslation();
@@ -63,6 +65,8 @@ const RentView: FunctionComponent<RentViewProps> = ({
   const pathname = window.location.pathname;
 
   useEffect(() => {
+    if (isEmbed) return;
+
     if (!post || pathname === "/") {
       window.document.title = `${t("common.appName")}`;
     } else {
@@ -78,7 +82,7 @@ const RentView: FunctionComponent<RentViewProps> = ({
             }`
       } - ${t("common.appNameShort")}`;
     }
-  }, [i18n.language, pathname, post, t]);
+  }, [i18n.language, isEmbed, pathname, post, t]);
 
   return (
     <div

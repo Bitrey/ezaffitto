@@ -15,7 +15,11 @@ const router = Router();
 router.get(
     "/",
     captchaQueryParam,
-    query("city").isString().optional(),
+    query("city")
+        .isString()
+        .isIn(config.enabledCities)
+        .optional()
+        .withMessage("errors.cityNotEnabled"),
     query("limit").isInt().optional(),
     query("skip").isInt().optional(),
     query("maxPrice").isInt({ gt: 0 }).optional(),

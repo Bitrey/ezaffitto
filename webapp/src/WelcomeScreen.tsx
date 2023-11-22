@@ -1,12 +1,17 @@
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ezaffittoCities } from "./interfaces/RentalPost";
 import Button from "./components/Button";
+import { config } from "./config";
 
 interface WelcomeScreenProps {}
 
 const WelcomeScreen: FC<WelcomeScreenProps> = () => {
   const { t } = useTranslation();
+
+  useEffect(() => {
+    window.document.title = t("common.appName");
+  }, [t]);
 
   return (
     <div className="p-3">
@@ -21,15 +26,29 @@ const WelcomeScreen: FC<WelcomeScreenProps> = () => {
         <p className="text-sm text-gray-500 mt-1">{t("welcome.chooseCity")}</p>
 
         <div className="flex justify-center flex-wrap gap-2">
-          {ezaffittoCities.map(e => (
-            <Button
-              href={`/${e}`}
-              key={e}
-              className="text-lg mt-2 rounded-full w-max px-3"
-            >
-              {t(`city.${e}`)}
-            </Button>
-          ))}
+          {ezaffittoCities.map(e =>
+            config.enabledCities.includes(e) ? (
+              <Button
+                href={`/${e}`}
+                key={e}
+                className="text-lg mt-2 rounded-full w-max px-3"
+                title={t("welcome.rentsIn", { city: t(`city.${e}`) })}
+              >
+                {t(`city.${e}`)}
+              </Button>
+            ) : (
+              <Button
+                key={e}
+                className="text-lg mt-2 rounded-full w-max px-3 opacity-50 cursor-wait"
+                disabled
+                title={t("welcome.cityNotYetAvailable", {
+                  city: t(`city.${e}`)
+                })}
+              >
+                {t(`city.${e}`)}
+              </Button>
+            )
+          )}
         </div>
       </div>
     </div>

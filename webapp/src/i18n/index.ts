@@ -10,17 +10,20 @@ const resources: Resource = {
                 title: "Welcome to ezaffitto!",
                 subtitle: "Your portal for finding rents in Italy",
                 where: "Where are you looking for a rent?",
-                chooseCity: "Choose your city"
+                chooseCity: "Choose your city",
+                rentsIn: "Rents in {{city}}",
+                cityNotYetAvailable: "{{city}} not yet available 😭"
             },
             common: {
                 // TODO to change
-                appName: "ezaffitto - Find your rent in Bologna!",
+                appName: "ezaffitto - Find your rent in Italy!",
                 appNameShort: "ezaffitto",
                 contact: "Contact",
                 loading: "Loading...",
                 error: "Error",
                 close: "Close",
-                on: "on"
+                on: "on",
+                roomsInCity: "Rooms for rent in {{city}}"
             },
             city: {
                 bologna: "Bologna",
@@ -38,6 +41,7 @@ const resources: Resource = {
                 geolocationFailed: "Geolocation failed",
                 noResultsFound: "No results found",
                 invalidCity: "Invalid city",
+                cityNotEnabled: "The selected city is not enabled! 😭",
                 invalidCityDescription:
                     "The selected city is not among the available ones.",
                 timeout:
@@ -155,16 +159,19 @@ const resources: Resource = {
                 title: "Benvenuto su ezaffitto!",
                 subtitle: "Il tuo portale per la ricerca di affitti",
                 where: "Dove stai cercando un affitto?",
-                chooseCity: "Scegli la tua città"
+                chooseCity: "Scegli la tua città",
+                rentsIn: "Affitti a {{city}}",
+                cityNotYetAvailable: "{{city}} non ancora disponibile 😭"
             },
             common: {
-                appName: "ezaffitto - Trova il tuo affitto a Bologna!",
+                appName: "ezaffitto - Trova il tuo affitto!",
                 appNameShort: "ezaffitto",
                 contact: "Contatta",
                 loading: "Caricamento...",
                 error: "Errore",
                 close: "Chiudi",
-                on: "su"
+                on: "su",
+                roomsInCity: "Stanze in affitto a {{city}}"
             },
             city: {
                 bologna: "Bologna",
@@ -182,6 +189,8 @@ const resources: Resource = {
                 geolocationFailed: "Geolocalizzazione fallita",
                 noResultsFound: "Nessun risultato trovato",
                 invalidCity: "Città non valida",
+                cityNotEnabled:
+                    "La città selezionata non è ancora abilitata! 😭",
                 invalidCityDescription:
                     "La città selezionata non è tra quelle disponibili.",
                 timeout:

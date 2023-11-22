@@ -12,5 +12,19 @@
             }
         ],
         "bannedAgencyIds": [374030, 368620]
+    },
+    {
+        "city": "milano",
+        "urls": [
+            {
+                "url": "https://www.immobiliare.it/api-next/search-list/real-estates/",
+                "fkRegione": "lom",
+                "idComune": "8042",
+                "idNazione": "IT",
+                "idProvincia": "MI",
+                "path": "%2Faffitto-stanze%2Fmilano%2F"
+            }
+        ],
+        "bannedAgencyIds": [374030, 368620]
     }
 ]

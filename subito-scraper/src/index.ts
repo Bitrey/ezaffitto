@@ -245,7 +245,7 @@ const job = new CronJob(
                 return;
             }
 
-            logger.info(`Scraped ${scraped.length} posts`);
+            logger.info(`Scraped ${scraped.length} posts for city ${city}`);
 
             for (let i = 0; i < scraped.length; i++) {
                 const post = scraped[i];

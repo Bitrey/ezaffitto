@@ -15,6 +15,11 @@ const router = Router();
 router.get(
     "/",
     captchaQueryParam,
+    query("city")
+        .isString()
+        .isIn(config.enabledCities)
+        .optional()
+        .withMessage("errors.cityNotEnabled"),
     query("limit").isInt().optional(),
     query("skip").isInt().optional(),
     query("maxPrice").isInt({ gt: 0 }).optional(),
@@ -61,6 +66,10 @@ router.get(
                 $caseSensitive: false,
                 $diacriticSensitive: false
             };
+        }
+
+        if (req.query.city) {
+            query.ezaffittoCity = req.query.city as string;
         }
 
         let sort: Sort;
@@ -114,7 +123,7 @@ router.get(
 
         const result = await data.toArray();
 
-        const count = await collection.countDocuments();
+        const count = await collection.countDocuments(query);
 
         logger.debug(
             `Data retrieved successfully (total: ${result.length}/${count})`

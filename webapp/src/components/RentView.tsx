@@ -20,11 +20,13 @@ import { MarkerIcon } from "../misc/MarkerIcon";
 
 interface RentViewProps extends HTMLAttributes<HTMLDivElement> {
   post?: RentalPostJSONified;
+  isEmbed?: boolean;
 }
 
 const RentView: FunctionComponent<RentViewProps> = ({
   post,
   className,
+  isEmbed,
   ...rest
 }) => {
   const { t, i18n } = useTranslation();
@@ -63,6 +65,8 @@ const RentView: FunctionComponent<RentViewProps> = ({
   const pathname = window.location.pathname;
 
   useEffect(() => {
+    if (isEmbed) return;
+
     if (!post || pathname === "/") {
       window.document.title = `${t("common.appName")}`;
     } else {
@@ -78,7 +82,7 @@ const RentView: FunctionComponent<RentViewProps> = ({
             }`
       } - ${t("common.appNameShort")}`;
     }
-  }, [i18n.language, pathname, post, t]);
+  }, [i18n.language, isEmbed, pathname, post, t]);
 
   return (
     <div
@@ -173,7 +177,14 @@ const RentView: FunctionComponent<RentViewProps> = ({
             )}
           </div>
         </div>
-        <p className="text-gray-800 dark:text-gray-200">{post?.description}</p>
+        <p className="text-gray-800 dark:text-gray-200">
+          {post?.description?.split("\n").map((e, i) => (
+            <Fragment key={i}>
+              {e}
+              <br />
+            </Fragment>
+          )) || t("rentViewer.noDescription")}
+        </p>
 
         <div className="mx-2 my-6 grid border grid-cols-2 justify-center items-center">
           {/* any sennò rompe */}
@@ -182,7 +193,12 @@ const RentView: FunctionComponent<RentViewProps> = ({
               e => post && e in post && post[e as keyof typeof post] !== null
             )
             .map((e, i) => {
-              if (!post) return false;
+              if (
+                !post ||
+                !(e in post) ||
+                typeof post[e as keyof typeof post] === "undefined"
+              )
+                return false;
               return (
                 <Fragment key={e}>
                   <p

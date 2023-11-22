@@ -25,6 +25,10 @@ puppeteer.use(pluginStealth());
 
 export const scrapedDataEvent: ScrapedDataEventEmitter = new EventEmitter();
 
+type GroupQueue = {
+    [city in EzaffittoCity]: string[];
+};
+
 scrapedDataEvent.on("scrapedData", async ({ fbData, city }) => {
     // check if exists
     logger.debug(
@@ -150,7 +154,16 @@ export class Scraper {
         const urls: CityUrls[] = JSON.parse(
             await readFile(config.URLS_JSON_PATH, { encoding: "utf-8" })
         );
-        return urls.filter(e => e.city === city).map(e => e.urls[0].url);
+        const mapped = urls.find(e => e.city === city)?.urls.map(e => e.url);
+        if (!mapped) {
+            logger.error("No urls found for city " + city);
+            await axios.post(config.DB_API_BASE_URL + "/panic", {
+                service: "fb-scraper",
+                message: "No urls found for city " + city
+            });
+            process.exit(1);
+        }
+        return mapped;
     }
 
     public static async getCities(): Promise<EzaffittoCity[]> {
@@ -160,7 +173,16 @@ export class Scraper {
         return urls.map(e => e.city);
     }
 
-    private groupQueue: string[] = [];
+    private groupQueue: GroupQueue = {
+        bologna: [],
+        firenze: [],
+        milano: [],
+        napoli: [],
+        roma: [],
+        torino: [],
+        genova: [],
+        padova: []
+    };
 
     private browser: Browser | null = null;
     private page: Page | null = null;
@@ -206,19 +228,21 @@ export class Scraper {
             process.exit(1);
         }
 
-        this.groupQueue = urls
+        this.groupQueue[city] = urls
             .map(url => ({ url, rand: Math.random() }))
             .sort((a, b) => a.rand - b.rand)
             .map(elem => elem.url);
+        logger.debug("Created random queue for city " + city + ": ");
+        logger.debug(this.groupQueue[city]);
     }
 
     private async getGroupUrl(city: EzaffittoCity): Promise<string> {
-        if (this.groupQueue.length === 0) {
+        if (this.groupQueue[city].length === 0) {
             await this.createRandomQueue(city);
         }
         // string since createRandomQueue() is called before
         // which populates groupQueue with strings
-        return this.groupQueue.pop() as string;
+        return this.groupQueue[city].pop() as string;
     }
 
     private async init() {
@@ -329,7 +353,13 @@ export class Scraper {
 
         this.page.on("request", async interceptedRequest => {
             try {
-                if (interceptedRequest.isInterceptResolutionHandled()) return;
+                if (interceptedRequest.isInterceptResolutionHandled()) {
+                    return;
+                }
+                if (interceptedRequest.resourceType() === "image") {
+                    interceptedRequest.abort();
+                    return;
+                }
                 if (interceptedRequest.url().includes("graphql")) {
                     urls.push(interceptedRequest.url());
                 }

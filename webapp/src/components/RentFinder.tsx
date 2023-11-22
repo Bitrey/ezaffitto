@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { FC, useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -11,7 +11,11 @@ import CustomSelect from "./Select";
 import Button from "./Button";
 import RentView from "./RentView";
 import Textbox from "./Textbox";
-import { RentalPostJSONified } from "../interfaces/RentalPost";
+import {
+  EzaffittoCity,
+  RentalPostJSONified,
+  RentalPostJSONifiedRaw
+} from "../interfaces/RentalPost";
 import { config, gaEvents, rentalTypeOptions } from "../config";
 import Search from "../icons/Search";
 // import ReactPaginate from "react-paginate";
@@ -27,7 +31,9 @@ import { format } from "date-fns";
 import { getLanguage } from "../misc/getLanguage";
 import { enUS, it } from "date-fns/locale";
 
-const RentFinder = () => {
+interface RentFinderProps {}
+
+const RentFinder: FC<RentFinderProps> = () => {
   const [maxPrice, setMaxPrice] = useState<number>(10_000);
 
   const { isLoading, setIsLoading, searchQuery } =
@@ -56,6 +62,9 @@ const RentFinder = () => {
     { key: "priceDesc", value: t("orderByOptions.priceDesc") }
   ];
 
+  // route is :city
+  const { city } = useParams<{ city: EzaffittoCity }>();
+
   const [orderBy, setOrderBy] = useState<OrderBy>("dateDesc");
 
   async function onOrderChange(option: DropdownOption<OrderBy>): Promise<void> {
@@ -73,13 +82,19 @@ const RentFinder = () => {
   // Create an event handler so you can call the verification on button click event or form submit
   const handleReCaptchaVerify = useCallback(async () => {
     if (!executeRecaptcha) {
-      console.log("Execute recaptcha not yet available");
       return;
     }
 
-    const token = await executeRecaptcha(gaEvents.findPosts.action);
-    setCaptchaToken(token);
-  }, [executeRecaptcha]);
+    setIsLoading(true);
+    try {
+      const token = await executeRecaptcha(gaEvents.findPosts.action);
+      setCaptchaToken(token);
+    } catch (err) {
+      setError("errors.timeout");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [executeRecaptcha, setIsLoading]);
 
   // You can use useEffect to trigger the verification as soon as the component being loaded
   useEffect(() => {
@@ -97,6 +112,7 @@ const RentFinder = () => {
       // await fetchCount();
 
       console.log("Fetching posts", {
+        city,
         limit,
         skip: cursor,
         rentalTypes,
@@ -110,6 +126,7 @@ const RentFinder = () => {
         const res = await axios.get("/api/v1/rentalpost", {
           params: {
             captcha: captchaToken,
+            city,
             limit,
             skip: cursor,
             rentalTypes: rentalTypes.length > 0 ? rentalTypes : null,
@@ -125,6 +142,8 @@ const RentFinder = () => {
 
         const { data, count } = res.data;
 
+        console.log("Posts count", { count });
+
         ReactGA.event(gaEvents.findPosts, {
           searchQuery,
           rentalTypes,
@@ -137,7 +156,7 @@ const RentFinder = () => {
 
         // DEBUG
         // parse dates
-        const mapped = (data as RentalPostJSONified[]).map(e =>
+        const mapped = (data as RentalPostJSONifiedRaw[]).map(e =>
           translatePostJSON(e)
         );
         console.log("Fetched posts", mapped, "out of", count);
@@ -185,11 +204,46 @@ const RentFinder = () => {
     ]
   );
 
-  useEffect(() => {
-    setCursor(0);
-  }, [searchQuery]);
+  const { state } = useLocation();
 
   useEffect(() => {
+    window.document.title = `${t("common.roomsInCity", {
+      city: t("city." + city)
+    })} - ${t("common.appNameShort")}`;
+  }, [city, i18n.language, t]);
+
+  useEffect(() => {
+    let posts = null;
+    let selected = null;
+    try {
+      posts = JSON.parse(state.posts).map((e: RentalPostJSONifiedRaw) =>
+        translatePostJSON(e)
+      );
+      if (!Array.isArray(posts)) {
+        throw new Error("sasso");
+      }
+    } catch (err) {}
+
+    try {
+      selected = translatePostJSON(JSON.parse(state.selected));
+    } catch (err) {}
+
+    if (posts) {
+      setPosts(posts);
+      if (posts.length > 0) {
+        setSelected(selected || posts[0]);
+      }
+      console.log(
+        "Using cache for posts",
+        posts,
+        "selected",
+        selected || posts[0]
+      );
+      state.posts = null;
+      state.selected = null;
+      return;
+    }
+
     if (!captchaToken || isLoading) {
       return;
     }
@@ -200,7 +254,7 @@ const RentFinder = () => {
   return (
     <div className="p-2 pb-8 dark:bg-gray-800 dark:text-white">
       <h3 className="mt-8 mb-2 text-center font-semibold text-2xl">
-        {t("homepage.banner")}
+        {t("homepage.banner", { city: t("city." + city) })}
       </h3>
 
       <form
@@ -310,7 +364,9 @@ const RentFinder = () => {
                         <Link
                           to={`/post/${e._id}`}
                           state={{
-                            post: JSON.stringify(e)
+                            post: JSON.stringify(e),
+                            prevPath: window.location.pathname,
+                            posts: JSON.stringify(posts)
                           }}
                         >
                           {e.monthlyPrice && (
@@ -359,25 +415,6 @@ const RentFinder = () => {
 
       <div className="mt-6 md:mt-12 grid grid-cols-1 md:grid-cols-2">
         <div>
-          {/* <div className="flex items-center mx-auto">
-            <ReactPaginate
-              activeClassName={"item active "}
-              breakClassName={"item break-me "}
-              breakLabel={"..."}
-              containerClassName={"pagination"}
-              disabledClassName={"disabled-page"}
-              marginPagesDisplayed={2}
-              nextClassName={"item next "}
-              nextLabel={<Forward />}
-              onPageChange={handlePageClick}
-              pageCount={pageCount}
-              pageClassName={"item pagination-page "}
-              pageRangeDisplayed={2}
-              previousClassName={"item previous"}
-              previousLabel={<Backwards />}
-            />
-          </div> */}
-
           <InfiniteScroll
             // height={600}
             dataLength={posts?.length}
@@ -389,11 +426,11 @@ const RentFinder = () => {
               await handleReCaptchaVerify();
             }}
             hasMore={
-              posts?.length !== 0 ||
+              !Number.isFinite(count) ||
               isLoading ||
               !posts ||
-              !count ||
-              posts.length < count
+              typeof count !== "number" ||
+              (posts?.length !== 0 && posts.length < count)
             }
             loader={
               <p
@@ -403,12 +440,16 @@ const RentFinder = () => {
                   error ? "" : "animate-pulse"
                 }`}
               >
-                {error || t("common.loading")}
+                {error || t("rentFinder.loadingPosts")}
               </p>
             }
             endMessage={
-              <p style={{ textAlign: "center" }}>
-                <b>{t("rentFinder.noMorePosts")}</b>
+              <p className="text-center mt-1">
+                <b>
+                  {posts?.length === 0
+                    ? t("rentFinder.noPostsAvailable")
+                    : t("rentFinder.noMorePosts")}
+                </b>
               </p>
             }
             // below props only if you need pull down functionality
@@ -437,7 +478,9 @@ const RentFinder = () => {
                   <Link
                     to={`/post/${e._id}`}
                     state={{
-                      post: JSON.stringify(e)
+                      post: JSON.stringify(e),
+                      prevPath: window.location.pathname,
+                      posts: JSON.stringify(posts)
                     }}
                   >
                     <RentCard post={e} />
@@ -447,27 +490,33 @@ const RentFinder = () => {
             ))}
           </InfiniteScroll>
         </div>
-        <div>
-          {selected ? (
-            <Link
-              to={`/post/${selected._id}`}
-              state={{
-                post: JSON.stringify(selected)
-              }}
-            >
-              <RentView
-                post={selected}
-                className="cursor-pointer hidden md:block"
-              />
-            </Link>
-          ) : isLoading ? (
-            <p className="bg-gray-100 w-full min-w-[16rem] h-16 mx-auto animate-pulse"></p>
-          ) : (
-            <p className="text-center text-gray-500">
-              {t("rentFinder.noPostSelected")}
-            </p>
-          )}
-        </div>
+        {posts && posts.length > 0 && (
+          <div className="hidden md:block">
+            {selected ? (
+              <Link
+                to={`/post/${selected._id}`}
+                state={{
+                  post: JSON.stringify(selected),
+                  prevPath: window.location.pathname,
+                  posts: JSON.stringify(posts),
+                  selected: JSON.stringify(selected)
+                }}
+              >
+                <RentView
+                  post={selected}
+                  isEmbed
+                  className="cursor-pointer hidden md:block"
+                />
+              </Link>
+            ) : isLoading ? (
+              <p className="bg-gray-100 w-full min-w-[16rem] h-16 mx-auto animate-pulse"></p>
+            ) : (
+              <p className="text-center text-gray-500">
+                {t("rentFinder.noPostSelected")}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

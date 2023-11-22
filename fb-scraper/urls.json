@@ -33,5 +33,28 @@
                 "url": "https://www.facebook.com/groups/6222659174441521/?locale=it_IT"
             }
         ]
+    },
+    {
+        "city": "milano",
+        "urls": [
+            {
+                "url": "https://facebook.com/groups/441612000631632/?locale=it_IT"
+            },
+            {
+                "url": "https://facebook.com/groups/milanoaffittocasa/?locale=it_IT"
+            },
+            {
+                "url": "https://facebook.com/groups/582894099747293/?locale=it_IT"
+            },
+            {
+                "url": "https://facebook.com/groups/affittimilanoprivati/?locale=it_IT"
+            },
+            {
+                "url": "https://facebook.com/groups/1029882184453175/?locale=it_IT"
+            },
+            {
+                "url": "https://facebook.com/groups/3653882284714233/?locale=it_IT"
+            }
+        ]
     }
 ]

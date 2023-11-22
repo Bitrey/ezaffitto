@@ -34,6 +34,12 @@ export enum EzaffittoCity {
     GENOVA = "genova"
 }
 
+export const ezaffittoCities = Object.values(EzaffittoCity);
+
+export const isEzaffittoCity = (city: string): city is EzaffittoCity => {
+    return ezaffittoCities.includes(city as EzaffittoCity);
+};
+
 // urls.json
 export interface CityUrls {
     city: EzaffittoCity;
@@ -92,3 +98,18 @@ export interface MongoDBFields {
 }
 
 export interface RentalPostJSONified extends RentalPost, MongoDBFields {}
+export interface RentalPostJSONifiedRaw
+    extends Omit<
+        RentalPostJSONified,
+        | "date"
+        | "availabilityStartDate"
+        | "availabilityEndDate"
+        | "createdAt"
+        | "updatedAt"
+    > {
+    date: string;
+    availabilityStartDate: string;
+    availabilityEndDate: string;
+    createdAt: string;
+    updatedAt: string;
+}

@@ -1,33 +1,37 @@
 Prompt:
-Il testo successivo a "Testo da elaborare: " si tratta di un post scritto da un utente su internet.
-Il tuo compito è quello di capire se si tratta di un post riguardante un affitto a {0}, restituendo SOLO ed ESCLUSIVAMENTE in formato JSON come da struttura richiesta, SENZA ALCUN testo aggiuntivo. Includi SOLO le proprietà che sono esplicitamente menzionate o che puoi dedurre con certezza dal testo. NON includere una proprietà se non è menzionata o deducibile. I campi "isRental" e "isForRent" devono essere sempre presenti. Il campo "isRental" deve essere true SOLAMENTE se il post riguarda un affitto e se il testo è da parte di un LOCATORE che OFFRE (e non CERCA) una struttura abitativa, altrimenti DEVE ESSERE false. Ad esempio, se il testo contiene "cerco una stanza" o "cerco appartamento" implica che isRental sarà false, mentre "offro una stanza" o simili implica isRental a true. Se l'annuncio contiene informazioni su più stanze, includi solo le informazioni sulla stanza più opportuna. Data attuale in formato ISO 8601: {1}.
+Il post successivo a "Testo da elaborare: " è un post scritto da un utente su internet, che potrebbe riguardare una proprietà a {0}.
+Il tuo compito è quello di analizzare il post e restituire in formato JSON i campi rilevanti, seguendo la struttura richiesta, SENZA alcun testo aggiuntivo. Usa SOLO le informazioni che sono esplicitamente menzionate o che puoi dedurre con certezza dal testo. NON usare informazioni che non sono menzionate o deducibili. I campi "isRental" e "isForRent" devono essere sempre presenti e devono avere i seguenti valori:
+- "isRental" deve essere true se il post riguarda un affitto di un immobile, altrimenti false.
+- "isForRent" deve essere true se il post è scritto da un LOCATORE che OFFRE un immobile in affitto, esempio: "Affittasi stanza singola arredata" => true. Deve essere false se il post è scritto da un CERCATORE che RICERCA un immobile in affitto, esempio: "Cerco una stanza disponibile" => false. 
+Data attuale in formato ISO 8601: {1}.
 
 Testo da elaborare: {2}
 
 Struttura JSON richiesta: {
-    "isRental": <boolean: if the post is about a RENTAL of a property (and not SEARCHING one)>,
-    "isForRent": <boolean: if the property is about OFFERING a rent and not FINDING a rent>,
+    "isRental": <boolean: if the post is about a RENTAL of a property>,
+    "isForRent": <boolean: if the post is about an OFFER of rent and not a REQUEST>,
     "rentalType": <enum: "singleRoom", "doubleRoom", "studio", "apartment", "house", "other">,
-    "monthlyPrice": <number | null: total rent cost for a single MONTH>,
-    "securityDepositMonths": <number | null: number of months of rent required as a security deposit if deducible from the text>,
-    "zone": <string | null: area or district within the city if deducible from the text>,
-    "sexRestrictions": <enum: "everyone", "males", "females", "other", set to "everyone" unless explicitly written>,
-    "occupationalRestrictions": <enum: "everyone", "students", "workers", "other", set to "everyone" unless EXPLICITLY written>,
-    "lgbtFriendly": <boolean: true if specified, null elsewise>,
-    "furnished": <boolean>,
-    "availabilityStartDate": <date: start date in ISO 8601 format, only if explicitly written>,
-    "availabilityEndDate": <date: end date in ISO 8601 format, only if explicitly written>,
-    "contractDurationMonths": <number, only if explicitly written>,
-    "hasBalcony": <boolean>,
-    "hasParking": <boolean>,
-    "address": <string: street, building number, city>,
-    "floorNumber": <number>,
+    "monthlyPrice": <number: total rent cost for a single MONTH, in euros>,
+    "securityDepositMonths": <number: number of months of rent required as a security deposit, only if deducible from the text>,
+    "zone": <string: district or neighborhood within the city, only if deducible from the text>,
+    "sexRestrictions": <enum: "everyone", "males", "females", "other", set to "everyone" unless EXPLICITLY written otherwise>,
+    "occupationalRestrictions": <enum: "everyone", "students", "workers", "other", set to "everyone" unless EXPLICITLY written otherwise>,
+    "lgbtFriendly": <boolean: true if specified, false otherwise>,
+    "furnished": <boolean: true/false if specified, null otherwise>,
+    "availabilityStartDate": <date: start date in ISO 8601 format, only if EXPLICITLY written, example: "2023-01-01">,
+    "availabilityEndDate": <date: end date in ISO 8601 format, only if EXPLICITLY written, example: "2023-06-30">,
+    "contractDurationMonths": <number: contract duration in months, only if EXPLICITLY written>,
+    "hasBalcony": <boolean: true/false if specified, null otherwise>,
+    "hasParking": <boolean: true/false if specified, null otherwise>,
+    "address": <string: street, building number, city if specified, null otherwise>,
+    "floorNumber": <number: floor number>,
     "rooms": <number: number of rooms>,
     "bathrooms": <number: number of bathrooms>,
     "areaSqMeters": <number: square meters>,
-    "priceIncludesTaxes": <boolean: if the price includes taxes and condo fees>,
-    "smokingAllowed": <boolean | null: if specified in the post, whether or not smoking is allowed>,
-    "hasAirConditioning": <boolean>,
-    "hasHeating": <boolean>,
-    "hasElevator": <boolean>
+    "priceIncludesTaxes": <boolean: if specified, whether the price includes taxes and condo fees>,
+    "smokingAllowed": <boolean: true/false if specified, null otherwise>,
+    "hasAirConditioning": <boolean: true/false if specified, null otherwise>,
+    "hasHeating": <boolean: true/false if specified, null otherwise>,
+    "hasElevator": <boolean: true/false if specified, null otherwise>
 }
+

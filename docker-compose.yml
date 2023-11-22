@@ -92,7 +92,7 @@ services:
     build: ./subito-scraper
     restart: unless-stopped
     volumes:
-      - ./subito-scraper:/usr/src/app
+      - ./subito-scraper:/home/bun/app
     # depends_on:
     #   rabbitmq:
     #     condition: service_healthy
@@ -113,7 +113,7 @@ services:
     build: ./zappyrent-scraper
     restart: unless-stopped
     volumes:
-      - ./zappyrent-scraper:/usr/src/app
+      - ./zappyrent-scraper:/home/bun/app
     environment:
       - NODE_ENV=development
       - PING_SERVER_PORT=3434
@@ -134,7 +134,7 @@ services:
     build: ./immobiliare-scraper
     restart: unless-stopped
     volumes:
-      - ./immobiliare-scraper:/usr/src/app
+      - ./immobiliare-scraper:/home/bun/app
     environment:
       - NODE_ENV=development
       - PING_SERVER_PORT=3434

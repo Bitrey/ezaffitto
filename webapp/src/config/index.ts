@@ -1,3 +1,5 @@
+import { EzaffittoCity } from "../interfaces/RentalPost";
+
 export const config = Object.freeze({
     languages: ["en", "it"],
     captchaV3SiteKey: "6LdjlRUpAAAAABkQdf4BNEdXAlKeANcbNQnpYTT5",
@@ -28,7 +30,8 @@ export const config = Object.freeze({
         "hasAirConditioning",
         "hasHeating",
         "hasElevator"
-    ]
+    ],
+    enabledCities: ["bologna", "milano"] as Readonly<EzaffittoCity[]>
 });
 
 export const gaEvents = {

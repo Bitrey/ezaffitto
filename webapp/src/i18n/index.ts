@@ -6,45 +6,74 @@ import { Resource } from "i18next";
 const resources: Resource = {
     en: {
         translation: {
+            welcome: {
+                title: "Welcome to ezaffitto!",
+                subtitle: "Your portal for finding rents in Italy",
+                where: "Where are you looking for a rent?",
+                chooseCity: "Choose your city",
+                rentsIn: "Rents in {{city}}",
+                cityNotYetAvailable: "{{city}} not yet available 😭"
+            },
             common: {
-                appName: "ezaffitto - Find your rent in Bologna!",
+                // TODO to change
+                appName: "ezaffitto - Find your rent in Italy!",
                 appNameShort: "ezaffitto",
                 contact: "Contact",
                 loading: "Loading...",
                 error: "Error",
                 close: "Close",
-                on: "on"
+                on: "on",
+                roomsInCity: "Rooms for rent in {{city}}"
+            },
+            city: {
+                bologna: "Bologna",
+                milano: "Milan",
+                roma: "Rome",
+                torino: "Turin",
+                firenze: "Florence",
+                napoli: "Naples",
+                padova: "Padua",
+                genova: "Genoa"
             },
             errors: {
                 notFound: "Not found",
                 unknown: "Unknown error",
                 geolocationFailed: "Geolocation failed",
-                noResultsFound: "No results found"
+                noResultsFound: "No results found",
+                invalidCity: "Invalid city",
+                cityNotEnabled: "The selected city is not enabled! 😭",
+                invalidCityDescription:
+                    "The selected city is not among the available ones.",
+                timeout:
+                    "Timeout error, please check your Internet connection and reload the page."
             },
             tos: {
+                title: "Terms and Conditions and Cookie Policy of ezaffitto",
                 using: "By using this site, you agree to the",
                 tos: "Terms of Service",
                 and: "and",
                 cookie: "Cookie Policy",
                 accept: "Accept",
-                note: "Please note that the Terms of Service and the Cookie Policy are only available in Italian, and that the English translation is provided for convenience only. The Italian version is the only legally binding version."
+                note: "Please note that the Terms of Service and the Cookie Policy are only available in Italian, and that the English translation is provided for convenience only. The Italian version is the only legally binding version. In order to view the Italian version, please change the language of the site to Italian by clicking on the button below.",
+                changeToItalian: "Change to Italian"
             },
             captcha: {
                 error: "Error in CAPTCHA",
                 missing: "Missing CAPTCHA",
-                failed: "CAPTCHA verification failed (please reload the page)",
+                failed: "CAPTCHA verification failed, please reload the page",
                 pleaseSolve: "Please solve the CAPTCHA to continue"
             },
             textbox: {
                 searchPlaceholder: "Search..."
             },
             rentFinder: {
+                loadingPosts: "Loading posts...",
                 noMoreOptions: "No more options found",
                 searchPlaceholder: "Single room Corticella",
                 maxPrice: "Up to",
-                noPosts: "No posts",
+                noPostsAvailable: "No posts available 😭😭",
                 noPostSelected: "No post selected",
-                noMorePosts: "No more posts found",
+                noMorePosts: "You reached the end!",
                 pullToRefresh: "Pull to refresh",
                 releaseToRefresh: "Release to refresh",
                 orderBy: "Order by"
@@ -63,7 +92,7 @@ const resources: Resource = {
                 loadingError: "Error while loading"
             },
             homepage: {
-                banner: "Find your rent in Bologna!",
+                banner: "Find your rent in {{city}}!",
                 account: "Account"
             },
             rentalType: {
@@ -126,45 +155,74 @@ const resources: Resource = {
     },
     it: {
         translation: {
+            welcome: {
+                title: "Benvenuto su ezaffitto!",
+                subtitle: "Il tuo portale per la ricerca di affitti",
+                where: "Dove stai cercando un affitto?",
+                chooseCity: "Scegli la tua città",
+                rentsIn: "Affitti a {{city}}",
+                cityNotYetAvailable: "{{city}} non ancora disponibile 😭"
+            },
             common: {
-                appName: "ezaffitto - Trova il tuo affitto a Bologna!",
+                appName: "ezaffitto - Trova il tuo affitto!",
                 appNameShort: "ezaffitto",
                 contact: "Contatta",
                 loading: "Caricamento...",
                 error: "Errore",
                 close: "Chiudi",
-                on: "su"
+                on: "su",
+                roomsInCity: "Stanze in affitto a {{city}}"
+            },
+            city: {
+                bologna: "Bologna",
+                milano: "Milano",
+                roma: "Roma",
+                torino: "Torino",
+                firenze: "Firenze",
+                napoli: "Napoli",
+                padova: "Padova",
+                genova: "Genova"
             },
             errors: {
                 notFound: "Non trovato",
                 unknown: "Errore sconosciuto",
                 geolocationFailed: "Geolocalizzazione fallita",
-                noResultsFound: "Nessun risultato trovato"
+                noResultsFound: "Nessun risultato trovato",
+                invalidCity: "Città non valida",
+                cityNotEnabled:
+                    "La città selezionata non è ancora abilitata! 😭",
+                invalidCityDescription:
+                    "La città selezionata non è tra quelle disponibili.",
+                timeout:
+                    "Errore di timeout, per favore controlla la tua connessione Internet e ricarica la pagina."
             },
             tos: {
+                title: "Termini e Condizioni e Cookie Policy di ezaffitto",
                 using: "Utilizzando questo sito, accetti i",
                 tos: "Termini di Servizio",
                 and: "e la",
                 cookie: "Cookie Policy",
                 accept: "Accetto",
-                note: ""
+                note: "",
+                changeToItalian: "Cambia in italiano"
             },
             captcha: {
                 error: "Errore nel CAPTCHA",
                 missing: "CAPTCHA mancante",
-                failed: "Verifica CAPTCHA fallita (per favore ricarica la pagina)",
+                failed: "Verifica CAPTCHA fallita, per favore ricarica la pagina",
                 pleaseSolve: "Risolvi il CAPTCHA per continuare"
             },
             textbox: {
                 searchPlaceholder: "Cerca..."
             },
             rentFinder: {
+                loadingPosts: "Caricamento dei post...",
                 noMoreOptions: "Nessun'altra opzione trovata",
                 searchPlaceholder: "Stanza singola Corticella",
                 maxPrice: "Fino a",
-                noPosts: "Nessun post",
+                noPostsAvailable: "Nessun post disponibile 😭😭",
                 noPostSelected: "Nessun post selezionato",
-                noMorePosts: "Nessun altro post trovato",
+                noMorePosts: "Sei arrivatə alla fine!",
                 pullToRefresh: "Tira per aggiornare",
                 releaseToRefresh: "Rilascia per aggiornare",
                 orderBy: "Ordina per"
@@ -183,7 +241,7 @@ const resources: Resource = {
                 loadingError: "Errore nel caricamento"
             },
             homepage: {
-                banner: "Trova il tuo affitto a Bologna!",
+                banner: "Trova il tuo affitto a {{city}}!",
                 account: "Account"
             },
             rentalType: {

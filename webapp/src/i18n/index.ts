@@ -42,12 +42,14 @@ const resources: Resource = {
                     "The selected city is not among the available ones."
             },
             tos: {
+                title: "Terms and Conditions and Cookie Policy of ezaffitto",
                 using: "By using this site, you agree to the",
                 tos: "Terms of Service",
                 and: "and",
                 cookie: "Cookie Policy",
                 accept: "Accept",
-                note: "Please note that the Terms of Service and the Cookie Policy are only available in Italian, and that the English translation is provided for convenience only. The Italian version is the only legally binding version."
+                note: "Please note that the Terms of Service and the Cookie Policy are only available in Italian, and that the English translation is provided for convenience only. The Italian version is the only legally binding version. In order to view the Italian version, please change the language of the site to Italian by clicking on the button below.",
+                changeToItalian: "Change to Italian"
             },
             captcha: {
                 error: "Error in CAPTCHA",
@@ -62,9 +64,9 @@ const resources: Resource = {
                 noMoreOptions: "No more options found",
                 searchPlaceholder: "Single room Corticella",
                 maxPrice: "Up to",
-                noPosts: "No posts",
+                noPostsAvailable: "No posts available 😭😭",
                 noPostSelected: "No post selected",
-                noMorePosts: "No more posts found",
+                noMorePosts: "You reached the end!",
                 pullToRefresh: "Pull to refresh",
                 releaseToRefresh: "Release to refresh",
                 orderBy: "Order by"
@@ -181,12 +183,14 @@ const resources: Resource = {
                     "La città selezionata non è tra quelle disponibili."
             },
             tos: {
+                title: "Termini e Condizioni e Cookie Policy di ezaffitto",
                 using: "Utilizzando questo sito, accetti i",
                 tos: "Termini di Servizio",
                 and: "e la",
                 cookie: "Cookie Policy",
                 accept: "Accetto",
-                note: ""
+                note: "",
+                changeToItalian: "Cambia in italiano"
             },
             captcha: {
                 error: "Errore nel CAPTCHA",
@@ -201,9 +205,9 @@ const resources: Resource = {
                 noMoreOptions: "Nessun'altra opzione trovata",
                 searchPlaceholder: "Stanza singola Corticella",
                 maxPrice: "Fino a",
-                noPosts: "Nessun post",
+                noPostsAvailable: "Nessun post disponibile 😭😭",
                 noPostSelected: "Nessun post selezionato",
-                noMorePosts: "Nessun altro post trovato",
+                noMorePosts: "Sei arrivatə alla fine!",
                 pullToRefresh: "Tira per aggiornare",
                 releaseToRefresh: "Rilascia per aggiornare",
                 orderBy: "Ordina per"

@@ -20,6 +20,7 @@ import ReactGA from "react-ga4";
 import { config } from "./config";
 import IsEzaffittoCity from "./components/IsEzaffittoCity";
 import WelcomeScreen from "./WelcomeScreen";
+import License from "./License";
 
 ReactGA.initialize(config.ga4Token);
 
@@ -33,12 +34,16 @@ const router = createBrowserRouter([
         element: <WelcomeScreen />
       },
       {
-        path: "/:city",
-        element: <IsEzaffittoCity />
-      },
-      {
         path: "/post/:id",
         element: <ByRentId />
+      },
+      {
+        path: "/license",
+        element: <License />
+      },
+      {
+        path: "/:city",
+        element: <IsEzaffittoCity />
       }
     ]
   }

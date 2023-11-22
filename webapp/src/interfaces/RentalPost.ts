@@ -98,3 +98,18 @@ export interface MongoDBFields {
 }
 
 export interface RentalPostJSONified extends RentalPost, MongoDBFields {}
+export interface RentalPostJSONifiedRaw
+    extends Omit<
+        RentalPostJSONified,
+        | "date"
+        | "availabilityStartDate"
+        | "availabilityEndDate"
+        | "createdAt"
+        | "updatedAt"
+    > {
+    date: string;
+    availabilityStartDate: string;
+    availabilityEndDate: string;
+    createdAt: string;
+    updatedAt: string;
+}

@@ -22,7 +22,6 @@ const ByRentId: FunctionComponent<any> = () => {
   // Create an event handler so you can call the verification on button click event or form submit
   const handleReCaptchaVerify = useCallback(async () => {
     if (!executeRecaptcha) {
-      console.log("Execute recaptcha not yet available");
       return;
     }
 
@@ -42,7 +41,6 @@ const ByRentId: FunctionComponent<any> = () => {
       setPost(JSON.parse(state.post));
       return;
     } else if (!executeRecaptcha) {
-      console.log("useEffect execute recaptcha not yet available");
       return;
     }
 
@@ -99,7 +97,11 @@ const ByRentId: FunctionComponent<any> = () => {
     <div>
       {post || isLoading ? (
         <div className="p-2 md:p-4">
-          <Button className="rounded-lg" href="/">
+          <Button
+            className="rounded-lg"
+            href={state.prevPath || "/"}
+            state={state.posts ? { posts: state.posts } : undefined}
+          >
             {t("rentViewer.backToSearch")}
           </Button>
           <RentView className="mt-4" post={post} />

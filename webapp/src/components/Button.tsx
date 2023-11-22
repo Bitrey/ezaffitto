@@ -18,6 +18,7 @@ const Button: FunctionComponent<ButtonProps> = ({
   children,
   href,
   className,
+  state,
   ...rest
 }) => {
   const _className = `p-2 text-white bg-red-500 dark:bg-red-600 hover:bg-red-600 dark:hover:bg-red-700 active:bg-red-700 disabled:bg-red-300 disabled:cursor-progress border-none outline-none transition-colors duration-75 ${
@@ -25,7 +26,7 @@ const Button: FunctionComponent<ButtonProps> = ({
   }`;
 
   return href?.startsWith("/") ? (
-    <Link to={href} className={_className} {...rest}>
+    <Link to={href} state={state} className={_className} {...rest}>
       {children}
     </Link>
   ) : href ? (

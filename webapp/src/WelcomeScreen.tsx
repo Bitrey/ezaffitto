@@ -16,7 +16,7 @@ const WelcomeScreen: FC<WelcomeScreenProps> = () => {
         </h1>
         <h4 className="text tracking-tight mt-1">{t("welcome.subtitle")}</h4>
       </div>
-      <div className="mt-5 flex flex-col gap-1 border rounded py-2 px-3 md:py-3 md:px-4">
+      <div className="mt-5 flex flex-col gap-1 border rounded p-3 md:p-4 md:pt-3">
         <p className="text-lg">{t("welcome.where")}</p>
         <p className="text-sm text-gray-500 mt-1">{t("welcome.chooseCity")}</p>
 

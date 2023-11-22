@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import React, { FC, useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -11,7 +11,11 @@ import CustomSelect from "./Select";
 import Button from "./Button";
 import RentView from "./RentView";
 import Textbox from "./Textbox";
-import { EzaffittoCity, RentalPostJSONified } from "../interfaces/RentalPost";
+import {
+  EzaffittoCity,
+  RentalPostJSONified,
+  RentalPostJSONifiedRaw
+} from "../interfaces/RentalPost";
 import { config, gaEvents, rentalTypeOptions } from "../config";
 import Search from "../icons/Search";
 // import ReactPaginate from "react-paginate";
@@ -78,7 +82,6 @@ const RentFinder: FC<RentFinderProps> = () => {
   // Create an event handler so you can call the verification on button click event or form submit
   const handleReCaptchaVerify = useCallback(async () => {
     if (!executeRecaptcha) {
-      console.log("Execute recaptcha not yet available");
       return;
     }
 
@@ -146,7 +149,7 @@ const RentFinder: FC<RentFinderProps> = () => {
 
         // DEBUG
         // parse dates
-        const mapped = (data as RentalPostJSONified[]).map(e =>
+        const mapped = (data as RentalPostJSONifiedRaw[]).map(e =>
           translatePostJSON(e)
         );
         console.log("Fetched posts", mapped, "out of", count);
@@ -198,7 +201,24 @@ const RentFinder: FC<RentFinderProps> = () => {
     setCursor(0);
   }, [searchQuery]);
 
+  const { state } = useLocation();
+
   useEffect(() => {
+    let posts = null;
+    try {
+      posts = JSON.parse(state.posts).map((e: RentalPostJSONifiedRaw) =>
+        translatePostJSON(e)
+      );
+      if (!Array.isArray(posts)) {
+        throw new Error("sasso");
+      }
+    } catch (err) {}
+
+    if (posts) {
+      setPosts(posts);
+      state.posts = null;
+      return;
+    }
     if (!captchaToken || isLoading) {
       return;
     }
@@ -319,7 +339,9 @@ const RentFinder: FC<RentFinderProps> = () => {
                         <Link
                           to={`/post/${e._id}`}
                           state={{
-                            post: JSON.stringify(e)
+                            post: JSON.stringify(e),
+                            prevPath: window.location.pathname,
+                            posts: JSON.stringify(posts)
                           }}
                         >
                           {e.monthlyPrice && (
@@ -398,23 +420,11 @@ const RentFinder: FC<RentFinderProps> = () => {
               await handleReCaptchaVerify();
             }}
             hasMore={
-              (console.log(
-                "posts?.length !== 0",
-                posts?.length !== 0,
-                "\nisLoading",
-                isLoading,
-                "\n!posts",
-                !posts,
-                "\n!count",
-                typeof count !== "number",
-                "\nposts.length < count",
-                posts.length < count
-              ),
-              posts?.length !== 0 ||
-                isLoading ||
-                !posts ||
-                typeof count !== "number" ||
-                posts.length < count)
+              !Number.isFinite(count) ||
+              isLoading ||
+              !posts ||
+              typeof count !== "number" ||
+              (posts?.length !== 0 && posts.length < count)
             }
             loader={
               <p
@@ -428,8 +438,12 @@ const RentFinder: FC<RentFinderProps> = () => {
               </p>
             }
             endMessage={
-              <p style={{ textAlign: "center" }}>
-                <b>{t("rentFinder.noMorePosts")}</b>
+              <p className="text-center mt-1">
+                <b>
+                  {posts?.length === 0
+                    ? t("rentFinder.noPostsAvailable")
+                    : t("rentFinder.noMorePosts")}
+                </b>
               </p>
             }
             // below props only if you need pull down functionality
@@ -458,7 +472,9 @@ const RentFinder: FC<RentFinderProps> = () => {
                   <Link
                     to={`/post/${e._id}`}
                     state={{
-                      post: JSON.stringify(e)
+                      post: JSON.stringify(e),
+                      prevPath: window.location.pathname,
+                      posts: JSON.stringify(posts)
                     }}
                   >
                     <RentCard post={e} />
@@ -468,27 +484,31 @@ const RentFinder: FC<RentFinderProps> = () => {
             ))}
           </InfiniteScroll>
         </div>
-        <div>
-          {selected ? (
-            <Link
-              to={`/post/${selected._id}`}
-              state={{
-                post: JSON.stringify(selected)
-              }}
-            >
-              <RentView
-                post={selected}
-                className="cursor-pointer hidden md:block"
-              />
-            </Link>
-          ) : isLoading ? (
-            <p className="bg-gray-100 w-full min-w-[16rem] h-16 mx-auto animate-pulse"></p>
-          ) : (
-            <p className="text-center text-gray-500">
-              {t("rentFinder.noPostSelected")}
-            </p>
-          )}
-        </div>
+        {posts && posts.length > 0 && !isLoading && (
+          <div className="hidden md:block">
+            {selected ? (
+              <Link
+                to={`/post/${selected._id}`}
+                state={{
+                  post: JSON.stringify(selected),
+                  prevPath: window.location.pathname,
+                  posts: JSON.stringify(posts)
+                }}
+              >
+                <RentView
+                  post={selected}
+                  className="cursor-pointer hidden md:block"
+                />
+              </Link>
+            ) : isLoading ? (
+              <p className="bg-gray-100 w-full min-w-[16rem] h-16 mx-auto animate-pulse"></p>
+            ) : (
+              <p className="text-center text-gray-500">
+                {t("rentFinder.noPostSelected")}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

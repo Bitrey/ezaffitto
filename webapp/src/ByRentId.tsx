@@ -100,7 +100,11 @@ const ByRentId: FunctionComponent<any> = () => {
           <Button
             className="rounded-lg"
             href={state.prevPath || "/"}
-            state={state.posts ? { posts: state.posts } : undefined}
+            state={
+              state.posts
+                ? { posts: state.posts, selected: state.selected }
+                : undefined
+            }
           >
             {t("rentViewer.backToSearch")}
           </Button>

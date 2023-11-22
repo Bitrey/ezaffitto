@@ -85,9 +85,16 @@ const RentFinder: FC<RentFinderProps> = () => {
       return;
     }
 
-    const token = await executeRecaptcha(gaEvents.findPosts.action);
-    setCaptchaToken(token);
-  }, [executeRecaptcha]);
+    setIsLoading(true);
+    try {
+      const token = await executeRecaptcha(gaEvents.findPosts.action);
+      setCaptchaToken(token);
+    } catch (err) {
+      setError("errors.timeout");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [executeRecaptcha, setIsLoading]);
 
   // You can use useEffect to trigger the verification as soon as the component being loaded
   useEffect(() => {
@@ -197,14 +204,11 @@ const RentFinder: FC<RentFinderProps> = () => {
     ]
   );
 
-  useEffect(() => {
-    setCursor(0);
-  }, [searchQuery]);
-
   const { state } = useLocation();
 
   useEffect(() => {
     let posts = null;
+    let selected = null;
     try {
       posts = JSON.parse(state.posts).map((e: RentalPostJSONifiedRaw) =>
         translatePostJSON(e)
@@ -214,11 +218,26 @@ const RentFinder: FC<RentFinderProps> = () => {
       }
     } catch (err) {}
 
+    try {
+      selected = translatePostJSON(JSON.parse(state.selected));
+    } catch (err) {}
+
     if (posts) {
       setPosts(posts);
+      if (posts.length > 0) {
+        setSelected(selected || posts[0]);
+      }
+      console.log(
+        "Using cache for posts",
+        posts,
+        "selected",
+        selected || posts[0]
+      );
       state.posts = null;
+      state.selected = null;
       return;
     }
+
     if (!captchaToken || isLoading) {
       return;
     }
@@ -390,25 +409,6 @@ const RentFinder: FC<RentFinderProps> = () => {
 
       <div className="mt-6 md:mt-12 grid grid-cols-1 md:grid-cols-2">
         <div>
-          {/* <div className="flex items-center mx-auto">
-            <ReactPaginate
-              activeClassName={"item active "}
-              breakClassName={"item break-me "}
-              breakLabel={"..."}
-              containerClassName={"pagination"}
-              disabledClassName={"disabled-page"}
-              marginPagesDisplayed={2}
-              nextClassName={"item next "}
-              nextLabel={<Forward />}
-              onPageChange={handlePageClick}
-              pageCount={pageCount}
-              pageClassName={"item pagination-page "}
-              pageRangeDisplayed={2}
-              previousClassName={"item previous"}
-              previousLabel={<Backwards />}
-            />
-          </div> */}
-
           <InfiniteScroll
             // height={600}
             dataLength={posts?.length}
@@ -434,7 +434,7 @@ const RentFinder: FC<RentFinderProps> = () => {
                   error ? "" : "animate-pulse"
                 }`}
               >
-                {error || t("common.loading")}
+                {error || t("rentFinder.loadingPosts")}
               </p>
             }
             endMessage={
@@ -484,7 +484,7 @@ const RentFinder: FC<RentFinderProps> = () => {
             ))}
           </InfiniteScroll>
         </div>
-        {posts && posts.length > 0 && !isLoading && (
+        {posts && posts.length > 0 && (
           <div className="hidden md:block">
             {selected ? (
               <Link
@@ -492,7 +492,8 @@ const RentFinder: FC<RentFinderProps> = () => {
                 state={{
                   post: JSON.stringify(selected),
                   prevPath: window.location.pathname,
-                  posts: JSON.stringify(posts)
+                  posts: JSON.stringify(posts),
+                  selected: JSON.stringify(selected)
                 }}
               >
                 <RentView

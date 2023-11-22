@@ -8,7 +8,7 @@ const resources: Resource = {
         translation: {
             welcome: {
                 title: "Welcome to ezaffitto!",
-                subtitle: "Your portal for finding a rent",
+                subtitle: "Your portal for finding rents in Italy",
                 where: "Where are you looking for a rent?",
                 chooseCity: "Choose your city"
             },
@@ -39,7 +39,9 @@ const resources: Resource = {
                 noResultsFound: "No results found",
                 invalidCity: "Invalid city",
                 invalidCityDescription:
-                    "The selected city is not among the available ones."
+                    "The selected city is not among the available ones.",
+                timeout:
+                    "Timeout error, please check your Internet connection and reload the page."
             },
             tos: {
                 title: "Terms and Conditions and Cookie Policy of ezaffitto",
@@ -54,13 +56,14 @@ const resources: Resource = {
             captcha: {
                 error: "Error in CAPTCHA",
                 missing: "Missing CAPTCHA",
-                failed: "CAPTCHA verification failed (please reload the page)",
+                failed: "CAPTCHA verification failed, please reload the page",
                 pleaseSolve: "Please solve the CAPTCHA to continue"
             },
             textbox: {
                 searchPlaceholder: "Search..."
             },
             rentFinder: {
+                loadingPosts: "Loading posts...",
                 noMoreOptions: "No more options found",
                 searchPlaceholder: "Single room Corticella",
                 maxPrice: "Up to",
@@ -180,7 +183,9 @@ const resources: Resource = {
                 noResultsFound: "Nessun risultato trovato",
                 invalidCity: "Città non valida",
                 invalidCityDescription:
-                    "La città selezionata non è tra quelle disponibili."
+                    "La città selezionata non è tra quelle disponibili.",
+                timeout:
+                    "Errore di timeout, per favore controlla la tua connessione Internet e ricarica la pagina."
             },
             tos: {
                 title: "Termini e Condizioni e Cookie Policy di ezaffitto",
@@ -195,13 +200,14 @@ const resources: Resource = {
             captcha: {
                 error: "Errore nel CAPTCHA",
                 missing: "CAPTCHA mancante",
-                failed: "Verifica CAPTCHA fallita (per favore ricarica la pagina)",
+                failed: "Verifica CAPTCHA fallita, per favore ricarica la pagina",
                 pleaseSolve: "Risolvi il CAPTCHA per continuare"
             },
             textbox: {
                 searchPlaceholder: "Cerca..."
             },
             rentFinder: {
+                loadingPosts: "Caricamento dei post...",
                 noMoreOptions: "Nessun'altra opzione trovata",
                 searchPlaceholder: "Stanza singola Corticella",
                 maxPrice: "Fino a",

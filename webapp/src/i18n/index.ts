@@ -12,7 +12,9 @@ const resources: Resource = {
                 where: "Where are you looking for a rent?",
                 chooseCity: "Choose your city",
                 rentsIn: "Rents in {{city}}",
-                cityNotYetAvailable: "{{city}} not yet available 😭"
+                cityNotYetAvailable: "{{city}} not yet available 😭",
+                aProjectBy: "A project by",
+                togetherWith: "created together with"
             },
             common: {
                 // TODO to change
@@ -92,7 +94,7 @@ const resources: Resource = {
                 loadingError: "Error while loading"
             },
             homepage: {
-                banner: "Find your rent in {{city}}!",
+                banner: "Find your rent in",
                 account: "Account"
             },
             rentalType: {
@@ -161,7 +163,9 @@ const resources: Resource = {
                 where: "Dove stai cercando un affitto?",
                 chooseCity: "Scegli la tua città",
                 rentsIn: "Affitti a {{city}}",
-                cityNotYetAvailable: "{{city}} non ancora disponibile 😭"
+                cityNotYetAvailable: "{{city}} non ancora disponibile 😭",
+                aProjectBy: "Un progetto di",
+                togetherWith: "ideato assieme a"
             },
             common: {
                 appName: "ezaffitto - Trova il tuo affitto!",
@@ -241,7 +245,7 @@ const resources: Resource = {
                 loadingError: "Errore nel caricamento"
             },
             homepage: {
-                banner: "Trova il tuo affitto a {{city}}!",
+                banner: "Trova il tuo affitto a",
                 account: "Account"
             },
             rentalType: {

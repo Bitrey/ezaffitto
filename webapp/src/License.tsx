@@ -4,6 +4,8 @@ import Button from "./components/Button";
 import axios, { isAxiosError } from "axios";
 import ErrorDialog from "./components/ErrorDialog";
 import { getLanguage } from "./misc/getLanguage";
+import { usePageHash } from "./misc/usePageHash";
+import { useLocation } from "react-router-dom";
 
 interface SectionProps {
   id: string;
@@ -27,7 +29,7 @@ const Section: FC<SectionProps> = ({ content, id, loading, title }) => {
           {t("common.loading")}
         </p>
       ) : (
-        <p className="text-gray-500 font-light text-sm">
+        <p className="text-gray-500 dark:text-gray-400 font-light text-sm">
           {content?.split("\n").map((line, i) => (
             <span key={i}>
               {line}
@@ -95,10 +97,13 @@ const License: FC<LicenseProps> = () => {
     fetchCookiePolicy();
   }, [i18n.language]);
 
+  const location = useLocation();
+  const hash = window.location.hash || location.hash;
+
   useEffect(() => {
-    if (!window.location.hash || licenseLoading || cookiePolicyLoading) return;
-    if (["#tos", "#cookie"].includes(window.location.hash)) {
-      const elem = document.getElementById(window.location.hash.slice(1));
+    if (!hash || licenseLoading || cookiePolicyLoading) return;
+    if (["#tos", "#cookie"].includes(hash)) {
+      const elem = document.getElementById(hash.slice(1));
       if (elem) {
         elem.scrollIntoView({
           behavior: "smooth",
@@ -107,12 +112,14 @@ const License: FC<LicenseProps> = () => {
         });
       }
     }
-  }, [cookiePolicyLoading, licenseLoading]);
+  }, [cookiePolicyLoading, licenseLoading, hash]);
 
   return (
     <div className="p-3">
       <h1 className="text-xl font-medium tracking-tighter">{t("tos.title")}</h1>
-      <p className="text-gray-500 font-light text-sm">{t("tos.note")}</p>
+      <p className="text-gray-500 dark:text-gray-400 font-light text-sm">
+        {t("tos.note")}
+      </p>
 
       {i18n.language !== "it" && (
         <div className="flex justify-center my-2">

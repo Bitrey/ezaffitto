@@ -1,14 +1,14 @@
 import { FC, HTMLAttributes } from "react";
 import Button from "./Button";
 import { useTranslation } from "react-i18next";
-import { getLanguage } from "../misc/getLanguage";
+import { Link } from "react-router-dom";
 
 interface TosCookiesAcceptProps extends HTMLAttributes<HTMLDivElement> {
   onAccept: () => void;
 }
 
 const TosCookiesAccept: FC<TosCookiesAcceptProps> = ({ onAccept, ...rest }) => {
-  const { i18n, t } = useTranslation();
+  const { t } = useTranslation();
 
   return (
     <div
@@ -17,23 +17,19 @@ const TosCookiesAccept: FC<TosCookiesAcceptProps> = ({ onAccept, ...rest }) => {
     >
       <p>
         {t("tos.using")}{" "}
-        <a
+        <Link
           className="text-blue-200 hover:text-blue-300 transition-colors"
-          href={`/LICENSE_${getLanguage(i18n.language)}.txt`}
-          target="_blank"
-          rel="noopener noreferrer"
+          to="/license#tos"
         >
           {t("tos.tos")}
-        </a>{" "}
+        </Link>{" "}
         {t("tos.and")}{" "}
-        <a
+        <Link
           className="text-blue-200 hover:text-blue-300 transition-colors"
-          href={`COOKIES_${getLanguage(i18n.language)}.txt`}
-          target="_blank"
-          rel="noopener noreferrer"
+          to="/license#cookie"
         >
           {t("tos.cookie")}
-        </a>
+        </Link>
         .
       </p>
       {t("tos.note") && (

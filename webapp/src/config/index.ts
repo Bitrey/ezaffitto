@@ -31,7 +31,23 @@ export const config = Object.freeze({
         "hasHeating",
         "hasElevator"
     ],
-    enabledCities: ["bologna", "milano"] as Readonly<EzaffittoCity[]>
+    enabledCities: ["bologna", "milano"] as Readonly<EzaffittoCity[]>,
+    bitreyUrl: "https://www.bitrey.it",
+    maxUrl: "https://www.ozolin.net/"
+});
+
+type CityCoords = {
+    [key in EzaffittoCity]: [lat: number, lng: number];
+};
+export const cityCoords: Readonly<CityCoords> = Object.freeze({
+    bologna: [44.494887, 11.342616],
+    milano: [45.464664, 9.18854],
+    roma: [41.902782, 12.496366],
+    torino: [45.070312, 7.686856],
+    firenze: [43.769871, 11.255576],
+    napoli: [40.851775, 14.268124],
+    padova: [45.406435, 11.876761],
+    genova: [44.40564, 8.946256]
 });
 
 export const gaEvents = {

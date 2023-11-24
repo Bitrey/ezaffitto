@@ -3,7 +3,11 @@ import { param, query } from "express-validator";
 import { captchaQueryParam } from "../../middlewares/captcha";
 import { validate } from "../../middlewares/expressValidator";
 import { logger } from "../../shared/logger";
-import { RentalTypes } from "../../interfaces/shared";
+import {
+    RentalTypes,
+    isRentalType,
+    rentalTypesArr
+} from "../../interfaces/shared";
 import { db } from "../../config/db";
 import { Document, Filter, ObjectId, Sort } from "mongodb";
 import moment from "moment";
@@ -42,11 +46,15 @@ router.get(
             date: { $gte: moment().subtract(3, "months").toDate() }
         };
 
-        const rentalTypes = req.query.rentalTypes as RentalTypes[] | null;
-        // aggiungo 'other' a rentalTypes
+        const rentalTypes = Array.isArray(req.query.rentalTypes)
+            ? (req.query.rentalTypes.filter(e =>
+                  isRentalType(e)
+              ) as RentalTypes[])
+            : null;
+        // rimuovo eventuali duplicati
         if (rentalTypes)
             query.rentalType = {
-                $in: [...new Set([...rentalTypes, RentalTypes.OTHER])]
+                $in: [...new Set(rentalTypes)]
             };
 
         if (req.query.maxPrice) {

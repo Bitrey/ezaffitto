@@ -9,6 +9,7 @@ import { RentalPostJSONified } from "./interfaces/RentalPost";
 import { gaEvents } from "./config";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import ErrorDialog from "./components/ErrorDialog";
+import Container from "./components/Container";
 
 const ByRentId: FunctionComponent<any> = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -94,7 +95,7 @@ const ByRentId: FunctionComponent<any> = () => {
   }, [captchaToken]);
 
   return (
-    <div>
+    <Container>
       {post || isLoading ? (
         <div className="p-2 md:p-4">
           <Button
@@ -117,7 +118,7 @@ const ByRentId: FunctionComponent<any> = () => {
           navigateToOnClose="/"
         />
       )}
-    </div>
+    </Container>
   );
 };
 

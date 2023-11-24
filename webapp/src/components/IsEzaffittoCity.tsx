@@ -4,6 +4,7 @@ import RentFinder from "./RentFinder";
 import ErrorDialog from "./ErrorDialog";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
+import Container from "./Container";
 
 interface IsEzaffittoCityProps {}
 
@@ -12,13 +13,15 @@ const IsEzaffittoCity: FC<IsEzaffittoCityProps> = () => {
   const { city } = useParams<{ city: string }>();
 
   return city && isEzaffittoCity(city) ? (
-    <RentFinder />
+    <RentFinder city={city} />
   ) : (
-    <ErrorDialog
-      title={t("errors.invalidCity")}
-      error={t("errors.invalidCityDescription")}
-      navigateToOnClose="/"
-    />
+    <Container>
+      <ErrorDialog
+        title={t("errors.invalidCity")}
+        error={t("errors.invalidCityDescription")}
+        navigateToOnClose="/"
+      />
+    </Container>
   );
 };
 

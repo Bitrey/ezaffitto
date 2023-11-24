@@ -9,6 +9,10 @@ export enum RentalTypes {
     OTHER = "other"
 }
 
+export const rentalTypesArr = Object.freeze(Object.values(RentalTypes));
+export const isRentalType = (value: any): value is RentalTypes =>
+    rentalTypesArr.includes(value);
+
 export enum SexRestrictions {
     EVERYONE = "everyone",
     MALES = "males",

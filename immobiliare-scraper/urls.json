@@ -11,7 +11,7 @@
                 "path": "%2Faffitto-stanze%2Fbologna%2F"
             }
         ],
-        "bannedAgencyIds": [374030, 368620]
+        "bannedAgencyIds": [374030, 368620, 247117]
     },
     {
         "city": "milano",
@@ -25,6 +25,6 @@
                 "path": "%2Faffitto-stanze%2Fmilano%2F"
             }
         ],
-        "bannedAgencyIds": [374030, 368620]
+        "bannedAgencyIds": [369503, 247117, 386776]
     }
 ]

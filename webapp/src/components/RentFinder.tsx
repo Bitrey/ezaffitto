@@ -393,6 +393,7 @@ const RentFinder: FC<RentFinderProps> = ({ city }) => {
                 // maxHeight: "90vh",
                 // maxWidth: "90%"
               }}
+              key={city}
               center={cityCoords[city]}
               zoom={13}
               scrollWheelZoom={false}

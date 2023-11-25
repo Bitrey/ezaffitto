@@ -27,7 +27,7 @@ export const config = Object.freeze({
 
     // random number between 20 and 40 seconds (in milliseconds)
     GET_DELAY_BETWEEN_SCRAPES_MS: () =>
-        Math.floor(Math.random() * 20 * 1000) + 20 * 1000,
+        Math.floor(Math.random() * 40 * 1000) + 40 * 1000,
 
     RABBITMQ_URL: "amqp://rabbitmq",
     RABBITMQ_EXCHANGE: "topic_exchange",

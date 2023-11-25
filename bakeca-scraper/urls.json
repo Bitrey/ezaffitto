@@ -1,0 +1,18 @@
+[
+    {
+        "city": "bologna",
+        "urls": [
+            {
+                "url": "https://bologna.bakeca.it/annunci/offro-camera/"
+            }
+        ]
+    },
+    {
+        "city": "milano",
+        "urls": [
+            {
+                "url": "https://milano.bakeca.it/annunci/offro-camera/"
+            }
+        ]
+    }
+]

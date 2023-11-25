@@ -1,5 +1,5 @@
 import puppeteer from "puppeteer-extra";
-import { Browser, Page } from "puppeteer-core";
+import { Browser } from "puppeteer-core";
 import pluginStealth from "puppeteer-extra-plugin-stealth";
 import { ScrapedDataEventEmitter } from "./interfaces/events";
 import EventEmitter from "events";
@@ -8,11 +8,11 @@ import { wait } from "./shared/wait";
 import { config } from "./config/config";
 import { FbPost } from "./interfaces/FbPost";
 import { extractor } from "./extractor";
-// import { runProducer } from "./producer";
 import moment, { Moment } from "moment";
 import axios, { AxiosError, isAxiosError } from "axios";
 import { CityUrls, EzaffittoCity, RentalPost } from "./interfaces/shared";
 import { envs } from "./config/envs";
+import exitHook from "async-exit-hook";
 
 import "./healthcheckPing";
 import { mkdir, readFile, unlink, writeFile } from "fs/promises";
@@ -157,10 +157,7 @@ export class Scraper {
         const mapped = urls.find(e => e.city === city)?.urls.map(e => e.url);
         if (!mapped) {
             logger.error("No urls found for city " + city);
-            await axios.post(config.DB_API_BASE_URL + "/panic", {
-                service: "fb-scraper",
-                message: "No urls found for city " + city
-            });
+            await Scraper.sendPanic("No urls found for city " + city);
             process.exit(1);
         }
         return mapped;
@@ -184,8 +181,11 @@ export class Scraper {
         padova: []
     };
 
-    private browser: Browser | null = null;
-    private page: Page | null = null;
+    private static browser: Browser | null = null;
+
+    public async closeBrowser() {
+        await Scraper.browser?.close();
+    }
 
     private startDate: Moment | null = null;
     private endDate: Moment | null = null;
@@ -221,10 +221,7 @@ export class Scraper {
         const urls = await Scraper.getUrls(city);
         if (urls.length === 0) {
             logger.error("No urls found for city " + city);
-            await axios.post(config.DB_API_BASE_URL + "/panic", {
-                service: "fb-scraper",
-                message: "No urls found for city " + city
-            });
+            await Scraper.sendPanic("No urls found for city " + city);
             process.exit(1);
         }
 
@@ -246,9 +243,7 @@ export class Scraper {
     }
 
     private async init() {
-        // const browser = await puppeteer.launch({ headless: "new" });
-        // const browser = await puppeteer.launch({ headless: false });
-        this.browser = await puppeteer.launch({
+        Scraper.browser = await puppeteer.launch({
             headless: true,
             executablePath: "/usr/bin/google-chrome",
             args: [
@@ -258,8 +253,13 @@ export class Scraper {
                 "--disable-dev-shm-usage"
             ]
         });
-        this.page = await this.browser!.newPage();
-        await this.page.setViewport({ width: 1080, height: 1024 });
+    }
+
+    private static async sendPanic(message: string): Promise<void> {
+        await axios.post(config.DB_API_BASE_URL + "/panic", {
+            service: "fb-scraper",
+            message
+        });
     }
 
     private async scrape(
@@ -267,11 +267,22 @@ export class Scraper {
         durationMs: number,
         city: EzaffittoCity
     ) {
-        if (!this.browser || !this.page) {
+        if (!Scraper.browser) {
+            logger.info("Browser is null, initializing...");
             await this.init();
         }
-        // new date
+
+        const page = await Scraper.browser?.newPage();
+
         // const scrapeId = moment().format("YYYY-MM-DD_HH-mm-ss");
+
+        if (!page) {
+            logger.error("CRITICAL! Page is null for groupUrl " + groupUrl);
+            await Scraper.sendPanic("Page is null for groupUrl " + groupUrl);
+            process.exit(1);
+        }
+
+        await page.setViewport({ width: 1080, height: 1024 });
 
         await mkdir(config.SCREENSHOTS_PATH, {
             recursive: true
@@ -292,14 +303,6 @@ export class Scraper {
                 "seconds"
             )}s`
         );
-
-        // const browser = await puppeteer.launch({ headless: "new" });
-        // const browser = await puppeteer.launch({ headless: false });
-
-        if (!this.page) {
-            logger.error("CRITICAL! Page is null for groupUrl " + groupUrl);
-            throw new Error("PAGE_IS_NULL");
-        }
 
         let cookies: Cookie[];
 
@@ -333,38 +336,41 @@ export class Scraper {
                     groupUrl +
                     this.getElapsedStr()
             );
-            await axios.post(config.DB_API_BASE_URL + "/panic", {
-                service: "fb-scraper",
-                message: "No cookies file found for groupUrl " + groupUrl
-            });
+            await Scraper.sendPanic(
+                "No cookies file found for groupUrl " + groupUrl
+            );
+            // remove page listeners
+            page.removeAllListeners("request");
+            page.removeAllListeners("response");
+            await page.close();
             process.exit(1);
         }
 
         try {
-            await this.page.setCookie(...mapCookiesToPuppeteer(cookies));
+            await page.setCookie(...mapCookiesToPuppeteer(cookies));
         } catch (err) {
             logger.error("CRITICAL: Error while setting cookies:");
             logger.error(err);
         }
 
-        await this.page.setRequestInterception(true);
+        await page.setRequestInterception(true);
 
         const urls: string[] = [];
 
-        this.page.on("request", async interceptedRequest => {
+        page.on("request", async request => {
             try {
-                if (interceptedRequest.isInterceptResolutionHandled()) {
+                if (request.isInterceptResolutionHandled()) {
                     return;
                 }
-                if (interceptedRequest.resourceType() === "image") {
-                    interceptedRequest.abort();
+                if (request.resourceType() === "image") {
+                    request.abort();
                     return;
                 }
-                if (interceptedRequest.url().includes("graphql")) {
-                    urls.push(interceptedRequest.url());
+                if (request.url().includes("graphql")) {
+                    urls.push(request.url());
                 }
 
-                await interceptedRequest.continue();
+                await request.continue();
             } catch (err) {
                 logger.error("Error while intercepting request:");
                 logger.error(err);
@@ -375,7 +381,7 @@ export class Scraper {
 
         let isError = false;
 
-        this.page.on("response", async response => {
+        page.on("response", async response => {
             if (urls.includes(response.url())) {
                 let obj;
                 try {
@@ -395,13 +401,16 @@ export class Scraper {
                             this.getElapsedStr()
                     );
                     isError = true;
-                    await this.page?.screenshot({
+                    await page?.screenshot({
                         path: "screenshots/rate_limit_exceeded.png"
                     });
-                    await axios.post(config.DB_API_BASE_URL + "/panic", {
-                        service: "fb-scraper",
-                        message: "Rate limit exceeded for groupUrl " + groupUrl
-                    });
+                    await Scraper.sendPanic(
+                        "Rate limit exceeded for groupUrl " + groupUrl
+                    );
+                    // remove page listeners
+                    page.removeAllListeners("request");
+                    page.removeAllListeners("response");
+                    await page.close();
                     process.exit(1);
                 }
 
@@ -452,11 +461,11 @@ export class Scraper {
         });
 
         try {
-            await this.page.goto(groupUrl, {
+            await page.goto(groupUrl, {
                 timeout: 10_000,
                 waitUntil: "networkidle2"
             });
-            await this.page.setViewport({ width: 1080, height: 1024 });
+            await page.setViewport({ width: 1080, height: 1024 });
         } catch (err) {
             logger.error("Error while going to groupUrl " + groupUrl + ":");
             logger.error(err);
@@ -464,7 +473,7 @@ export class Scraper {
 
         // screenshot
         try {
-            await this.page.screenshot({
+            await page.screenshot({
                 path: "screenshots/start_page.png"
             });
         } catch (err) {
@@ -475,14 +484,14 @@ export class Scraper {
         // if div with aria-label="Get started" exists
         // click on it
         try {
-            await this.page.waitForSelector('[aria-label="Get started"]', {
+            await page.waitForSelector('[aria-label="Get started"]', {
                 timeout: 3_000
             });
-            await this.page.click('[aria-label="Get started"]');
+            await page.click('[aria-label="Get started"]');
             await wait(Math.random() * 1000 + 1000);
 
             // get span with text "Use for free"
-            const [useForFreeSpan] = await this.page.$x(
+            const [useForFreeSpan] = await page.$x(
                 "//span[contains(., 'Use for free')]"
             );
             if (!useForFreeSpan) {
@@ -497,9 +506,7 @@ export class Scraper {
             await wait(Math.random() * 1000 + 1000);
 
             // get span with text "Agree"
-            const [agreeSpan] = await this.page.$x(
-                "//span[contains(., 'Agree')]"
-            );
+            const [agreeSpan] = await page.$x("//span[contains(., 'Agree')]");
             if (!agreeSpan) {
                 logger.warn(
                     "agreeSpan not found for groupUrl " +
@@ -510,7 +517,7 @@ export class Scraper {
             }
             await agreeSpan.click();
 
-            await this.page.waitForNavigation({
+            await page.waitForNavigation({
                 waitUntil: "networkidle2",
                 timeout: 5_000
             });
@@ -518,7 +525,7 @@ export class Scraper {
             // update cookies file
             await writeFile(
                 config.COOKIES_JSON_PATH,
-                JSON.stringify(await this.page.cookies(), null, 4)
+                JSON.stringify(await page.cookies(), null, 4)
             );
         } catch (err) {
             // logger.debug(
@@ -538,7 +545,7 @@ export class Scraper {
         const cantUseText = "You can't use this feature at the moment";
 
         try {
-            await this.page.waitForXPath(
+            await page.waitForXPath(
                 '//*[contains(text(), "' + loginText + '")]',
                 { timeout: 3_000 }
             );
@@ -553,21 +560,43 @@ export class Scraper {
             );
             try {
                 // save html to screenshots
-                const html = await this.page.content();
+                const html = await page.content();
                 await writeFile(
                     path.join(config.SCREENSHOTS_PATH, "login_required.html"),
                     html
                 );
-                await this.page.screenshot({
+                await page.screenshot({
                     path: "screenshots" + "/login_required.png"
                 });
 
                 // try to login: write email on input .inputtext with id email
-                await this.page.type("#email", envs.FB_ACCOUNT_EMAIL, {
+                // check if email is already written
+                const emailInput = await page.$("#email");
+                if (!emailInput) {
+                    logger.error(
+                        "emailInput not found for groupUrl " +
+                            groupUrl +
+                            this.getElapsedStr()
+                    );
+                    throw new Error("emailInput not found");
+                }
+                // check if email already written
+                const emailInputValue = await page.evaluate(
+                    (input: any) => input.value,
+                    emailInput
+                );
+                if (emailInputValue !== "") {
+                    // clear input
+                    await page.click("#email");
+                    await page.keyboard.down("Control");
+                    await page.keyboard.press("A");
+                    await page.keyboard.up("Control");
+                    await page.keyboard.press("Backspace");
+                }
+                await page.type("#email", envs.FB_ACCOUNT_EMAIL, {
                     delay: Math.random() * 100 + 50
                 });
-                await wait(Math.random() * 1000 + 500);
-                await this.page.type("#pass", envs.FB_ACCOUNT_PASSWORD, {
+                await page.type("#pass", envs.FB_ACCOUNT_PASSWORD, {
                     delay: Math.random() * 100 + 50
                 });
                 await wait(Math.random() * 1000 + 500);
@@ -577,61 +606,63 @@ export class Scraper {
                         "..." +
                         this.getElapsedStr()
                 );
-                await this.page.screenshot({
+                await page.screenshot({
                     path: "screenshots" + "/before_login_try.png"
                 });
-                await this.page.click("#loginbutton");
+                await page.click("#loginbutton");
                 await wait(Math.random() * 1000 + 500);
-                await this.page.screenshot({
+                await page.screenshot({
                     path: "screenshots" + "/before_login_try_clicked.png"
+                });
+            } catch (err) {}
+
+            try {
+                // just to be sure
+                await page.waitForNavigation({
+                    waitUntil: "networkidle2",
+                    timeout: 2_000
                 });
             } catch (err) {}
 
             let passFieldPresent = false;
             try {
                 // check if pass field is still present
-                await this.page.waitForSelector("#pass", {
+                await page.waitForSelector("#pass", {
                     timeout: 3_000
                 });
                 passFieldPresent = true;
             } catch (err) {}
 
             if (passFieldPresent) {
-                await this.page.screenshot({
+                await page.screenshot({
                     path: "screenshots" + "/passfield_present.png"
                 });
-                await this.page.type("#pass", envs.FB_ACCOUNT_PASSWORD, {
-                    delay: Math.random() * 100 + 50
-                });
-                await wait(Math.random() * 1000 + 500);
-                await this.page.screenshot({
-                    path: "screenshots" + "/passfield_present_typed.png"
-                });
-                await this.page.click("#loginbutton");
-                await wait(Math.random() * 1000 + 500);
-                await this.page.screenshot({
-                    path: "screenshots" + "/passfield_present_clicked.png"
-                });
             } else {
-                await this.page.screenshot({
+                await page.screenshot({
                     path: "screenshots" + "/passfield_not_present.png"
                 });
+                await writeFile(
+                    config.NEW_COOKIES_JSON_PATH,
+                    JSON.stringify(await page.cookies(), null, 4)
+                );
+                logger.info(
+                    "Saved new cookies file for groupUrl " +
+                        groupUrl +
+                        this.getElapsedStr()
+                );
             }
 
             try {
                 // just to be sure
-                await this.page.waitForNavigation({
+                await page.waitForNavigation({
                     waitUntil: "networkidle2",
                     timeout: 1_000
                 });
             } catch (err) {}
 
-            await this.page.screenshot({
-                path: "screenshots" + "/after_login_try.png"
-            });
             try {
                 // exit if still requires login
-                await this.page.waitForXPath(
+                await page.waitForXPath(
                     '//*[contains(text(), "' + loginText + '")]',
                     { timeout: 2_000 }
                 );
@@ -642,7 +673,7 @@ export class Scraper {
 
             try {
                 // check if can't use feature
-                await this.page.waitForXPath(
+                await page.waitForXPath(
                     '//*[contains(text(), "' + cantUseText + '")]',
                     { timeout: 1_000 }
                 );
@@ -651,7 +682,7 @@ export class Scraper {
 
             try {
                 // check if pass field is still present
-                await this.page.waitForSelector("#pass", {
+                await page.waitForSelector("#pass", {
                     timeout: 1_000
                 });
                 passFieldAgain = true;
@@ -659,7 +690,7 @@ export class Scraper {
         }
 
         if (loginRequiredAgain || cantUseFeature || passFieldAgain) {
-            await this.page.screenshot({
+            await page.screenshot({
                 path: "screenshots" + "/login_failed.png"
             });
 
@@ -676,11 +707,13 @@ export class Scraper {
                     passFieldAgain +
                     this.getElapsedStr()
             );
-            await axios.post(config.DB_API_BASE_URL + "/panic", {
-                service: "fb-scraper",
-                message: `Login required for groupUrl ${groupUrl} - login with email ${envs.FB_ACCOUNT_EMAIL} failed: ${loginRequiredAgain} - cantUseFeature: ${cantUseFeature} - passFieldAgain: ${passFieldAgain} - exiting`
-                // message: "Login required for groupUrl " + groupUrl
-            });
+            await Scraper.sendPanic(
+                `Login required for groupUrl ${groupUrl} - login with email ${envs.FB_ACCOUNT_EMAIL} failed: ${loginRequiredAgain} - cantUseFeature: ${cantUseFeature} - passFieldAgain: ${passFieldAgain} - exiting`
+            );
+            // remove page listeners
+            page.removeAllListeners("request");
+            page.removeAllListeners("response");
+            await page.close();
             process.exit(1);
         }
 
@@ -691,11 +724,11 @@ export class Scraper {
 
         // if (page.$(cookieButtonSelector) == null)
         try {
-            await this.page.waitForSelector(cookieButtonSelector, {
-                timeout: 2_000
+            await page.waitForSelector(cookieButtonSelector, {
+                timeout: 1_000
             });
             await wait(Math.random() * 1000);
-            await this.page.click(cookieButtonSelector);
+            await page.click(cookieButtonSelector);
         } catch (err) {
             // logger.debug(
             //     "Cookie button not found for groupUrl " +
@@ -709,11 +742,11 @@ export class Scraper {
 
         // if (page.$(closeLoginButtonSelector) == null)
         try {
-            await this.page.waitForSelector(closeLoginButtonSelector, {
-                timeout: 2_000
+            await page.waitForSelector(closeLoginButtonSelector, {
+                timeout: 1_000
             });
             await wait(Math.random() * 1000);
-            await this.page.click(closeLoginButtonSelector);
+            await page.click(closeLoginButtonSelector);
         } catch (err) {
             // logger.debug(
             //     "Close login button not found for groupUrl " +
@@ -723,7 +756,7 @@ export class Scraper {
         }
 
         try {
-            const [orderBySpan] = await this.page.$x(
+            const [orderBySpan] = await page.$x(
                 "//span[contains(., 'Più pertinenti')]"
             );
             if (!orderBySpan) {
@@ -734,7 +767,7 @@ export class Scraper {
                 );
             } else {
                 await orderBySpan.click();
-                const [newPostsSpan] = await this.page.$x(
+                const [newPostsSpan] = await page.$x(
                     "//span[contains(., 'Nuovi post')]"
                 );
                 if (!newPostsSpan) {
@@ -768,7 +801,7 @@ export class Scraper {
             try {
                 await wait(Math.random() * 500 + 500);
                 // await page.keyboard.press("PageDown");
-                await this.page.mouse.wheel({
+                await page.mouse.wheel({
                     deltaY: Math.floor(Math.random() * 500) + 500
                 });
                 await wait(Math.random() * 500 + 500);
@@ -790,7 +823,7 @@ export class Scraper {
             // update cookies file
             await writeFile(
                 config.COOKIES_JSON_PATH,
-                JSON.stringify(await this.page.cookies(), null, 4)
+                JSON.stringify(await page.cookies(), null, 4)
             );
             logger.debug(
                 "Updated cookies file for groupUrl " +
@@ -800,7 +833,7 @@ export class Scraper {
         }
 
         try {
-            await this.page.screenshot({
+            await page.screenshot({
                 path:
                     "screenshots/" +
                     (fetchedPosts === 0
@@ -821,11 +854,13 @@ export class Scraper {
         );
 
         // remove page listeners
-        this.page.removeAllListeners("request");
-        this.page.removeAllListeners("response");
+        page.removeAllListeners("request");
+        page.removeAllListeners("response");
 
         this.startDate = null;
         this.endDate = null;
+
+        await page.close();
     }
 
     private getElapsedStr() {
@@ -875,15 +910,13 @@ export class Scraper {
                         logger.error(
                             "No posts fetched 3 times in a row, sending panic message..."
                         );
-
-                        await axios.post(config.DB_API_BASE_URL + "/panic", {
-                            service: "fb-scraper",
-                            message: `No posts fetched ${
+                        await Scraper.sendPanic(
+                            `No posts fetched ${
                                 config.MAX_TIMES_NO_POSTS_FETCHED
                             } times in a row for groups: ${this.urlsNoPostsFetched.join(
                                 ", "
                             )} - exiting`
-                        });
+                        );
                         process.exit(1);
                     }
                 } catch (err) {
@@ -897,6 +930,12 @@ export class Scraper {
 
 async function run() {
     const scraper = new Scraper();
+
+    exitHook(() => {
+        logger.info(`Closing browser...`);
+        scraper.closeBrowser();
+    });
+
     while (true) {
         try {
             await scraper.runScraper();

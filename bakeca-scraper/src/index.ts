@@ -1,59 +1,130 @@
-// https://bologna.bakeca.it/annunci/offro-camera/page/2/
-
 import puppeteer from "puppeteer-extra";
-import {
-    BakecaRoot,
-    RentalPost,
-    RentalPostEventEmitter,
-    RentalTypes
-} from "./interfaces";
-import moment from "moment";
-import axios from "axios";
-
-// Add stealth plugin and use defaults
+import { Browser } from "puppeteer-core";
 import pluginStealth from "puppeteer-extra-plugin-stealth";
-import { logger } from "./shared/logger";
-import { Browser, Page } from "puppeteer-core";
-import { config } from "./config";
-import { wait } from "./shared/wait";
 import EventEmitter from "events";
+import { logger } from "./shared/logger";
+import { wait } from "./shared/wait";
+import moment from "moment";
+import axios, { AxiosError } from "axios";
+import exitHook from "async-exit-hook";
+
+import * as fastq from "fastq";
+import type { queueAsPromised } from "fastq";
 
 import "./healthcheckPing";
-import { mkdir } from "fs/promises";
-import path from "path";
+import { mkdir, readFile } from "fs/promises";
+import { BakecaRoot, RentalPostEventEmitter, UrlTask } from "./interfaces";
+import { config } from "./config";
+import {
+    CityUrls,
+    EzaffittoCity,
+    RentalPost,
+    RentalTypes
+} from "./interfaces/shared";
 
-// Use stealth
 puppeteer.use(pluginStealth());
 
-export const rentalPostEvent: RentalPostEventEmitter = new EventEmitter();
+export const bakecaEventEmitter: RentalPostEventEmitter = new EventEmitter();
 
-rentalPostEvent.on("bakecaPost", async post => {
-    // debug posting with axios
+bakecaEventEmitter.on("bakecaPost", async post => {
+    logger.warn("Running debug API call for bakecaEventEmitter");
+
+    // remove all undefined and null fields
+    Object.keys(post).forEach(
+        key =>
+            [null, undefined].includes(post[key as keyof typeof post] as any) &&
+            delete post[key as keyof typeof post]
+    );
+
+    if (post.latitude && post.longitude) {
+        try {
+            const coords = await Scraper.reverseGeolocate(
+                post.latitude,
+                post.longitude
+            );
+            if (coords) {
+                post.address = coords.formattedAddress;
+                post.latitude = coords.latitude;
+                post.longitude = coords.longitude;
+            }
+        } catch (err) {
+            logger.error(
+                "Error while geolocating address " +
+                    post.latitude +
+                    "," +
+                    post.longitude +
+                    " for post " +
+                    post.postId +
+                    ":"
+            );
+            logger.error(err);
+            delete post.address;
+        }
+    } else {
+        delete post.address;
+        delete post.latitude;
+        delete post.longitude;
+    }
+
     try {
-        // TODO debug replace with RabbitMQ
-        logger.warn("Posting to DB API");
         const { data } = await axios.post(
             config.DB_API_BASE_URL + "/rentalpost",
             post
         );
         logger.info(
-            "Posted to DB API with _id " + data._id + " postId " + post.postId
+            "Saved post with postId " + data.postId + " _id " + data._id
         );
     } catch (err) {
-        logger.error("Error while posting to DB API:");
-        logger.error(err);
+        logger.error("Error while saving post with id " + post.postId + ":");
+        logger.error((err as AxiosError)?.response?.data || err);
     }
 });
 
 export class Scraper {
-    public static roomsUrl =
-        "https://bologna.bakeca.it/annunci/offro-camera/inserzionistacase/privato/";
+    public static async getUrl(city: string): Promise<string | null> {
+        const urls: CityUrls[] = JSON.parse(
+            await readFile(config.URLS_JSON_PATH, { encoding: "utf-8" })
+        );
+        return urls.find(e => e.city === city)?.urls[0]?.url || null;
+    }
 
-    private async scrape(url: string) {
-        // const browser = await puppeteer.launch({ headless: "new" });
-        // const browser = await puppeteer.launch({ headless: false });
+    public static async getCities(): Promise<EzaffittoCity[]> {
+        const urls: CityUrls[] = JSON.parse(
+            await readFile(config.URLS_JSON_PATH, { encoding: "utf-8" })
+        );
+        return urls.map(e => e.city);
+    }
 
-        const browser = (await puppeteer.launch({
+    private static browser: Browser | null = null;
+
+    public async closeBrowser() {
+        await Scraper.browser?.close();
+    }
+
+    public static async reverseGeolocate(
+        lat: number,
+        lng: number
+    ): Promise<{
+        formattedAddress: string;
+        latitude: number;
+        longitude: number;
+    } | null> {
+        try {
+            const { data } = await axios.get(
+                config.DB_API_BASE_URL + "/geolocate/reverse",
+                { params: { lat, lng } }
+            );
+
+            return data;
+        } catch (err) {
+            logger.error("Error while reverse geolocating query");
+            logger.error((err as AxiosError).response?.data || err);
+            throw new Error("Geolocation failed"); // TODO change with custom error
+        }
+    }
+
+    private async init() {
+        Scraper.browser = await puppeteer.launch({
             headless: true,
             executablePath: "/usr/bin/google-chrome",
             args: [
@@ -62,14 +133,33 @@ export class Scraper {
                 "--disable-notifications",
                 "--disable-dev-shm-usage"
             ]
-        })) as Browser;
+        });
+    }
 
-        logger.debug("Browser connected for url " + url);
+    private static async sendPanic(message: string): Promise<void> {
+        await axios.post(config.DB_API_BASE_URL + "/panic", {
+            service: "bakeca-scraper",
+            message
+        });
+    }
 
-        const page = await browser.newPage();
+    private async scrape(url: string, durationMs: number, city: EzaffittoCity) {
+        if (!Scraper.browser) {
+            logger.info("Browser is null, initializing...");
+            await this.init();
+        }
 
-        // Wait for a random time before navigating to a new web page
-        await wait(Math.floor(Math.random() * 12 * 100) + 50);
+        const page = await Scraper.browser?.newPage();
+
+        // const scrapeId = moment().format("YYYY-MM-DD_HH-mm-ss");
+
+        if (!page) {
+            logger.error("CRITICAL! Page is null for url " + url);
+            await Scraper.sendPanic("Page is null for url " + url);
+            process.exit(1);
+        }
+
+        logger.info(`Starting scrape for url ${url}`);
 
         // fake headers
         await page.setExtraHTTPHeaders({
@@ -81,76 +171,78 @@ export class Scraper {
             "accept-language": "en-US,en;q=0.9,en;q=0.8"
         });
 
-        // Limit requests
+        await page.setViewport({ width: 1080, height: 1024 });
+
+        await mkdir(config.SCREENSHOTS_PATH, {
+            recursive: true
+        });
         await page.setRequestInterception(true);
+
         page.on("request", async request => {
-            if (request.resourceType() === "image") {
-                await request.abort();
-            } else {
+            try {
+                if (request.isInterceptResolutionHandled()) {
+                    return;
+                }
+                if (request.resourceType() === "image") {
+                    request.abort();
+                    return;
+                }
+
                 await request.continue();
+            } catch (err) {
+                logger.error("Error while intercepting request:");
+                logger.error(err);
             }
         });
 
         await page.goto(url);
-        await page.setViewport({ width: 1080, height: 1024 });
 
-        let listEl, elements;
         try {
-            listEl = await page.waitForSelector(".annuncio-elenco", {
-                timeout: 10_000
-            });
+            await page.waitForSelector(".annuncio-elenco", { timeout: 10_000 });
         } catch (err) {
-            logger.error("Timeout");
+            logger.error("Error while waiting for .annuncio-elenco:");
             logger.error(err);
-        }
-
-        if (listEl) {
-            elements = await listEl.$$(".annuncio-elenco > section");
-        }
-
-        if (!elements || elements.length === 0) {
-            logger.error(
-                elements
-                    ? "No elements found"
-                    : "No listEl '.annuncio-elenco' found"
+            await page.screenshot({
+                path: "screenshots" + "/annuncio-elenco_not_found.png"
+            });
+            page.removeAllListeners("request");
+            page.removeAllListeners("response");
+            await Scraper.sendPanic(
+                `Error while waiting for .annuncio-elenco for url ${url} - exiting`
             );
-            await browser.close();
-            return;
+            await page.close();
+            process.exit(1);
+        }
+
+        await page.screenshot({
+            path: "screenshots/start_page.png"
+        });
+
+        const elements = await page.$$(".annuncio-elenco > section");
+
+        if (elements.length === 0) {
+            logger.error("No elements found!");
+            await page.screenshot({
+                path: "screenshots/no_elements_found.png"
+            });
         } else {
             logger.debug(`Found ${elements.length} elements`);
         }
 
-        // DEBUG SCREENSHOT
-        try {
-            await mkdir(path.join(process.cwd(), "/screenshots"), {
-                recursive: true
-            });
-            await page.screenshot({
-                path:
-                    "screenshots/" +
-                    (elements.length === 0
-                        ? "/no_posts_fetched.png"
-                        : "/end_page.png")
-            });
-        } catch (err) {
-            logger.warn("Error while taking screenshot:");
-            logger.warn(err);
-        }
+        const tasks: UrlTask[] = [];
 
-        // this is a for of with index of 'elements'
-        for (const [i, e] of elements.entries()) {
+        // print all elements
+        elements.forEach(async (e, i) => {
             try {
                 const text: string = await e.$eval(
                     "div.flex > div.flex > a",
                     e => e.textContent
                 );
                 if (text.toLowerCase().includes(config.AGENCY_TEXT)) {
-                    logger.debug("Skipping agency post:", text);
-                    continue;
+                    return;
                 }
             } catch (err) {
-                logger.debug("Err while checking for agency post:");
-                logger.debug(err);
+                // DEBUG log
             }
             let date;
             try {
@@ -158,11 +250,15 @@ export class Scraper {
                     "a > div:nth-child(3) > span.text-sm",
                     e => e.textContent
                 );
-                // timezone is not important since it's just a date
-                date = moment(dateStr, "DD-MM-YYYY").toDate();
+                const momentDate = moment(dateStr, "DD-MM-YYYY");
+                if (momentDate.isValid()) {
+                    date = momentDate.toDate();
+                }
             } catch (err) {
-                logger.error(err);
+                logger.warn("Error while getting date:");
+                logger.warn(err);
             }
+
             try {
                 const content: BakecaRoot = JSON.parse(
                     await e.$eval("a > script", e => e.textContent)
@@ -181,62 +277,242 @@ export class Scraper {
 
                 const post: RentalPost = {
                     postId: content.productID,
-                    source: "bakeca",
+                    ezaffittoCity: city,
+                    monthlyPrice: price,
                     rawData: content,
+                    source: "bakeca",
                     isRental: true,
                     isForRent: true,
-                    monthlyPrice: price,
                     images: content.image ? [content.image] : [],
                     description: content.description,
                     latitude: content.geo?.latitude,
                     longitude: content.geo?.longitude,
-                    rentalType: (lwDesc.includes("singola")
-                        ? "singleRoom"
-                        : lwDesc.includes("doppia")
-                        ? "doubleRoom"
-                        : undefined) as RentalTypes,
+                    rentalType:
+                        lwDesc.includes("singola") ||
+                        content.url.includes("singola")
+                            ? RentalTypes.SINGLE_ROOM
+                            : lwDesc.includes("doppia") ||
+                              content.url.includes("doppia")
+                            ? RentalTypes.DOUBLE_ROOM
+                            : RentalTypes.OTHER,
                     date: date || new Date(),
                     url: content.url
                 };
 
                 logger.debug(
-                    "Parsed post with id " +
-                        post.postId +
-                        ": " +
-                        post.description?.slice(0, 30) +
-                        "..."
+                    "Checking if post already exists with text " +
+                        content.description.slice(0, 30) +
+                        "... and id " +
+                        content.productID
                 );
-                rentalPostEvent.emit("bakecaPost", post);
+
+                let existsOrError = false;
+
+                try {
+                    const res1 = await axios.post(
+                        config.DB_API_BASE_URL + "/rentalpost/text",
+                        { text: content.description, source: "bakeca" }
+                    );
+                    const res2 = await axios.get(
+                        config.DB_API_BASE_URL +
+                            "/rentalpost/postid/" +
+                            content.productID
+                    );
+                    const p =
+                        res1.data &&
+                        typeof res1.data === "object" &&
+                        Object.keys(res1.data).length > 0
+                            ? res1.data
+                            : res2.data;
+                    if (p) {
+                        logger.debug(
+                            `Post ${
+                                content.productID
+                            } (${content.description.slice(
+                                0,
+                                30
+                            )}...) already exists with _id ${p._id} - postId ${
+                                p.postId
+                            }, skipping...`
+                        );
+                        existsOrError = true;
+                    }
+                } catch (err) {
+                    logger.error(
+                        `Error while checking if post ${content.productID} already exists:`
+                    );
+                    logger.error((err as AxiosError)?.response?.data || err);
+                    existsOrError = true;
+                }
+
+                if (!existsOrError) {
+                    tasks.push({ post, postUrl: content.url });
+                }
             } catch (err) {
-                logger.error("Error while parsing post:");
+                logger.error("Error while parsing element:");
                 logger.error(err);
             }
+        });
+
+        await wait(config.DELAY_AFTER_SCRAPES_MS);
+
+        // remove page listeners
+        page.removeAllListeners("request");
+        page.removeAllListeners("response");
+
+        logger.debug("Closing page...");
+        await page.close();
+
+        // create queue with max 3 concurrent workers
+        const q: queueAsPromised<UrlTask> = fastq.promise<UrlTask>(
+            this.scrapeTask.bind(this),
+            3
+        );
+
+        for (const task of tasks) {
+            // add tasks to queue
+            q.push(task);
         }
 
-        await wait(Math.floor(Math.random() * 12 * 100) + 50);
-        await browser.close();
+        // await the end of the queue
+        await q.drained();
+
+        logger.info(
+            `Scrape finished with ${elements.length} posts for city ${city}`
+        );
+    }
+
+    private async scrapeTask(task: UrlTask) {
+        try {
+            if (!Scraper.browser) {
+                throw new Error("Browser not initialized!");
+            }
+
+            const url = task.postUrl;
+
+            logger.debug("Browser connected for task url " + url);
+
+            const page = await Scraper.browser.newPage();
+
+            // fake headers
+            await page.setExtraHTTPHeaders({
+                "user-agent":
+                    "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+                "upgrade-insecure-requests": "1",
+                accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                "accept-encoding": "gzip, deflate, br",
+                "accept-language": "en-US,en;q=0.9,en;q=0.8"
+            });
+
+            // Limit requests
+            await page.setRequestInterception(true);
+            page.on("request", async request => {
+                if (request.isInterceptResolutionHandled()) {
+                    return;
+                }
+                if (request.resourceType() == "image") {
+                    await request.abort();
+                } else {
+                    await request.continue();
+                }
+            });
+
+            await page.goto(url);
+            await page.setViewport({ width: 1080, height: 1024 });
+
+            // wait for description to load
+            // No need for a try-catch block, fastq handles errors automatically
+
+            await page.waitForSelector("#annuncio_descrizione", {
+                timeout: 2_000
+            });
+            const description = await page.$eval(
+                "#annuncio_descrizione",
+                e => e.textContent
+            );
+
+            const district = await page.$(
+                "#annuncio_metacaratteristiche ~ div.flex div:nth-child(4)"
+            );
+            const districtStr = (await district?.evaluate(
+                e => e.textContent
+            )) as string | undefined;
+            const districtName = districtStr?.split("\n")[1].trim();
+
+            const images = await page.$$(
+                "div#annuncio_thumbnails div.relative div.glide__track ul.glide__slides li.glide__slide div img"
+            );
+            const imagesSrc = images
+                .filter(e => e)
+                .map(e => e.evaluate(e => e.src));
+            const imagesSrcResolved = (await Promise.all(
+                imagesSrc
+            )) as string[];
+
+            await wait(config.DELAY_AFTER_TASKS_MS);
+
+            // remove page listeners
+            page.removeAllListeners("request");
+            page.removeAllListeners("response");
+
+            logger.debug("Closing page...");
+            await page.close();
+
+            const post: RentalPost = {
+                ...task.post,
+                description,
+                zone: districtName,
+                images: imagesSrcResolved
+            };
+
+            bakecaEventEmitter.emit("bakecaPost", post);
+        } catch (err) {
+            logger.error("Error while scraping task:");
+            logger.error(err);
+            throw err;
+        }
     }
 
     public async runScraper() {
+        if (!config.DEBUG_RUN_SCRAPER) {
+            logger.warn("DEBUG_RUN_SCRAPER is false, not running scraper");
+            return;
+        }
+
         logger.info("Starting scraper...");
+        // await runProducer();
 
         logger.info("Starting scraping loop...");
         while (true) {
             const duration = config.GET_DELAY_BETWEEN_SCRAPES_MS();
 
-            logger.info(
-                `Scraping for ${(duration / 1000).toFixed(3)} seconds...`
-            );
+            for (const city of await Scraper.getCities()) {
+                logger.info(
+                    `Scraping for ${(duration / 1000).toFixed(
+                        3
+                    )} seconds city ${city}...`
+                );
 
-            for (const url of [Scraper.roomsUrl]) {
+                const url = await Scraper.getUrl(city);
+
+                if (!url) {
+                    logger.error("No url found for city " + city);
+                    continue;
+                }
+
                 try {
-                    await this.scrape(url);
-                    await wait(duration);
+                    await this.scrape(url, duration, city);
                 } catch (err) {
+                    logger.error(
+                        "Error while scraping url " +
+                            url +
+                            " for city " +
+                            city +
+                            ":"
+                    );
                     logger.error(err);
                 }
-                // wait for duration + random time between 0 and 5 seconds
-                await wait(Math.floor(Math.random() * 5000));
+                await wait(config.GET_DELAY_BETWEEN_SCRAPES_MS());
             }
         }
     }
@@ -244,6 +520,12 @@ export class Scraper {
 
 async function run() {
     const scraper = new Scraper();
+
+    exitHook(() => {
+        logger.info(`Closing browser...`);
+        scraper.closeBrowser();
+    });
+
     while (true) {
         try {
             await scraper.runScraper();

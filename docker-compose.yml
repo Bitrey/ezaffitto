@@ -78,6 +78,8 @@ services:
       #     condition: service_healthy
       parser:
         condition: service_healthy
+      db-api:
+        condition: service_healthy
     networks:
       # - rabbitmq-network
       - db-api-network
@@ -93,7 +95,9 @@ services:
     restart: unless-stopped
     volumes:
       - ./subito-scraper:/home/bun/app
-    # depends_on:
+    depends_on:
+      db-api:
+        condition: service_healthy
     #   rabbitmq:
     #     condition: service_healthy
     environment:
@@ -112,6 +116,9 @@ services:
   zappyrent-scraper:
     build: ./zappyrent-scraper
     restart: unless-stopped
+    depends_on:
+      db-api:
+        condition: service_healthy
     volumes:
       - ./zappyrent-scraper:/home/bun/app
     environment:
@@ -133,6 +140,9 @@ services:
   immobiliare-scraper:
     build: ./immobiliare-scraper
     restart: unless-stopped
+    depends_on:
+      db-api:
+        condition: service_healthy
     volumes:
       - ./immobiliare-scraper:/home/bun/app
     environment:
@@ -151,26 +161,25 @@ services:
       retries: 3
       start_period: 5s
 
-  # bakeca-scraper:
-  #   build: ./bakeca-scraper
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ./bakeca-scraper:/usr/src/app
-  #   environment:
-  #     - NODE_ENV=development
-  #     - PING_SERVER_PORT=3434
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   networks:
-  #     - rabbitmq-network
-  #     - db-api-network
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget -q -O- http://localhost:3434/ping || exit 1"]
-  #     interval: 5s
-  #     timeout: 5s
-  #     retries: 3
-  #     start_period: 5s
+  bakeca-scraper:
+    build: ./bakeca-scraper
+    restart: unless-stopped
+    volumes:
+      - ./bakeca-scraper:/usr/src/app
+    environment:
+      - NODE_ENV=development
+      - PING_SERVER_PORT=3434
+    depends_on:
+      db-api:
+        condition: service_healthy
+    networks:
+      - db-api-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:3434/ping || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   # rabbitmq:
   #   image: rabbitmq:3-management

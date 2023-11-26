@@ -102,7 +102,7 @@ const ByRentId: FunctionComponent<any> = () => {
             className="rounded-lg"
             href={state?.prevPath || "/"}
             state={
-              state.posts
+              state?.posts && state?.selected
                 ? { posts: state.posts, selected: state.selected }
                 : undefined
             }

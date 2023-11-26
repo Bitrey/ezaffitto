@@ -151,7 +151,7 @@ services:
     build:
       context: ./bakeca-scraper
       dockerfile: Dockerfile.prod
-    restart: unless-stopped
+    restart: on-failure:5
     environment:
       - NODE_ENV=production
       - PING_SERVER_PORT=3434

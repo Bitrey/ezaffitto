@@ -100,7 +100,7 @@ const ByRentId: FunctionComponent<any> = () => {
         <div className="p-2 md:p-4">
           <Button
             className="rounded-lg"
-            href={state.prevPath || "/"}
+            href={state?.prevPath || "/"}
             state={
               state.posts
                 ? { posts: state.posts, selected: state.selected }

@@ -514,12 +514,17 @@ export class Scraper {
 async function run() {
     const scraper = new Scraper();
 
-    exitHook(() => {
+    let doScrape = true;
+
+    exitHook(async done => {
         logger.info(`Closing browser...`);
-        scraper.closeBrowser();
+        await scraper.closeBrowser();
+        logger.info(`Browser closed`);
+        doScrape = false;
+        done();
     });
 
-    while (true) {
+    while (doScrape) {
         try {
             await scraper.runScraper();
             break;

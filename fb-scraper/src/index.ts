@@ -250,7 +250,10 @@ export class Scraper {
                 "--no-sandbox",
                 "--disable-gpu",
                 "--disable-notifications",
-                "--disable-dev-shm-usage"
+                "--disable-dev-shm-usage",
+                "--disable-setuid-sandbox",
+                "--disable-accelerated-2d-canvas",
+                "--disable-web-security"
             ]
         });
     }
@@ -281,6 +284,15 @@ export class Scraper {
             await Scraper.sendPanic("Page is null for groupUrl " + groupUrl);
             process.exit(1);
         }
+
+        await page.setExtraHTTPHeaders({
+            "user-agent":
+                "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+            "upgrade-insecure-requests": "1",
+            accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+            "accept-encoding": "gzip, deflate, br",
+            "accept-language": "en-US,en;q=0.9,en;q=0.8"
+        });
 
         await page.setViewport({ width: 1080, height: 1024 });
 
@@ -473,6 +485,9 @@ export class Scraper {
 
         // screenshot
         try {
+            logger.debug(
+                "Taking start_page screenshot for groupUrl " + groupUrl
+            );
             await page.screenshot({
                 path: "screenshots/start_page.png"
             });
@@ -920,6 +935,7 @@ export class Scraper {
                         process.exit(1);
                     }
                 } catch (err) {
+                    logger.error("Error while scraping:");
                     logger.error(err);
                 }
                 await wait(Math.floor(Math.random() * 5000));

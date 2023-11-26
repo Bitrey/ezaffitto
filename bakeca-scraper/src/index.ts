@@ -125,13 +125,16 @@ export class Scraper {
 
     private async init() {
         Scraper.browser = await puppeteer.launch({
-            headless: true,
+            headless: "new",
             executablePath: "/usr/bin/google-chrome",
             args: [
                 "--no-sandbox",
                 "--disable-gpu",
                 "--disable-notifications",
-                "--disable-dev-shm-usage"
+                "--disable-dev-shm-usage",
+                "--disable-setuid-sandbox",
+                "--disable-accelerated-2d-canvas",
+                "--disable-web-security"
             ]
         });
     }
@@ -143,7 +146,7 @@ export class Scraper {
         });
     }
 
-    private async scrape(url: string, durationMs: number, city: EzaffittoCity) {
+    private async scrape(url: string, city: EzaffittoCity) {
         if (!Scraper.browser) {
             logger.info("Browser is null, initializing...");
             await this.init();
@@ -160,16 +163,6 @@ export class Scraper {
         }
 
         logger.info(`Starting scrape for url ${url}`);
-
-        // fake headers
-        await page.setExtraHTTPHeaders({
-            "user-agent":
-                "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-            "upgrade-insecure-requests": "1",
-            accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-            "accept-encoding": "gzip, deflate, br",
-            "accept-language": "en-US,en;q=0.9,en;q=0.8"
-        });
 
         await page.setViewport({ width: 1080, height: 1024 });
 
@@ -501,7 +494,7 @@ export class Scraper {
                 }
 
                 try {
-                    await this.scrape(url, duration, city);
+                    await this.scrape(url, city);
                 } catch (err) {
                     logger.error(
                         "Error while scraping url " +

@@ -178,12 +178,17 @@ const RentView: FunctionComponent<RentViewProps> = ({
           </div>
         </div>
         <p className="text-gray-800 dark:text-gray-200">
-          {post?.description?.split("\n").map((e, i) => (
-            <Fragment key={i}>
-              {e}
-              <br />
-            </Fragment>
-          )) || t("rentViewer.noDescription")}
+          {(post?.description?.length &&
+            post?.description?.split("\n").map((e, i) => (
+              <Fragment key={i}>
+                {e}
+                <br />
+              </Fragment>
+            ))) || (
+            <span className="text-gray-500 dark:text-gray-400">
+              {t("rentViewer.noDescription")}
+            </span>
+          )}
         </p>
 
         <div className="mx-2 my-6 grid border grid-cols-2 justify-center items-center">

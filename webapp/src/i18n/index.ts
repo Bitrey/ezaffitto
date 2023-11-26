@@ -91,7 +91,8 @@ const resources: Resource = {
                 backToSearch: "Back to search",
                 postNotFound: "Post not found",
                 invalidPost: "Invalid post",
-                loadingError: "Error while loading"
+                loadingError: "Error while loading",
+                noDescription: "This post has no description"
             },
             homepage: {
                 banner: "Find your rent in",
@@ -242,7 +243,8 @@ const resources: Resource = {
                 backToSearch: "Torna alla ricerca",
                 postNotFound: "Post non trovato",
                 invalidPost: "Post non valido",
-                loadingError: "Errore nel caricamento"
+                loadingError: "Errore nel caricamento",
+                noDescription: "Questo post non ha una descrizione"
             },
             homepage: {
                 banner: "Trova il tuo affitto a",

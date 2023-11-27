@@ -1,5 +1,5 @@
 import puppeteer from "puppeteer-extra";
-import { Browser } from "puppeteer-core";
+import { Browser, Page } from "puppeteer-core";
 import pluginStealth from "puppeteer-extra-plugin-stealth";
 import { ScrapedDataEventEmitter } from "./interfaces/events";
 import EventEmitter from "events";
@@ -17,7 +17,7 @@ import exitHook from "async-exit-hook";
 import "./healthcheckPing";
 import { mkdir, readFile, unlink, writeFile } from "fs/promises";
 import { Cookie } from "./interfaces/Cookie";
-import { mapCookiesToPuppeteer } from "./shared/mapCookiesToPuppeteer";
+import { mapCookiesToPuppeteer } from "./misc/mapCookiesToPuppeteer";
 import { existsSync } from "fs";
 import path from "path";
 
@@ -307,54 +307,7 @@ export class Scraper {
             )}s`
         );
 
-        let cookies: Cookie[];
-
-        if (existsSync(config.NEW_COOKIES_JSON_PATH)) {
-            logger.info(
-                "New cookies file found, using it for groupUrl " +
-                    groupUrl +
-                    this.getElapsedStr()
-            );
-            cookies = require(config.NEW_COOKIES_JSON_PATH);
-            try {
-                await unlink(config.NEW_COOKIES_JSON_PATH);
-            } catch (err) {
-                logger.error(
-                    "Error while deleting new cookies file for groupUrl " +
-                        groupUrl +
-                        ":"
-                );
-                logger.error(err);
-            }
-        } else if (existsSync(config.COOKIES_JSON_PATH)) {
-            logger.debug(
-                "New cookies file not found, using old one for groupUrl " +
-                    groupUrl +
-                    this.getElapsedStr()
-            );
-            cookies = require(config.COOKIES_JSON_PATH);
-        } else {
-            logger.error(
-                "No cookies file found for groupUrl " +
-                    groupUrl +
-                    this.getElapsedStr()
-            );
-            await Scraper.sendPanic(
-                "No cookies file found for groupUrl " + groupUrl
-            );
-            // remove page listeners
-            page.removeAllListeners("request");
-            page.removeAllListeners("response");
-            await page.close();
-            process.exit(1);
-        }
-
-        try {
-            await page.setCookie(...mapCookiesToPuppeteer(cookies));
-        } catch (err) {
-            logger.error("CRITICAL: Error while setting cookies:");
-            logger.error(err);
-        }
+        await this.loadCookies(groupUrl, page);
 
         await page.setRequestInterception(true);
 
@@ -867,6 +820,57 @@ export class Scraper {
         this.endDate = null;
 
         await page.close();
+    }
+
+    private async loadCookies(groupUrl: string, page: Page) {
+        let cookies: Cookie[];
+
+        if (existsSync(config.NEW_COOKIES_JSON_PATH)) {
+            logger.info(
+                "New cookies file found, using it for groupUrl " +
+                    groupUrl +
+                    this.getElapsedStr()
+            );
+            cookies = require(config.NEW_COOKIES_JSON_PATH);
+            try {
+                await unlink(config.NEW_COOKIES_JSON_PATH);
+            } catch (err) {
+                logger.error(
+                    "Error while deleting new cookies file for groupUrl " +
+                        groupUrl +
+                        ":"
+                );
+                logger.error(err);
+            }
+        } else if (existsSync(config.COOKIES_JSON_PATH)) {
+            logger.debug(
+                "New cookies file not found, using old one for groupUrl " +
+                    groupUrl +
+                    this.getElapsedStr()
+            );
+            cookies = require(config.COOKIES_JSON_PATH);
+        } else {
+            logger.error(
+                "No cookies file found for groupUrl " +
+                    groupUrl +
+                    this.getElapsedStr()
+            );
+            await Scraper.sendPanic(
+                "No cookies file found for groupUrl " + groupUrl
+            );
+            // remove page listeners
+            page.removeAllListeners("request");
+            page.removeAllListeners("response");
+            await page.close();
+            process.exit(1);
+        }
+
+        try {
+            await page.setCookie(...mapCookiesToPuppeteer(cookies));
+        } catch (err) {
+            logger.error("CRITICAL: Error while setting cookies:");
+            logger.error(err);
+        }
     }
 
     private getElapsedStr() {

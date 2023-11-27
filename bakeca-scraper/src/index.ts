@@ -1,5 +1,5 @@
 import puppeteer from "puppeteer-extra";
-import { Browser } from "puppeteer-core";
+import { Browser, Page } from "puppeteer-core";
 import pluginStealth from "puppeteer-extra-plugin-stealth";
 import EventEmitter from "events";
 import { logger } from "./shared/logger";
@@ -12,7 +12,7 @@ import * as fastq from "fastq";
 import type { queueAsPromised } from "fastq";
 
 import "./healthcheckPing";
-import { mkdir, readFile } from "fs/promises";
+import { mkdir, readFile, unlink } from "fs/promises";
 import { BakecaRoot, RentalPostEventEmitter, UrlTask } from "./interfaces";
 import { config } from "./config";
 import {
@@ -21,6 +21,9 @@ import {
     RentalPost,
     RentalTypes
 } from "./interfaces/shared";
+import { Cookie } from "./interfaces/Cookie";
+import { existsSync } from "fs";
+import { mapCookiesToPuppeteer } from "./misc/mapCookiesToPuppeteer";
 
 puppeteer.use(pluginStealth());
 
@@ -146,6 +149,43 @@ export class Scraper {
         });
     }
 
+    private async loadCookies(url: string, page: Page) {
+        let cookies: Cookie[];
+
+        if (existsSync(config.NEW_COOKIES_JSON_PATH)) {
+            logger.info("New cookies file found, using it for url " + url);
+            cookies = require(config.NEW_COOKIES_JSON_PATH);
+            try {
+                await unlink(config.NEW_COOKIES_JSON_PATH);
+            } catch (err) {
+                logger.error(
+                    "Error while deleting new cookies file for url " + url + ":"
+                );
+                logger.error(err);
+            }
+        } else if (existsSync(config.COOKIES_JSON_PATH)) {
+            logger.debug(
+                "New cookies file not found, using old one for url " + url
+            );
+            cookies = require(config.COOKIES_JSON_PATH);
+        } else {
+            logger.error("No cookies file found for url " + url);
+            await Scraper.sendPanic("No cookies file found for url " + url);
+            // remove page listeners
+            page.removeAllListeners("request");
+            page.removeAllListeners("response");
+            await page.close();
+            process.exit(1);
+        }
+
+        try {
+            await page.setCookie(...mapCookiesToPuppeteer(cookies));
+        } catch (err) {
+            logger.error("CRITICAL: Error while setting cookies:");
+            logger.error(err);
+        }
+    }
+
     private async scrape(url: string, city: EzaffittoCity) {
         if (!Scraper.browser) {
             logger.info("Browser is null, initializing...");
@@ -165,6 +205,8 @@ export class Scraper {
         logger.info(`Starting scrape for url ${url}`);
 
         await page.setViewport({ width: 1080, height: 1024 });
+
+        await this.loadCookies(url, page);
 
         await mkdir(config.SCREENSHOTS_PATH, {
             recursive: true

@@ -6,6 +6,12 @@ export const config = Object.freeze({
     DB_API_BASE_URL: "http://db-api:5500/api/v1",
 
     URLS_JSON_PATH: path.join(process.cwd(), "urls.json"),
+
+    COOKIES_JSON_PATH: path.join(process.cwd(), "/cookies/cookies.json"),
+    NEW_COOKIES_JSON_PATH: path.join(
+        process.cwd(),
+        "/cookies/new_cookies.json"
+    ),
     SCREENSHOTS_PATH: path.join(process.cwd(), "/screenshots"),
 
     AGENCY_TEXT: "agenzia",

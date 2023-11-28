@@ -31,7 +31,7 @@ export const config = Object.freeze({
         "hasHeating",
         "hasElevator"
     ],
-    enabledCities: ["bologna", "milano"] as Readonly<EzaffittoCity[]>,
+    enabledCities: ["bologna", "milano", "torino"] as Readonly<EzaffittoCity[]>,
     bitreyUrl: "https://www.bitrey.it",
     maxUrl: "https://www.ozolin.net/"
 });

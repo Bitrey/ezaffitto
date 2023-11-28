@@ -26,5 +26,19 @@
             }
         ],
         "bannedAgencyIds": [369503, 247117, 386776]
+    },
+    {
+        "city": "torino",
+        "urls": [
+            {
+                "url": "https://www.immobiliare.it/api-next/search-list/real-estates/",
+                "fkRegione": "pie",
+                "idComune": "9987",
+                "idNazione": "IT",
+                "idProvincia": "MI",
+                "path": "%2Faffitto-stanze%2Ftorino%2F"
+            }
+        ],
+        "bannedAgencyIds": [377122, 216332, 175743]
     }
 ]

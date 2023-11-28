@@ -6,5 +6,21 @@
                 "url": "https://www.zappyrent.com/api/propertylisting/get/20/filter"
             }
         ]
+    },
+    {
+        "city": "milano",
+        "urls": [
+            {
+                "url": "https://www.zappyrent.com/api/propertylisting/get/20/filter"
+            }
+        ]
+    },
+    {
+        "city": "torino",
+        "urls": [
+            {
+                "url": "https://www.zappyrent.com/api/propertylisting/get/20/filter"
+            }
+        ]
     }
 ]

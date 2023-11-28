@@ -8,6 +8,8 @@ export const config = Object.freeze({
     DB_API_BASE_URL: "http://db-api:5500/api/v1",
     PARSER_API_BASE_URL: "http://parser:3000/parse",
 
+    SCRAPES_BEFORE_WAIT: 5,
+
     URLS_JSON_PATH: path.join(process.cwd(), "urls.json"),
 
     COOKIES_JSON_PATH: path.join(process.cwd(), "/cookies/cookies.json"),

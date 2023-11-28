@@ -26,8 +26,8 @@ export enum OccupationalRestrictions {
 export enum EzaffittoCity {
     BOLOGNA = "bologna",
     MILANO = "milano",
-    ROMA = "roma",
     TORINO = "torino",
+    ROMA = "roma",
     FIRENZE = "firenze",
     NAPOLI = "napoli",
     PADOVA = "padova",

@@ -873,6 +873,32 @@ export class Scraper {
         }
     }
 
+    private async waitSomeTime() {
+        const date = moment();
+        // check if it's between 00:00 and 06:00
+        if (date.isBetween(date.clone().startOf("day"), date.clone().hour(6))) {
+            // wait for 40 minutes - 1 hour
+            const minutes = Math.floor(Math.random() * 20 + 40);
+            logger.info(
+                "Waiting " +
+                    minutes +
+                    " minutes for next scrape" +
+                    this.getElapsedStr()
+            );
+            wait(minutes * 60 * 1000);
+        } else {
+            // wait for 5 minutes - 10 minutes
+            const minutes = Math.floor(Math.random() * 5 + 5);
+            logger.info(
+                "Waiting " +
+                    minutes +
+                    " minutes for next scrape" +
+                    this.getElapsedStr()
+            );
+            wait(minutes * 60 * 1000);
+        }
+    }
+
     private getElapsedStr() {
         return (
             " - startDate: " +
@@ -899,6 +925,9 @@ export class Scraper {
         // await runProducer();
 
         logger.info("Starting scraping loop...");
+
+        let scrapeCount = 0;
+
         while (true) {
             const duration = config.GET_DELAY_BETWEEN_SCRAPES_MS();
 
@@ -913,6 +942,11 @@ export class Scraper {
 
                 try {
                     await this.scrape(groupUrl, duration, city);
+                    scrapeCount++;
+                    if (scrapeCount % config.SCRAPES_BEFORE_WAIT === 0) {
+                        await this.waitSomeTime();
+                    }
+
                     if (
                         this.urlsNoPostsFetched.length >=
                         config.MAX_TIMES_NO_POSTS_FETCHED

@@ -6,9 +6,6 @@
                 "url": "https://www.facebook.com/groups/bolognaaffitti/?locale=it_IT"
             },
             {
-                "url": "https://www.facebook.com/groups/4227281414051454/?locale=it_IT"
-            },
-            {
                 "url": "https://www.facebook.com/groups/affitti.a.bologna/?locale=it_IT"
             },
             {
@@ -22,9 +19,6 @@
             },
             {
                 "url": "https://www.facebook.com/groups/926952708679868/?locale=it_IT"
-            },
-            {
-                "url": "https://www.facebook.com/groups/1141916849589069/?locale=it_IT"
             },
             {
                 "url": "https://www.facebook.com/groups/6222659174441521/?locale=it_IT"
@@ -51,6 +45,14 @@
             },
             {
                 "url": "https://facebook.com/groups/3653882284714233/?locale=it_IT"
+            }
+        ]
+    },
+    {
+        "city": "torino",
+        "urls": [
+            {
+                "url": "https://www.facebook.com/groups/182051112459622/?locale=it_IT"
             }
         ]
     }

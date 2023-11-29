@@ -16,7 +16,7 @@ Struttura JSON richiesta: {
     "zone": <string: district or neighborhood within the city, only if deducible from the text>,
     "sexRestrictions": <enum: "everyone", "males", "females", "other", set to "everyone" unless EXPLICITLY written otherwise>,
     "occupationalRestrictions": <enum: "everyone", "students", "workers", "other", set to "everyone" unless EXPLICITLY written otherwise>,
-    "lgbtFriendly": <boolean: true if specified, false otherwise>,
+    "lgbtFriendly": <boolean: true if specified, null otherwise>,
     "furnished": <boolean: true/false if specified, null otherwise>,
     "availabilityStartDate": <date: start date in ISO 8601 format, only if EXPLICITLY written, example: "2023-01-01">,
     "availabilityEndDate": <date: end date in ISO 8601 format, only if EXPLICITLY written, example: "2023-06-30">,

@@ -335,8 +335,6 @@ export class Scraper {
 
         let fetchedPosts = 0;
 
-        let isError = false;
-
         page.on("response", async response => {
             if (urls.includes(response.url())) {
                 let obj;
@@ -356,7 +354,6 @@ export class Scraper {
                             groupUrl +
                             this.getElapsedStr()
                     );
-                    isError = true;
                     await page?.screenshot({
                         path: "screenshots/rate_limit_exceeded.png"
                     });
@@ -368,10 +365,6 @@ export class Scraper {
                     page.removeAllListeners("response");
                     await page.close();
                     process.exit(1);
-                }
-
-                if (isError) {
-                    return;
                 }
 
                 for (const elem of arr) {
@@ -677,41 +670,32 @@ export class Scraper {
         }
 
         // click refuse cookie button by selecting aria-label
-        const cookieButtonSelector =
+        const cookieButtonSelector1 =
             '[aria-label="Rifiuta cookie facoltativi"]';
-        ('[aria-cookiebanner="accept_only_essential_button"]');
-
-        // if (page.$(cookieButtonSelector) == null)
-        try {
-            await page.waitForSelector(cookieButtonSelector, {
-                timeout: 1_000
-            });
-            await wait(Math.random() * 1000);
-            await page.click(cookieButtonSelector);
-        } catch (err) {
-            // logger.debug(
-            //     "Cookie button not found for groupUrl " +
-            //         groupUrl +
-            //         this.getElapsedStr()
-            // );
-        }
+        const cookieButtonSelector2 = '[aria-label="Decline optional cookies"]';
 
         // click close login button by selecting aria-label
         const closeLoginButtonSelector = '[aria-label="Chiudi"]';
 
-        // if (page.$(closeLoginButtonSelector) == null)
-        try {
-            await page.waitForSelector(closeLoginButtonSelector, {
-                timeout: 1_000
-            });
-            await wait(Math.random() * 1000);
-            await page.click(closeLoginButtonSelector);
-        } catch (err) {
-            // logger.debug(
-            //     "Close login button not found for groupUrl " +
-            //         groupUrl +
-            //         this.getElapsedStr()
-            // );
+        // if (page.$(cookieButtonSelector) == null)
+        for (const selector of [
+            cookieButtonSelector1,
+            cookieButtonSelector2,
+            closeLoginButtonSelector
+        ]) {
+            try {
+                await page.waitForSelector(selector, {
+                    timeout: 1_000
+                });
+                await wait(Math.random() * 1000);
+                await page.click(selector);
+            } catch (err) {
+                // logger.debug(
+                //     "Button not found for groupUrl " +
+                //         groupUrl +
+                //         this.getElapsedStr()
+                // );
+            }
         }
 
         try {
@@ -945,6 +929,10 @@ export class Scraper {
                     scrapeCount++;
                     if (scrapeCount % config.SCRAPES_BEFORE_WAIT === 0) {
                         await this.waitSomeTime();
+                    } else {
+                        // wait 30 seconds - 1 minute
+                        const seconds = Math.floor(Math.random() * 30 + 30);
+                        await wait(seconds * 1000);
                     }
 
                     if (
